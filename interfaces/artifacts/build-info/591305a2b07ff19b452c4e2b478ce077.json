@@ -1,0 +1,447 @@
+{
+	"id": "591305a2b07ff19b452c4e2b478ce077",
+	"_format": "hh-sol-build-info-1",
+	"solcVersion": "0.8.26",
+	"solcLongVersion": "0.8.26+commit.8a97fa7a",
+	"input": {
+		"language": "Solidity",
+		"sources": {
+			"interfaces/IProfileNFTMinter.sol": {
+				"content": "\npragma solidity ^0.8.0;\n\ninterface IProfileNFTMinter {\n    // Profile NFT metadata\n    struct ProfileNFT {\n        string username;\n        string avatar; // IPFS CID\n    }\n\n    // Mint a new profile NFT\n    function mintProfileNFT(string memory username, string memory avatar) external;\n\n    // Get the metadata for a profile NFT\n    function getProfileNFT(uint256 tokenId) external view returns (ProfileNFT memory);\n}"
+			}
+		},
+		"settings": {
+			"optimizer": {
+				"enabled": false,
+				"runs": 200
+			},
+			"outputSelection": {
+				"*": {
+					"": [
+						"ast"
+					],
+					"*": [
+						"abi",
+						"metadata",
+						"devdoc",
+						"userdoc",
+						"storageLayout",
+						"evm.legacyAssembly",
+						"evm.bytecode",
+						"evm.deployedBytecode",
+						"evm.methodIdentifiers",
+						"evm.gasEstimates",
+						"evm.assembly"
+					]
+				}
+			},
+			"remappings": []
+		}
+	},
+	"output": {
+		"contracts": {
+			"interfaces/IProfileNFTMinter.sol": {
+				"IProfileNFTMinter": {
+					"abi": [
+						{
+							"inputs": [
+								{
+									"internalType": "uint256",
+									"name": "tokenId",
+									"type": "uint256"
+								}
+							],
+							"name": "getProfileNFT",
+							"outputs": [
+								{
+									"components": [
+										{
+											"internalType": "string",
+											"name": "username",
+											"type": "string"
+										},
+										{
+											"internalType": "string",
+											"name": "avatar",
+											"type": "string"
+										}
+									],
+									"internalType": "struct IProfileNFTMinter.ProfileNFT",
+									"name": "",
+									"type": "tuple"
+								}
+							],
+							"stateMutability": "view",
+							"type": "function"
+						},
+						{
+							"inputs": [
+								{
+									"internalType": "string",
+									"name": "username",
+									"type": "string"
+								},
+								{
+									"internalType": "string",
+									"name": "avatar",
+									"type": "string"
+								}
+							],
+							"name": "mintProfileNFT",
+							"outputs": [],
+							"stateMutability": "nonpayable",
+							"type": "function"
+						}
+					],
+					"devdoc": {
+						"kind": "dev",
+						"methods": {},
+						"version": 1
+					},
+					"evm": {
+						"assembly": "",
+						"bytecode": {
+							"functionDebugData": {},
+							"generatedSources": [],
+							"linkReferences": {},
+							"object": "",
+							"opcodes": "",
+							"sourceMap": ""
+						},
+						"deployedBytecode": {
+							"functionDebugData": {},
+							"generatedSources": [],
+							"immutableReferences": {},
+							"linkReferences": {},
+							"object": "",
+							"opcodes": "",
+							"sourceMap": ""
+						},
+						"gasEstimates": null,
+						"legacyAssembly": null,
+						"methodIdentifiers": {
+							"getProfileNFT(uint256)": "04750245",
+							"mintProfileNFT(string,string)": "70cc451a"
+						}
+					},
+					"metadata": "{\"compiler\":{\"version\":\"0.8.26+commit.8a97fa7a\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"getProfileNFT\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"username\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"avatar\",\"type\":\"string\"}],\"internalType\":\"struct IProfileNFTMinter.ProfileNFT\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"username\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"avatar\",\"type\":\"string\"}],\"name\":\"mintProfileNFT\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"interfaces/IProfileNFTMinter.sol\":\"IProfileNFTMinter\"},\"evmVersion\":\"cancun\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"interfaces/IProfileNFTMinter.sol\":{\"keccak256\":\"0xaf2f28c14847b61b2499dcf9fe289f642d3f43c05869ca34ed6939e4201008f6\",\"urls\":[\"bzz-raw://ca016d77844ba3788f5db22ffa1f58bdd54ef011d192ed9708917e97d5e2b972\",\"dweb:/ipfs/QmanFeqqj1bTaHP2vXpsyW7cYKPJdAKDaUWHEB8RrJGm73\"]}},\"version\":1}",
+					"storageLayout": {
+						"storage": [],
+						"types": null
+					},
+					"userdoc": {
+						"kind": "user",
+						"methods": {},
+						"version": 1
+					}
+				}
+			}
+		},
+		"errors": [
+			{
+				"component": "general",
+				"errorCode": "1878",
+				"formattedMessage": "Warning: SPDX license identifier not provided in source file. Before publishing, consider adding a comment containing \"SPDX-License-Identifier: <SPDX-License>\" to each source file. Use \"SPDX-License-Identifier: UNLICENSED\" for non-open-source code. Please see https://spdx.org for more information.\n--> interfaces/IProfileNFTMinter.sol\n\n",
+				"message": "SPDX license identifier not provided in source file. Before publishing, consider adding a comment containing \"SPDX-License-Identifier: <SPDX-License>\" to each source file. Use \"SPDX-License-Identifier: UNLICENSED\" for non-open-source code. Please see https://spdx.org for more information.",
+				"severity": "warning",
+				"sourceLocation": {
+					"end": -1,
+					"file": "interfaces/IProfileNFTMinter.sol",
+					"start": -1
+				},
+				"type": "Warning"
+			}
+		],
+		"sources": {
+			"interfaces/IProfileNFTMinter.sol": {
+				"ast": {
+					"absolutePath": "interfaces/IProfileNFTMinter.sol",
+					"exportedSymbols": {
+						"IProfileNFTMinter": [
+							22
+						]
+					},
+					"id": 23,
+					"nodeType": "SourceUnit",
+					"nodes": [
+						{
+							"id": 1,
+							"literals": [
+								"solidity",
+								"^",
+								"0.8",
+								".0"
+							],
+							"nodeType": "PragmaDirective",
+							"src": "1:23:0"
+						},
+						{
+							"abstract": false,
+							"baseContracts": [],
+							"canonicalName": "IProfileNFTMinter",
+							"contractDependencies": [],
+							"contractKind": "interface",
+							"fullyImplemented": false,
+							"id": 22,
+							"linearizedBaseContracts": [
+								22
+							],
+							"name": "IProfileNFTMinter",
+							"nameLocation": "36:17:0",
+							"nodeType": "ContractDefinition",
+							"nodes": [
+								{
+									"canonicalName": "IProfileNFTMinter.ProfileNFT",
+									"id": 6,
+									"members": [
+										{
+											"constant": false,
+											"id": 3,
+											"mutability": "mutable",
+											"name": "username",
+											"nameLocation": "123:8:0",
+											"nodeType": "VariableDeclaration",
+											"scope": 6,
+											"src": "116:15:0",
+											"stateVariable": false,
+											"storageLocation": "default",
+											"typeDescriptions": {
+												"typeIdentifier": "t_string_storage_ptr",
+												"typeString": "string"
+											},
+											"typeName": {
+												"id": 2,
+												"name": "string",
+												"nodeType": "ElementaryTypeName",
+												"src": "116:6:0",
+												"typeDescriptions": {
+													"typeIdentifier": "t_string_storage_ptr",
+													"typeString": "string"
+												}
+											},
+											"visibility": "internal"
+										},
+										{
+											"constant": false,
+											"id": 5,
+											"mutability": "mutable",
+											"name": "avatar",
+											"nameLocation": "148:6:0",
+											"nodeType": "VariableDeclaration",
+											"scope": 6,
+											"src": "141:13:0",
+											"stateVariable": false,
+											"storageLocation": "default",
+											"typeDescriptions": {
+												"typeIdentifier": "t_string_storage_ptr",
+												"typeString": "string"
+											},
+											"typeName": {
+												"id": 4,
+												"name": "string",
+												"nodeType": "ElementaryTypeName",
+												"src": "141:6:0",
+												"typeDescriptions": {
+													"typeIdentifier": "t_string_storage_ptr",
+													"typeString": "string"
+												}
+											},
+											"visibility": "internal"
+										}
+									],
+									"name": "ProfileNFT",
+									"nameLocation": "95:10:0",
+									"nodeType": "StructDefinition",
+									"scope": 22,
+									"src": "88:85:0",
+									"visibility": "public"
+								},
+								{
+									"functionSelector": "70cc451a",
+									"id": 13,
+									"implemented": false,
+									"kind": "function",
+									"modifiers": [],
+									"name": "mintProfileNFT",
+									"nameLocation": "218:14:0",
+									"nodeType": "FunctionDefinition",
+									"parameters": {
+										"id": 11,
+										"nodeType": "ParameterList",
+										"parameters": [
+											{
+												"constant": false,
+												"id": 8,
+												"mutability": "mutable",
+												"name": "username",
+												"nameLocation": "247:8:0",
+												"nodeType": "VariableDeclaration",
+												"scope": 13,
+												"src": "233:22:0",
+												"stateVariable": false,
+												"storageLocation": "memory",
+												"typeDescriptions": {
+													"typeIdentifier": "t_string_memory_ptr",
+													"typeString": "string"
+												},
+												"typeName": {
+													"id": 7,
+													"name": "string",
+													"nodeType": "ElementaryTypeName",
+													"src": "233:6:0",
+													"typeDescriptions": {
+														"typeIdentifier": "t_string_storage_ptr",
+														"typeString": "string"
+													}
+												},
+												"visibility": "internal"
+											},
+											{
+												"constant": false,
+												"id": 10,
+												"mutability": "mutable",
+												"name": "avatar",
+												"nameLocation": "271:6:0",
+												"nodeType": "VariableDeclaration",
+												"scope": 13,
+												"src": "257:20:0",
+												"stateVariable": false,
+												"storageLocation": "memory",
+												"typeDescriptions": {
+													"typeIdentifier": "t_string_memory_ptr",
+													"typeString": "string"
+												},
+												"typeName": {
+													"id": 9,
+													"name": "string",
+													"nodeType": "ElementaryTypeName",
+													"src": "257:6:0",
+													"typeDescriptions": {
+														"typeIdentifier": "t_string_storage_ptr",
+														"typeString": "string"
+													}
+												},
+												"visibility": "internal"
+											}
+										],
+										"src": "232:46:0"
+									},
+									"returnParameters": {
+										"id": 12,
+										"nodeType": "ParameterList",
+										"parameters": [],
+										"src": "287:0:0"
+									},
+									"scope": 22,
+									"src": "209:79:0",
+									"stateMutability": "nonpayable",
+									"virtual": false,
+									"visibility": "external"
+								},
+								{
+									"functionSelector": "04750245",
+									"id": 21,
+									"implemented": false,
+									"kind": "function",
+									"modifiers": [],
+									"name": "getProfileNFT",
+									"nameLocation": "345:13:0",
+									"nodeType": "FunctionDefinition",
+									"parameters": {
+										"id": 16,
+										"nodeType": "ParameterList",
+										"parameters": [
+											{
+												"constant": false,
+												"id": 15,
+												"mutability": "mutable",
+												"name": "tokenId",
+												"nameLocation": "367:7:0",
+												"nodeType": "VariableDeclaration",
+												"scope": 21,
+												"src": "359:15:0",
+												"stateVariable": false,
+												"storageLocation": "default",
+												"typeDescriptions": {
+													"typeIdentifier": "t_uint256",
+													"typeString": "uint256"
+												},
+												"typeName": {
+													"id": 14,
+													"name": "uint256",
+													"nodeType": "ElementaryTypeName",
+													"src": "359:7:0",
+													"typeDescriptions": {
+														"typeIdentifier": "t_uint256",
+														"typeString": "uint256"
+													}
+												},
+												"visibility": "internal"
+											}
+										],
+										"src": "358:17:0"
+									},
+									"returnParameters": {
+										"id": 20,
+										"nodeType": "ParameterList",
+										"parameters": [
+											{
+												"constant": false,
+												"id": 19,
+												"mutability": "mutable",
+												"name": "",
+												"nameLocation": "-1:-1:-1",
+												"nodeType": "VariableDeclaration",
+												"scope": 21,
+												"src": "399:17:0",
+												"stateVariable": false,
+												"storageLocation": "memory",
+												"typeDescriptions": {
+													"typeIdentifier": "t_struct$_ProfileNFT_$6_memory_ptr",
+													"typeString": "struct IProfileNFTMinter.ProfileNFT"
+												},
+												"typeName": {
+													"id": 18,
+													"nodeType": "UserDefinedTypeName",
+													"pathNode": {
+														"id": 17,
+														"name": "ProfileNFT",
+														"nameLocations": [
+															"399:10:0"
+														],
+														"nodeType": "IdentifierPath",
+														"referencedDeclaration": 6,
+														"src": "399:10:0"
+													},
+													"referencedDeclaration": 6,
+													"src": "399:10:0",
+													"typeDescriptions": {
+														"typeIdentifier": "t_struct$_ProfileNFT_$6_storage_ptr",
+														"typeString": "struct IProfileNFTMinter.ProfileNFT"
+													}
+												},
+												"visibility": "internal"
+											}
+										],
+										"src": "398:19:0"
+									},
+									"scope": 22,
+									"src": "336:82:0",
+									"stateMutability": "view",
+									"virtual": false,
+									"visibility": "external"
+								}
+							],
+							"scope": 23,
+							"src": "26:394:0",
+							"usedErrors": [],
+							"usedEvents": []
+						}
+					],
+					"src": "1:419:0"
+				},
+				"id": 0
+			}
+		}
+	}
+}
