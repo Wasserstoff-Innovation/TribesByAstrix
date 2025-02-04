@@ -14,13 +14,33 @@ This document details typical user interactions with the Astrix contracts. These
    - 3.1 [Mint Collectible (Whitelisted)](#journey-31)
    - 3.2 [Mint Collectible (Not Whitelisted)](#journey-32)
    - 3.3 [Verify Access & Generate Session Key](#journey-33)
-4. **Content Creation & Posting**
-   - 4.1 [Create Post in Tribe](#journey-41)
-   - 4.2 [Create Post Without Permission](#journey-42)
-5. **Governance & Voting**
-   - 5.1 [Create Proposal](#journey-51)
-   - 5.2 [Vote on Proposal](#journey-52)
-   - 5.3 [Unauthorized Vote Attempt](#journey-53)
+4. **Community Points & Activity**
+   - 4.1 [Earning Points for On-Chain Activity](#journey-41)
+   - 4.2 [Redeeming Points for Collectible](#journey-42)
+   - 4.3 [Point Redemption with Signature](#journey-43)
+   - 4.4 [Invalid Point Redemption](#journey-44)
+5. **Community Events & Ticketing**
+   - 5.1 [Minting Event Tickets](#journey-51)
+   - 5.2 [Attending an Event](#journey-52)
+   - 5.3 [Transfer Event Ticket](#journey-53)
+   - 5.4 [Cancel Event](#journey-54)
+6. **Super Communities & Merging**
+   - 6.1 [Soft Merge Through Off-Chain Linking](#journey-61)
+   - 6.2 [ParentTribe Field Assignment](#journey-62)
+   - 6.3 [Add Tribe to Super Community](#journey-63)
+   - 6.4 [Remove Tribe from Super Community](#journey-64)
+7. **Concurrency & Scalability**
+   - 7.1 [High-Demand Collectible Drop](#journey-71)
+   - 7.2 [Multiple Admins Editing Tribe](#journey-72)
+8. **Analytics & Insights**
+   - 8.1 [Off-Chain Metrics Generation](#journey-81)
+   - 8.2 [Aggregated Super Community Stats](#journey-82)
+9. **Technical Considerations**
+   - 9.1 [Access Control Integration](#journey-91)
+   - 9.2 [Rate Limiting & RBAC](#journey-92)
+10. **Edge Cases & Error Handling**
+    - 10.1 [Banning a User](#journey-101)
+    - 10.2 [Failed Transaction Handling](#journey-102)
 
 ---
 
@@ -73,7 +93,7 @@ This document details typical user interactions with the Astrix contracts. These
 1. **User** wants to see if they are whitelisted for a given tribe.
 2. **User** or **backend** reads `tribes[tribeId].whitelist`.
    - **Expectation**:  
-     - The user’s address is in the `whitelist[]` if the tribe is invite-only.
+     - The user's address is in the `whitelist[]` if the tribe is invite-only.
    - **Outcome**:  
      - If not whitelisted, user might not be able to post or see certain tribe content.
 
@@ -94,7 +114,7 @@ This document details typical user interactions with the Astrix contracts. These
 1. **User** tries to call `mintCollectible(collectibleType)` but is not whitelisted.
    - **Expectation**:  
      - `verifyPreconditionsForPurchase(...)` will return false.
-     - Transaction reverts with “Preconditions not met”.
+     - Transaction reverts with "Preconditions not met".
    - **Outcome**:  
      - No collectible is minted.
 
@@ -109,62 +129,298 @@ This document details typical user interactions with the Astrix contracts. These
 
 ---
 
-## 4. Content Creation & Posting
+## 4. Community Points & Activity
 
-### Journey 4.1 <a id="journey-41"></a> Create Post in Tribe
-1. **User** (a tribe member or NFT holder) wants to post content in a specific tribe.
+### Journey 4.1 <a id="journey-41"></a> Earning Points for On-Chain Activity
+1. **User** (already has a Profile NFT) creates a new post in a tribe.
 2. **User** calls `createPost(tribeId, content)` on `PostMinter`.
+3. **Backend** receives the `PostCreated(postId, tribeId, creator, content)` event.
+4. **Backend** updates user's points off-chain (e.g., +5 points).
    - **Expectation**:  
-     - Possibly checks if `msg.sender` is in the tribe’s whitelist, or if user owns a Profile NFT, etc. (Depending on your extended logic).
+     - No on-chain state changes except event emission.
    - **Outcome**:  
-     - `nextPostId` increments, returning the new post ID.
-     - `PostCreated(postId, tribeId, creator, content)` event is emitted.
+     - Points are updated in off-chain database.
+     - Event is emitted for tracking.
 
-### Journey 4.2 <a id="journey-42"></a> Create Post Without Permission
-1. **User** does not meet the tribe’s membership or NFT ownership requirements.
-2. **User** attempts to call `createPost(tribeId, content)`.
+### Journey 4.2 <a id="journey-42"></a> Redeeming Points for Collectible
+1. **User** wants to redeem points for a special "Badge" collectible.
+2. **Frontend** checks user's points in off-chain DB.
+3. **Backend** signs redemption payload (user address, collectible type, nonce).
+4. **User** calls `redeemCollectible(collectibleType, signature)`.
    - **Expectation**:  
-     - If your contract enforces checks, revert with an error (e.g., “Not authorized”).
+     - Valid signature required.
+     - Sufficient points in off-chain system.
    - **Outcome**:  
-     - Transaction reverts, no post is created.
+     - NFT is minted to user.
+     - Points deducted off-chain.
+     - `CollectibleMinted` event emitted.
+
+### Journey 4.3 <a id="journey-43"></a> Point Redemption with Signature
+1. **User** has earned points through off-chain activities.
+2. **Backend** generates signature for point redemption.
+3. **User** calls `redeemPoints(points, collectibleType, signature)`.
+   - **Expectation**:  
+     - Signature must be valid and unused.
+     - Points amount must match signature.
+   - **Outcome**:  
+     - Points are redeemed.
+     - `PointsRedeemed` event emitted.
+
+### Journey 4.4 <a id="journey-44"></a> Invalid Point Redemption
+1. **User** attempts to redeem with invalid/used signature.
+2. **User** calls `redeemPoints(points, collectibleType, signature)`.
+   - **Expectation**:  
+     - Transaction reverts with "Invalid signature" or "Signature already used".
+   - **Outcome**:  
+     - No points redeemed.
+     - No state changes.
 
 ---
 
-## 5. Governance & Voting
+## 5. Community Events & Ticketing
 
-### Journey 5.1 <a id="journey-51"></a> Create Proposal
-1. **Tribe admin** or an authorized user calls `createProposal(tribeId, proposalDetails)` on `Voting`.
+### Journey 5.1 <a id="journey-51"></a> Minting Event Tickets
+1. **Organizer** sets up event in database.
+2. **Organizer** configures ticket collectible:
+   ```typescript
+   await collectibleController.setCollectibleData(
+     1001, // Event Ticket Type
+     200,  // Max Supply
+     ethers.parseEther("0.05"), // Price
+     true, // Redeemable
+     futureTimestamp // Expiration
+   );
+   ```
+3. **User** purchases ticket:
    - **Expectation**:  
-     - Possibly only admin or certain token/NFT holders can create proposals.
+     - Must send sufficient payment.
+     - Supply must be available.
    - **Outcome**:  
-     - A `proposalId` is returned and incremented internally.
-     - `ProposalCreated(proposalId, tribeId, msg.sender, proposalDetails)` event is emitted.
+     - Ticket (ERC1155) minted to user.
+     - Payment processed.
+     - `CollectibleMinted` event emitted.
 
-### Journey 5.2 <a id="journey-52"></a> Vote on Proposal
-1. **User** checks if they are eligible to vote (off-chain logic or on-chain check).
-2. **User** calls `vote(proposalId, voteChoice)`.
+### Journey 5.2 <a id="journey-52"></a> Attending an Event
+1. **User** arrives at event venue.
+2. **Organizer** verifies ticket ownership.
+3. **Optional**: Call `redeem(ticketId, 1)` for one-time use.
    - **Expectation**:  
-     - Must be a valid proposal ID.
-     - If user has already voted or is not eligible, revert or skip (depending on logic).
+     - Valid ticket ownership.
+     - Not already redeemed.
    - **Outcome**:  
-     - `voteCount` increments if `voteChoice` is `true`.
-     - `VoteCasted(proposalId, voter, voteChoice)` event is emitted.
+     - Attendance recorded off-chain.
+     - Optional: Ticket marked as used on-chain.
 
-### Journey 5.3 <a id="journey-53"></a> Unauthorized Vote Attempt
-1. **User** tries to vote on a proposal but does not meet eligibility (e.g., no NFT, not in tribe).
-2. **User** calls `vote(proposalId, voteChoice)`.
+### Journey 5.3 <a id="journey-53"></a> Transfer Event Ticket
+1. **User** wants to transfer their ticket to another address.
+2. **User** calls `safeTransferFrom(from, to, eventId, amount, data)`.
    - **Expectation**:  
-     - Transaction reverts, e.g., “Not authorized to vote”.
+     - Can only transfer ticket once.
+     - If already transferred, revert with "Ticket already transferred once".
    - **Outcome**:  
-     - No changes made to proposal state.
+     - Ticket is transferred if allowed.
+     - Transfer is tracked in `hasTransferredTicket`.
+
+### Journey 5.4 <a id="journey-54"></a> Cancel Event
+1. **Organizer** needs to cancel an event.
+2. **Organizer** calls `cancelEvent(eventId)`.
+   - **Expectation**:  
+     - Only event organizer can cancel.
+     - If not organizer, revert with "Not event organizer".
+   - **Outcome**:  
+     - Event is marked as inactive.
+     - No more tickets can be purchased.
+
+---
+
+## 6. Super Communities & Merging
+
+### Journey 6.1 <a id="journey-61"></a> Soft Merge Through Off-Chain Linking
+1. **Admin** wants to merge two tribes.
+2. **Admin** calls `softMerge(tribeId1, tribeId2)`.
+   - **Expectation**:  
+     - Both tribes must be in the same super community.
+     - Tribe1's members are merged into Tribe2.
+   - **Outcome**:  
+     - Tribe1 is marked as inactive.
+     - Tribe2's members are updated to include Tribe1's members.
+     - `TribeMerged(tribeId1, tribeId2)` event is emitted.
+
+### Journey 6.2 <a id="journey-62"></a> ParentTribe Field Assignment
+1. **Admin** assigns a parent tribe to a new tribe.
+2. **Admin** calls `assignParentTribe(tribeId, parentTribeId)`.
+   - **Expectation**:  
+     - Only admin can assign a parent tribe.
+     - If non-admin tries, revert with `Not admin`.
+   - **Outcome**:  
+     - `tribes[tribeId].parentTribe` is updated to `parentTribeId`.
+     - `TribeUpdated(tribeId, newMetadata)` event is emitted.
+
+### Journey 6.3 <a id="journey-63"></a> Add Tribe to Super Community
+1. **Admin** wants to add a tribe to their super community.
+2. **Admin** calls `addTribeToSuperCommunity(superCommunityId, tribeId)`.
+   - **Expectation**:  
+     - Must be super community admin.
+     - Tribe must not be in another super community.
+   - **Outcome**:  
+     - Tribe is added to super community.
+     - `TribeJoinedSuperCommunity(superCommunityId, tribeId)` event is emitted.
+
+### Journey 6.4 <a id="journey-64"></a> Remove Tribe from Super Community
+1. **Admin** or **Tribe Admin** wants to remove a tribe.
+2. **User** calls `removeTribeFromSuperCommunity(superCommunityId, tribeId)`.
+   - **Expectation**:  
+     - Must be super community admin or tribe admin.
+     - Tribe must be in the super community.
+   - **Outcome**:  
+     - Tribe is removed.
+     - `TribeLeftSuperCommunity(superCommunityId, tribeId)` event is emitted.
+
+---
+
+## 7. Concurrency & Scalability
+
+### Journey 7.1 <a id="journey-71"></a> High-Demand Collectible Drop
+1. **Admin** configures limited collectible:
+   ```typescript
+   await collectibleController.setCollectibleData(
+     2002, // Limited Edition Type
+     500,  // Max Supply
+     price,
+     false,
+     0
+   );
+   ```
+2. **Multiple Users** attempt to mint simultaneously.
+   - **Expectation**:  
+     - Supply cap enforced.
+     - First-come-first-served.
+   - **Outcome**:  
+     - Successful mints up to cap.
+     - Later attempts revert.
+
+### Journey 7.2 <a id="journey-72"></a> Multiple Admins Editing Tribe
+1. **Admin A** and **Admin B** edit simultaneously.
+2. **Network** processes in arrival order.
+   - **Expectation**:  
+     - Last-write-wins semantics.
+     - No corrupt state.
+   - **Outcome**:  
+     - Final state reflects last processed tx.
+     - Optional off-chain conflict detection.
+
+---
+
+## 8. Analytics & Insights
+
+### Journey 8.1 <a id="journey-81"></a> Off-Chain Metrics Generation
+1. **Indexer** monitors contract events.
+2. **Backend** processes and stores metrics.
+3. **Frontend** displays analytics.
+   - **Expectation**:  
+     - Accurate event processing.
+     - Real-time updates.
+   - **Outcome**:  
+     - Comprehensive analytics.
+     - No on-chain overhead.
+
+### Journey 8.2 <a id="journey-82"></a> Aggregated Super Community Stats
+1. **Backend** aggregates data from multiple tribes.
+2. **Frontend** displays combined metrics.
+   - **Expectation**:  
+     - Accurate aggregation.
+     - Clear hierarchy display.
+   - **Outcome**:  
+     - Unified community view.
+     - Enhanced insights.
+
+---
+
+## 9. Technical Considerations
+
+### Journey 9.1 <a id="journey-91"></a> Access Control Integration
+1. **Contract** inherits OpenZeppelin `AccessControl`.
+2. **Admin** grants roles post-deployment.
+   - **Expectation**:  
+     - Role checks enforced.
+     - Backward compatibility.
+   - **Outcome**:  
+     - Secure access control.
+     - Minimal refactoring.
+
+### Journey 9.2 <a id="journey-92"></a> Rate Limiting & RBAC
+1. **API Gateway** enforces rate limits.
+2. **Contract** enforces role checks.
+   - **Expectation**:  
+     - Rate limits respected.
+     - Role validation.
+   - **Outcome**:  
+     - Protected endpoints.
+     - Spam prevention.
+
+---
+
+## 10. Edge Cases & Error Handling
+
+### Journey 10.1 <a id="journey-101"></a> Banning a User
+1. **Admin** initiates ban.
+2. **System** implements restrictions:
+   ```typescript
+   // Off-chain
+   await db.setUserStatus(userId, 'BANNED');
+   
+   // On-chain (if needed)
+   await roleManager.revokeRole(COMMUNITY_ROLE, userAddress);
+   ```
+   - **Expectation**:  
+     - User access revoked.
+     - Clean state transition.
+   - **Outcome**:  
+     - Effective ban enforcement.
+     - Minimal contract changes.
+
+### Journey 10.2 <a id="journey-102"></a> Failed Transaction Handling
+1. **User** attempts invalid purchase.
+2. **Contract** reverts cleanly.
+   - **Expectation**:  
+     - No partial state changes.
+     - Clear error message.
+   - **Outcome**:  
+     - Atomic transaction.
+     - User funds preserved.
 
 ---
 
 ## How to Use These Journeys
 
-Each journey outlines a specific set of contract calls, the preconditions, and the expected outcome. You can create test files (e.g., `test/ProfileNFTMinter.test.js`, `test/TribeController.test.js`) and replicate these scenarios in your tests:
+### Unit Testing
+```typescript
+describe("Community Points", () => {
+  it("should redeem points with valid signature", async () => {
+    // Setup
+    const points = 100;
+    const signature = await generateSignature(user, points);
+    
+    // Test
+    await expect(communityPoints.redeemPoints(points, signature))
+      .to.emit(communityPoints, "PointsRedeemed")
+      .withArgs(user.address, points);
+  });
+});
+```
 
-1. **Setup**: Deploy fresh instances of the contracts in a test environment.
-2. **Preconditions**: Mock or set up any necessary state (e.g., add user to a whitelist, set `mintFee`).
-3. **Action**: Call the contract function (e.g., `mintProfileNFT`, `createPost`, `vote`) with relevant parameters.
-4. **Assertion**: Verify logs (`events`), return values, and any updated on-chain state. Ensure the correct revert/require errors are triggered in negative scenarios.
+### Integration Testing
+1. Deploy contracts to test network
+2. Setup backend services
+3. Run full user journeys
+4. Verify both on-chain and off-chain state
+
+### Performance Testing
+1. Simulate concurrent users
+2. Verify system limits
+3. Test recovery scenarios
+
+### Security Testing
+1. Role permission tests
+2. Signature verification
+3. Rate limit effectiveness

@@ -1,10 +1,11 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { ProfileNFTMinter } from "../typechain-types";
+import { ProfileNFTMinter, RoleManager } from "../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 describe("ProfileNFTMinter", function () {
   let profileNFTMinter: ProfileNFTMinter;
+  let roleManager: RoleManager;
   let owner: SignerWithAddress;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
@@ -13,9 +14,18 @@ describe("ProfileNFTMinter", function () {
   beforeEach(async function () {
     [owner, user1, user2] = await ethers.getSigners();
     
+    // Deploy RoleManager first
+    const RoleManager = await ethers.getContractFactory("RoleManager");
+    roleManager = await RoleManager.deploy();
+    await roleManager.waitForDeployment();
+
+    // Deploy ProfileNFTMinter with RoleManager address
     const ProfileNFTMinter = await ethers.getContractFactory("ProfileNFTMinter");
-    profileNFTMinter = await ProfileNFTMinter.deploy(MINT_FEE);
+    profileNFTMinter = await ProfileNFTMinter.deploy(MINT_FEE, await roleManager.getAddress());
     await profileNFTMinter.waitForDeployment();
+
+    // Authorize ProfileNFTMinter to assign FAN_ROLE
+    await roleManager.authorizeFanAssigner(await profileNFTMinter.getAddress());
   });
 
   describe("Journey 1.1: Create Profile NFT", function () {
@@ -32,10 +42,13 @@ describe("ProfileNFTMinter", function () {
       // Wait for the transaction
       const receipt = await tx.wait();
       
-      // Check events
-      const event = receipt?.logs[1]; // Second event is our custom event
-      expect(event?.topics[1]).to.equal(ethers.zeroPadValue(user1.address, 32)); // indexed user
-      expect(event?.topics[2]).to.equal(ethers.zeroPadValue(ethers.toBeHex(0), 32)); // indexed tokenId
+      // Find the ProfileNFTMinted event (it's after the Transfer event)
+      const mintEvent = receipt?.logs.find(
+        log => log.topics[0] === ethers.id("ProfileNFTMinted(address,uint256,string)")
+      );
+      expect(mintEvent).to.not.be.undefined;
+      expect(mintEvent?.topics[1]).to.equal(ethers.zeroPadValue(user1.address, 32)); // indexed user
+      expect(mintEvent?.topics[2]).to.equal(ethers.zeroPadValue(ethers.toBeHex(0), 32)); // indexed tokenId
 
       // Check token ownership
       expect(await profileNFTMinter.ownerOf(0)).to.equal(user1.address);
@@ -43,6 +56,9 @@ describe("ProfileNFTMinter", function () {
       // Check metadata
       expect(await profileNFTMinter.profileMetadata(0, "username")).to.equal(username);
       expect(await profileNFTMinter.profileMetadata(0, "avatarURI")).to.equal(avatarURI);
+
+      // Check that FAN_ROLE was assigned
+      expect(await roleManager.hasRole(await roleManager.FAN_ROLE(), user1.address)).to.be.true;
     });
 
     it("Should revert when minting with insufficient fee", async function () {
@@ -73,6 +89,10 @@ describe("ProfileNFTMinter", function () {
       );
 
       expect(await profileNFTMinter.nextTokenId()).to.equal(2);
+
+      // Check that both users got FAN_ROLE
+      expect(await roleManager.hasRole(await roleManager.FAN_ROLE(), user1.address)).to.be.true;
+      expect(await roleManager.hasRole(await roleManager.FAN_ROLE(), user2.address)).to.be.true;
     });
   });
 
