@@ -2,10 +2,11 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "./RoleManager.sol";
 
-contract EventController is ERC1155 {
+contract EventController is ERC1155Supply {
     using Strings for uint256;
     
     RoleManager public roleManager;
@@ -23,8 +24,8 @@ contract EventController is ERC1155 {
     // eventId => Event
     mapping(uint256 => Event) public events;
     
-    // eventId => (address => bool) to track ticket transfers
-    mapping(uint256 => mapping(address => bool)) public hasTransferredTicket;
+    // eventId => (tokenId => bool) to track if a ticket has been transferred
+    mapping(uint256 => mapping(uint256 => bool)) public ticketTransferred;
     
     event EventCreated(
         uint256 indexed eventId,
@@ -44,6 +45,27 @@ contract EventController is ERC1155 {
         roleManager = RoleManager(_roleManager);
     }
     
+    function _update(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory values
+    ) internal virtual override {
+        // Skip check for minting (from == address(0))
+        // Skip check for burning (to == address(0))
+        if (from != address(0) && to != address(0)) {
+            for (uint256 i = 0; i < ids.length; i++) {
+                require(
+                    !ticketTransferred[ids[i]][ids[i]],
+                    "Ticket already transferred once"
+                );
+                ticketTransferred[ids[i]][ids[i]] = true;
+            }
+        }
+        
+        super._update(from, to, ids, values);
+    }
+
     /**
      * @dev Creates a new event with tickets as ERC1155 tokens
      */
@@ -99,43 +121,6 @@ contract EventController is ERC1155 {
         // Return excess payment
         if (msg.value > eventData.price * amount) {
             payable(msg.sender).transfer(msg.value - (eventData.price * amount));
-        }
-    }
-    
-    /**
-     * @dev Override transfer functions to implement transfer restrictions
-     */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) public virtual override {
-        require(
-            !hasTransferredTicket[id][from],
-            "Ticket already transferred once"
-        );
-        super.safeTransferFrom(from, to, id, amount, data);
-        hasTransferredTicket[id][from] = true;
-    }
-    
-    function safeBatchTransferFrom(
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) public virtual override {
-        for (uint256 i = 0; i < ids.length; i++) {
-            require(
-                !hasTransferredTicket[ids[i]][from],
-                "Ticket already transferred once"
-            );
-        }
-        super.safeBatchTransferFrom(from, to, ids, amounts, data);
-        for (uint256 i = 0; i < ids.length; i++) {
-            hasTransferredTicket[ids[i]][from] = true;
         }
     }
     

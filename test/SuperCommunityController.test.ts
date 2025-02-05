@@ -125,8 +125,9 @@ describe("SuperCommunityController", function () {
 
       // Verify tribe is still in first super community
       const superComm1Tribes = await superCommunityController.getSuperCommunityTribes(0);
-      expect(superComm1Tribes).to.include(1);
-      expect(await superCommunityController.tribeSuperCommunity(1)).to.equal(0);
+      expect(superComm1Tribes.map(t => Number(t))).to.include(1);
+      expect(await superCommunityController.tribeInSuperCommunity(1)).to.be.true;
+      expect(Number(await superCommunityController.tribeSuperCommunity(1))).to.equal(0);
     });
 
     it("Should allow admin to remove tribe", async function () {

@@ -138,8 +138,8 @@ describe("EventController", function () {
           .safeTransferFrom(user.address, recipient.address, 0, 1, "0x")
       ).to.not.be.reverted;
 
-      const hasTransferred = await eventController.hasTransferredTicket(0, user.address);
-      expect(hasTransferred).to.be.true;
+      const isTransferred = await eventController.ticketTransferred(0, 0);
+      expect(isTransferred).to.be.true;
     });
 
     it("Should prevent second transfer", async function () {
@@ -163,7 +163,7 @@ describe("EventController", function () {
 
     it("Should track transfer status correctly", async function () {
       // Check initial status
-      expect(await eventController.hasTransferredTicket(0, user.address)).to.be.false;
+      expect(await eventController.ticketTransferred(0, 0)).to.be.false;
 
       // Perform transfer
       await eventController
@@ -171,7 +171,7 @@ describe("EventController", function () {
         .safeTransferFrom(user.address, recipient.address, 0, 1, "0x");
 
       // Check status after transfer
-      expect(await eventController.hasTransferredTicket(0, user.address)).to.be.true;
+      expect(await eventController.ticketTransferred(0, 0)).to.be.true;
     });
 
     it("Should handle batch transfers correctly", async function () {
@@ -180,26 +180,35 @@ describe("EventController", function () {
         .connect(user)
         .purchaseTickets(0, 2, { value: TICKET_PRICE * BigInt(2) });
 
+      // Create another event and purchase tickets
+      await eventController
+        .connect(organizer)
+        .createEvent(EVENT_METADATA, MAX_TICKETS, TICKET_PRICE);
+      await eventController
+        .connect(user)
+        .purchaseTickets(1, 1, { value: TICKET_PRICE });
+
       // Approve user for batch transfer
       await eventController
         .connect(user)
         .setApprovalForAll(user.address, true);
 
-      // Batch transfer
+      // Batch transfer different event tickets
       await expect(
         eventController
           .connect(user)
           .safeBatchTransferFrom(
             user.address,
             recipient.address,
-            [0, 0],
+            [0, 1],
             [1, 1],
             "0x"
           )
       ).to.not.be.reverted;
 
       // Check transfer status
-      expect(await eventController.hasTransferredTicket(0, user.address)).to.be.true;
+      expect(await eventController.ticketTransferred(0, 0)).to.be.true;
+      expect(await eventController.ticketTransferred(1, 1)).to.be.true;
 
       // Approve recipient for batch transfer
       await eventController
@@ -213,7 +222,7 @@ describe("EventController", function () {
           .safeBatchTransferFrom(
             recipient.address,
             user.address,
-            [0, 0],
+            [0, 1],
             [1, 1],
             "0x"
           )

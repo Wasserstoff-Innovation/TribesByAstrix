@@ -20,6 +20,8 @@ contract SuperCommunityController {
     mapping(uint256 => SuperCommunity) public superCommunities;
     // tribeId => superCommunityId
     mapping(uint256 => uint256) public tribeSuperCommunity;
+    // tribeId => bool to track if tribe is in any super community
+    mapping(uint256 => bool) public tribeInSuperCommunity;
     
     uint256 public nextSuperCommunityId;
     
@@ -69,7 +71,9 @@ contract SuperCommunityController {
         
         // Link tribes to super community
         for (uint256 i = 0; i < initialTribeIds.length; i++) {
+            require(!tribeInSuperCommunity[initialTribeIds[i]], "Tribe already in super community");
             tribeSuperCommunity[initialTribeIds[i]] = superCommunityId;
+            tribeInSuperCommunity[initialTribeIds[i]] = true;
             emit TribeJoinedSuperCommunity(superCommunityId, initialTribeIds[i]);
         }
         
@@ -84,10 +88,11 @@ contract SuperCommunityController {
         SuperCommunity storage superComm = superCommunities[superCommunityId];
         require(superComm.active, "Super community not active");
         require(superComm.admin == msg.sender, "Not admin");
-        require(tribeSuperCommunity[tribeId] == 0, "Tribe already in super community");
+        require(!tribeInSuperCommunity[tribeId], "Tribe already in super community");
         
         superComm.memberTribeIds.push(tribeId);
         tribeSuperCommunity[tribeId] = superCommunityId;
+        tribeInSuperCommunity[tribeId] = true;
         
         emit TribeJoinedSuperCommunity(superCommunityId, tribeId);
     }
@@ -116,6 +121,7 @@ contract SuperCommunityController {
         }
         
         delete tribeSuperCommunity[tribeId];
+        tribeInSuperCommunity[tribeId] = false;
         
         emit TribeLeftSuperCommunity(superCommunityId, tribeId);
     }
