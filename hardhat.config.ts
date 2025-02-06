@@ -26,6 +26,12 @@ const config: HardhatUserConfig = {
     localhost: {
       url: "http://127.0.0.1:8545"
     },
+    monadDevnet: {
+      url: "https://rpc-devnet.monadinfra.com/rpc/3fe540e310bbb6ef0b9f16cd23073b0a",
+      chainId: 20143,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      gasPrice: 52000000000 // 52 gwei
+    },
     // Add other networks as needed
     // Example:
     // goerli: {

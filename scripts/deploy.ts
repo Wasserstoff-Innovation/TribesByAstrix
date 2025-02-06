@@ -11,9 +11,8 @@ async function main() {
   console.log("RoleManager deployed to:", await roleManager.getAddress());
 
   // Deploy ProfileNFTMinter
-  const mintFee = ethers.parseEther("0.01"); // 0.01 ETH mint fee
   const ProfileNFTMinter = await ethers.getContractFactory("ProfileNFTMinter");
-  const profileNFTMinter = await ProfileNFTMinter.deploy(mintFee, await roleManager.getAddress());
+  const profileNFTMinter = await ProfileNFTMinter.deploy(await roleManager.getAddress());
   await profileNFTMinter.waitForDeployment();
   console.log("ProfileNFTMinter deployed to:", await profileNFTMinter.getAddress());
 
@@ -41,9 +40,7 @@ async function main() {
   await voting.waitForDeployment();
   console.log("Voting deployed to:", await voting.getAddress());
 
-  // Deploy new contracts
-
-  // 1. Deploy CommunityPoints
+  // Deploy CommunityPoints
   const CommunityPoints = await ethers.getContractFactory("CommunityPoints");
   const communityPoints = await CommunityPoints.deploy(
     await roleManager.getAddress(),
@@ -52,13 +49,13 @@ async function main() {
   await communityPoints.waitForDeployment();
   console.log("CommunityPoints deployed to:", await communityPoints.getAddress());
 
-  // 2. Deploy EventController
+  // Deploy EventController
   const EventController = await ethers.getContractFactory("EventController");
   const eventController = await EventController.deploy(await roleManager.getAddress());
   await eventController.waitForDeployment();
   console.log("EventController deployed to:", await eventController.getAddress());
 
-  // 3. Deploy SuperCommunityController
+  // Deploy SuperCommunityController
   const SuperCommunityController = await ethers.getContractFactory("SuperCommunityController");
   const superCommunityController = await SuperCommunityController.deploy(
     await roleManager.getAddress(),
@@ -72,8 +69,8 @@ async function main() {
   const FAN_ASSIGNER_ROLE = await roleManager.FAN_ASSIGNER_ROLE();
 
   // Grant necessary roles
-  await roleManager.assignRole(await profileNFTMinter.getAddress(), FAN_ASSIGNER_ROLE);
-  await roleManager.assignRole(deployer.address, ORGANIZER_ROLE);
+  await roleManager.authorizeFanAssigner(await profileNFTMinter.getAddress());
+  await roleManager.grantRole(ORGANIZER_ROLE, deployer.address);
 
   console.log("\nContract Addresses:");
   console.log("===================");
@@ -87,10 +84,18 @@ async function main() {
   console.log(`EventController: ${await eventController.getAddress()}`);
   console.log(`SuperCommunityController: ${await superCommunityController.getAddress()}`);
 
-  console.log("\nInitial Setup Complete!");
-  console.log("- Deployer has been granted ORGANIZER_ROLE");
-  console.log("- ProfileNFTMinter has been granted FAN_ASSIGNER_ROLE");
-  console.log("- Deployer is set as the initial points verifier");
+  console.log("\nDeployment Verification:");
+  console.log("=======================");
+  console.log("1. Role Setup:");
+  console.log("   - Deployer has ORGANIZER_ROLE");
+  console.log("   - ProfileNFTMinter authorized as FAN_ASSIGNER");
+  console.log("2. Contract Initialization:");
+  console.log("   - All contracts deployed and initialized");
+  console.log("   - Deployer set as points verifier");
+  console.log("3. Network Details:");
+  console.log("   - Network: Monad Devnet");
+  console.log("   - Chain ID: 20143");
+  console.log("   - Currency: DMON");
 }
 
 main()

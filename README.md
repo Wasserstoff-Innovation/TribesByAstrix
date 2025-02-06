@@ -169,10 +169,34 @@ npx hardhat compile
 
 # Run tests
 npx hardhat test
-
-# Deploy
-npx hardhat run scripts/deploy.ts --network <network_name>
 ```
+
+### Deployment
+```bash
+# Set up environment variables in .env
+PRIVATE_KEY=your_private_key_here
+
+# Deploy to Monad Devnet
+npx hardhat run scripts/deploy.ts --network monadDevnet
+```
+
+#### Network Details
+- **Network Name**: Monad Devnet
+- **Chain ID**: 20143
+- **Currency Symbol**: DMON
+- **RPC URL**: rpc-devnet.monadinfra.com/rpc/api-key
+- **Gas Price**: 52 GWEI
+
+#### Deployment Order
+1. Deploy RoleManager
+2. Deploy TribeController
+3. Deploy SuperCommunityController (requires RoleManager and TribeController addresses)
+4. Deploy EventController (requires RoleManager address)
+5. Deploy CommunityPoints (requires RoleManager address)
+6. Deploy remaining contracts with their dependencies
+
+#### Post Deployment
+After deployment, verify the contract addresses and update them in your frontend configuration.
 
 ### Testing
 ```bash
@@ -242,74 +266,177 @@ MIT
 
 ## Test Coverage Summary
 
-### Test Status (as of latest run)
-- Total Tests: 84
-- Passing: 84 (100%)
+### Test Status (Latest Run)
+- Total Tests: 93
+- Passing: 93 (100%)
 - Failing: 0 (0%)
 
-### Passing Test Categories
-✅ Profile Creation & Updates
-- Profile NFT minting with fee validation
-- Profile metadata updates
-- Access control for updates
-
-✅ Community Points
-- Point redemption with signature validation
-- Replay attack prevention
-- Admin role management
-
-✅ Collectible Management
-- Whitelist-based minting
-- Concurrent minting handling
-- Access verification
-
-✅ Event Management
-- Event creation and cancellation
-- Ticket purchasing with refunds
-- Transfer restrictions implemented
-- Batch transfer handling
-
-✅ Tribe Management
-- Tribe creation and updates
-- Whitelist permissions
-- Admin controls
-
-✅ Super Community Integration
-- Tribe-to-community mapping
-- Multiple community membership validation
-- Admin and tribe removal permissions
-
-✅ Voting System
-- Proposal creation
-- Vote tracking
-- Access control
-
-### Recent Changes & Improvements
-1. Event Ticket Transfers
-   - Implemented token ID-based transfer tracking
-   - Fixed batch transfer restrictions
-   - Added proper transfer status validation
-
-2. Super Community Integration
-   - Fixed tribe membership validation
-   - Improved community mapping checks
-   - Added explicit tribe status tracking
-
-3. Test Coverage
-   - Added comprehensive batch transfer tests
-   - Expanded super community integration tests
-   - Improved error message consistency
-
 ### Test Categories Coverage
-- Core Functionality: 100%
-- Access Control: 100%
-- Integration Tests: 100%
-- Concurrency Tests: 100%
-- Edge Cases: 100%
+1. Core Functionality
+   - Profile Creation & Management: ✅ 
+   - Username Validation & Uniqueness: ✅
+   - Role-Based Access Control: ✅
+   - Token Management: ✅
 
-To run the tests:
+2. Community Features
+   - Tribe Management: ✅
+   - Super Communities: ✅
+   - Events & Ticketing: ✅
+   - Points System: ✅
+
+3. Content & Governance
+   - Post Creation: ✅
+   - Voting System: ✅
+   - Collectibles: ✅
+
+4. Security & Scalability
+   - Concurrency Handling: ✅
+   - Access Control: ✅
+   - Data Validation: ✅
+
+5. Super Community Analytics: ✅
+   - Should track all member tribes: ✅
+   - Should track tribe additions and removals: ✅
+   - Should maintain accurate tribe-to-community mapping: ✅
+   - Should track metadata updates: ✅
+   - Should maintain admin access control: ✅
+
+6. Collectible Management: ✅
+   - Should allow whitelisted user to mint collectible: ✅
+   - Should revert when non-whitelisted user tries to mint: ✅
+   - Should verify preconditions correctly: ✅
+   - Should generate unique session keys: ✅
+   - Should generate different keys for different parameters: ✅
+   - Should emit WhitelistUpdated event: ✅
+
+7. Community Points: ✅
+   - Should allow point redemption with valid signature: ✅
+   - Should reject redemption with invalid signature: ✅
+   - Should prevent replay attacks: ✅
+   - Should allow admin to update verifier: ✅
+   - Should prevent non-admin from updating verifier: ✅
+
+8. Event Management: ✅
+   - Should allow organizer to create event: ✅
+   - Should prevent non-organizer from creating event: ✅
+   - Should allow user to purchase tickets: ✅
+   - Should refund excess payment: ✅
+   - Should prevent purchase when not enough tickets available: ✅
+   - Should prevent purchase with insufficient payment: ✅
+   - Should allow first transfer: ✅
+   - Should prevent second transfer: ✅
+   - Should track transfer status correctly: ✅
+   - Should handle batch transfers correctly: ✅
+   - Should allow organizer to update metadata: ✅
+   - Should prevent non-organizer from updating metadata: ✅
+   - Should allow organizer to cancel event: ✅
+   - Should prevent ticket purchase after cancellation: ✅
+
+9. Profile Management: ✅
+   - Should allow creating a profile: ✅
+   - Should prevent duplicate usernames: ✅
+   - Should allow owner to update profile metadata: ✅
+   - Should prevent non-owner from updating metadata: ✅
+   - Should correctly track username availability: ✅
+   - Should handle username case sensitivity correctly: ✅
+   - Should validate username format: ✅
+   - Should return correct profile data: ✅
+   - Should return correct token ID by username: ✅
+   - Should handle queries for non-existent profiles: ✅
+
+10. Role Management: ✅
+    - Should assign roles correctly: ✅
+    - Should remove roles correctly: ✅
+    - Should only allow admin to assign roles: ✅
+    - Should check for any role correctly: ✅
+    - Should check for all roles correctly: ✅
+    - Should get user roles correctly: ✅
+    - Should allow admin to assign fan role: ✅
+    - Should not allow non-admin to assign fan role: ✅
+
+11. Voting: ✅
+    - Should allow creating a proposal: ✅
+    - Should increment proposalId after each creation: ✅
+    - Should allow voting on proposal: ✅
+    - Should track vote counts correctly: ✅
+    - Should emit vote event regardless of vote choice: ✅
+    - Should only count positive votes: ✅
+
+### Deployment Instructions
+
+1. **Environment Setup**
+```bash
+# Install dependencies
+npm install
+
+# Create .env file
+cp .env.example .env
+
+# Add your private key to .env
+PRIVATE_KEY=your_private_key_here
+```
+
+2. **Compile Contracts**
+```bash
+npx hardhat compile
+```
+
+3. **Run Tests**
 ```bash
 npx hardhat test
 ```
 
-Note: All tests are now passing. The system has been thoroughly tested and is ready for review.
+4. **Deploy to Monad Devnet**
+```bash
+npx hardhat run scripts/deploy.ts --network monadDevnet
+```
+
+### Network Configuration
+```javascript
+{
+  chainId: "0x4E9F", // 20143
+  chainName: "Monad Devnet",
+  nativeCurrency: {
+    name: "DMON",
+    symbol: "DMON",
+    decimals: 18
+  },
+  rpcUrls: ["https://rpc-devnet.monadinfra.com/rpc/3fe540e310bbb6ef0b9f16cd23073b0a"],
+  blockExplorerUrls: ["https://explorer-devnet.monadinfra.com"]
+}
+```
+
+### Deployment Order & Dependencies
+1. RoleManager
+2. ProfileNFTMinter (requires RoleManager)
+3. TribeController
+4. CollectibleController
+5. PostMinter
+6. Voting
+7. CommunityPoints (requires RoleManager)
+8. EventController (requires RoleManager)
+9. SuperCommunityController (requires RoleManager and TribeController)
+
+### Post-Deployment Verification
+1. Role Setup
+   - Verify deployer has ORGANIZER_ROLE
+   - Verify ProfileNFTMinter is authorized as FAN_ASSIGNER
+
+2. Contract Initialization
+   - All contracts deployed successfully
+   - All contract dependencies resolved
+   - Initial roles and permissions set
+
+3. Network Verification
+   - Connected to Monad Devnet
+   - Correct chain ID (20143)
+   - Gas price set to 52 GWEI
+
+### Contract Interactions
+After deployment, you can interact with the contracts using the following steps:
+1. Create a profile using ProfileNFTMinter
+2. Create or join tribes using TribeController
+3. Create posts, participate in events, and earn points
+4. Create super communities to group tribes together
+
+For detailed integration instructions, see [FRONTEND_INTEGRATION.md](./FRONTEND_INTEGRATION.md)
