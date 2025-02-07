@@ -23,11 +23,17 @@ describe("TribeController", function () {
       const tribeName = "Test Tribe";
       const tribeMetadata = "ipfs://QmTribeMetadata";
       const whitelist = [user1.address, user2.address];
+      const joinType = 0; // PUBLIC
+      const entryFee = 0;
+      const collectibleRequirement = ethers.ZeroAddress;
 
       const tx = await tribeController.connect(user1).createTribe(
         tribeName,
         tribeMetadata,
-        whitelist
+        whitelist,
+        joinType,
+        entryFee,
+        collectibleRequirement
       );
 
       const receipt = await tx.wait();
@@ -47,10 +53,14 @@ describe("TribeController", function () {
       const storedWhitelist = await tribeController.getTribeWhitelist(0);
       expect(storedWhitelist).to.deep.equal(whitelist);
 
-      // Check whitelist status
-      expect(await tribeController.isAddressWhitelisted(0, user1.address)).to.be.true;
-      expect(await tribeController.isAddressWhitelisted(0, user2.address)).to.be.true;
-      expect(await tribeController.isAddressWhitelisted(0, user3.address)).to.be.false;
+      // Check tribe config
+      const config = await tribeController.getTribeConfig(0);
+      expect(config.joinType).to.equal(joinType);
+      expect(config.entryFee).to.equal(entryFee);
+      expect(config.collectibleRequirement).to.equal(collectibleRequirement);
+
+      // Check member status
+      expect(await tribeController.getMemberStatus(0, user1.address)).to.equal(1); // ACTIVE
     });
 
     it("Should increment tribeId after each creation", async function () {
@@ -58,14 +68,20 @@ describe("TribeController", function () {
       await tribeController.connect(user1).createTribe(
         "Tribe 1",
         "ipfs://metadata1",
-        [user1.address]
+        [user1.address],
+        0, // PUBLIC
+        0,
+        ethers.ZeroAddress
       );
 
       // Create second tribe
       await tribeController.connect(user2).createTribe(
         "Tribe 2",
         "ipfs://metadata2",
-        [user2.address]
+        [user2.address],
+        0, // PUBLIC
+        0,
+        ethers.ZeroAddress
       );
 
       expect(await tribeController.nextTribeId()).to.equal(2);
@@ -78,7 +94,10 @@ describe("TribeController", function () {
       await tribeController.connect(user1).createTribe(
         "Test Tribe",
         "ipfs://QmInitialMetadata",
-        [user1.address, user2.address]
+        [user1.address, user2.address],
+        0, // PUBLIC
+        0,
+        ethers.ZeroAddress
       );
     });
 
@@ -97,7 +116,6 @@ describe("TribeController", function () {
       
       // Check events
       const updateEvent = receipt?.logs[0];
-      const whitelistEvent = receipt?.logs[1];
       expect(updateEvent?.topics[1]).to.equal(ethers.zeroPadValue(ethers.toBeHex(tribeId), 32)); // indexed tribeId
 
       // Check updated tribe data
@@ -107,11 +125,6 @@ describe("TribeController", function () {
       // Check updated whitelist
       const storedWhitelist = await tribeController.getTribeWhitelist(tribeId);
       expect(storedWhitelist).to.deep.equal(newWhitelist);
-
-      // Check whitelist status
-      expect(await tribeController.isAddressWhitelisted(tribeId, user1.address)).to.be.true;
-      expect(await tribeController.isAddressWhitelisted(tribeId, user2.address)).to.be.true;
-      expect(await tribeController.isAddressWhitelisted(tribeId, user3.address)).to.be.true;
     });
 
     it("Should revert when non-admin tries to update tribe", async function () {
@@ -123,44 +136,94 @@ describe("TribeController", function () {
         )
       ).to.be.revertedWith("Not tribe admin");
     });
+
+    it("Should allow admin to update joining criteria", async function () {
+      const tribeId = 0;
+      const newJoinType = 1; // PRIVATE
+      const newEntryFee = ethers.parseEther("0.1");
+      const newCollectibleRequirement = ethers.ZeroAddress;
+
+      await expect(tribeController.connect(user1).updateTribeJoiningCriteria(
+        tribeId,
+        newJoinType,
+        newEntryFee,
+        newCollectibleRequirement
+      )).to.not.be.reverted;
+
+      const config = await tribeController.getTribeConfig(tribeId);
+      expect(config.joinType).to.equal(newJoinType);
+      expect(config.entryFee).to.equal(newEntryFee);
+      expect(config.collectibleRequirement).to.equal(newCollectibleRequirement);
+    });
   });
 
-  describe("Journey 2.3: Check Whitelist Permissions", function () {
+  describe("Journey 2.3: Member Management", function () {
+    let publicTribeId: number;
+    let privateTribeId: number;
+
     beforeEach(async function () {
-      // Create a tribe with specific whitelist
+      // Create public tribe
       await tribeController.connect(user1).createTribe(
-        "Whitelisted Tribe",
+        "Public Tribe",
         "ipfs://QmMetadata",
-        [user1.address, user2.address]
-      );
-    });
-
-    it("Should correctly report whitelist status", async function () {
-      // Check whitelisted users
-      expect(await tribeController.isAddressWhitelisted(0, user1.address)).to.be.true;
-      expect(await tribeController.isAddressWhitelisted(0, user2.address)).to.be.true;
-      
-      // Check non-whitelisted user
-      expect(await tribeController.isAddressWhitelisted(0, user3.address)).to.be.false;
-    });
-
-    it("Should allow admin to update whitelist", async function () {
-      const newWhitelist = [user1.address, user3.address]; // Remove user2, add user3
-      
-      await tribeController.connect(user1).updateTribe(
+        [user1.address],
+        0, // PUBLIC
         0,
-        "ipfs://QmMetadata",
-        newWhitelist
+        ethers.ZeroAddress
       );
+      publicTribeId = 0;
 
-      // Check updated whitelist
-      const storedWhitelist = await tribeController.getTribeWhitelist(0);
-      expect(storedWhitelist).to.deep.equal(newWhitelist);
+      // Create private tribe
+      await tribeController.connect(user1).createTribe(
+        "Private Tribe",
+        "ipfs://QmMetadata",
+        [user1.address],
+        1, // PRIVATE
+        ethers.parseEther("0.1"),
+        ethers.ZeroAddress
+      );
+      privateTribeId = 1;
+    });
 
-      // Verify whitelist status
-      expect(await tribeController.isAddressWhitelisted(0, user1.address)).to.be.true;
-      expect(await tribeController.isAddressWhitelisted(0, user2.address)).to.be.false;
-      expect(await tribeController.isAddressWhitelisted(0, user3.address)).to.be.true;
+    it("Should allow instant join for public tribes", async function () {
+      await expect(tribeController.connect(user2).joinTribe(publicTribeId))
+        .to.not.be.reverted;
+      
+      expect(await tribeController.getMemberStatus(publicTribeId, user2.address))
+        .to.equal(1); // ACTIVE
+    });
+
+    it("Should require approval for private tribes", async function () {
+      await expect(tribeController.connect(user2).requestToJoinTribe(privateTribeId))
+        .to.be.revertedWith("Insufficient entry fee");
+
+      await expect(tribeController.connect(user2).requestToJoinTribe(privateTribeId, {
+        value: ethers.parseEther("0.1")
+      })).to.not.be.reverted;
+      
+      expect(await tribeController.getMemberStatus(privateTribeId, user2.address))
+        .to.equal(0); // PENDING
+    });
+
+    it("Should allow admin to manage members", async function () {
+      // Request to join
+      await tribeController.connect(user2).requestToJoinTribe(privateTribeId, {
+        value: ethers.parseEther("0.1")
+      });
+
+      // Approve member
+      await expect(tribeController.connect(user1).approveMember(privateTribeId, user2.address))
+        .to.not.be.reverted;
+      
+      expect(await tribeController.getMemberStatus(privateTribeId, user2.address))
+        .to.equal(1); // ACTIVE
+
+      // Ban member
+      await expect(tribeController.connect(user1).banMember(privateTribeId, user2.address))
+        .to.not.be.reverted;
+      
+      expect(await tribeController.getMemberStatus(privateTribeId, user2.address))
+        .to.equal(2); // BANNED
     });
   });
 }); 

@@ -46,7 +46,10 @@ describe("SuperCommunityController", function () {
     await tribeController.connect(tribeAdmin).createTribe(
       TRIBE_NAME,
       TRIBE_METADATA,
-      [user.address] // whitelist
+      [user.address],
+      0, // PUBLIC
+      0,
+      ethers.ZeroAddress
     );
   });
 
@@ -93,7 +96,10 @@ describe("SuperCommunityController", function () {
       await tribeController.connect(tribeAdmin).createTribe(
         "Second Tribe",
         TRIBE_METADATA,
-        [user.address]
+        [user.address],
+        0, // PUBLIC
+        0,
+        ethers.ZeroAddress
       );
     });
 
@@ -179,7 +185,10 @@ describe("SuperCommunityController", function () {
       await tribeController.connect(tribeAdmin).createTribe(
         "New Tribe",
         TRIBE_METADATA,
-        [owner.address] // different whitelist
+        [owner.address],
+        0, // PUBLIC
+        0,
+        ethers.ZeroAddress
       );
 
       // Add new tribe to super community
@@ -204,14 +213,20 @@ describe("SuperCommunityController", function () {
       await tribeController.connect(tribeAdmin).createTribe(
         "Tribe 1",
         TRIBE_METADATA,
-        [user.address]
+        [user.address],
+        0, // PUBLIC
+        0,
+        ethers.ZeroAddress
       );
       tribe1Id = 0;
 
       await tribeController.connect(tribeAdmin).createTribe(
         "Tribe 2",
         TRIBE_METADATA,
-        [user.address]
+        [user.address],
+        0, // PUBLIC
+        0,
+        ethers.ZeroAddress
       );
       tribe2Id = 1;
     });
@@ -263,7 +278,10 @@ describe("SuperCommunityController", function () {
       await tribeController.connect(tribeAdmin).createTribe(
         TRIBE_NAME,
         TRIBE_METADATA,
-        [user.address]
+        [user.address],
+        0, // PUBLIC
+        0,
+        ethers.ZeroAddress
       );
       tribeId = 0;
 
@@ -376,6 +394,18 @@ describe("SuperCommunityController", function () {
           "New Metadata"
         )
       ).to.be.revertedWith("Not admin");
+    });
+  });
+
+  describe("Community Data Retrieval", function () {
+    it("Should retrieve community data correctly", async function () {
+      // Create a super community
+      await superCommunityController.connect(organizer).createSuperCommunity("Test Community", "ipfs://metadata", []);
+      
+      // Fetch the community data
+      const community = await superCommunityController.superCommunities(0);
+      expect(community.name).to.equal("Test Community");
+      expect(community.metadata).to.equal("ipfs://metadata");
     });
   });
 }); 

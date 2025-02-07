@@ -1,128 +1,143 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { CollectibleController } from "../typechain-types";
+import { CollectibleController, RoleManager, TribeController, PointSystem } from "../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { EventLog, Log } from "ethers";
 
 describe("CollectibleController", function () {
   let collectibleController: CollectibleController;
+  let roleManager: RoleManager;
+  let tribeController: TribeController;
+  let pointSystem: PointSystem;
   let owner: SignerWithAddress;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
-  const COLLECTIBLE_TYPE = 1;
+  let tribeId: number;
 
   beforeEach(async function () {
     [owner, user1, user2] = await ethers.getSigners();
     
+    // Deploy RoleManager
+    const RoleManager = await ethers.getContractFactory("RoleManager");
+    roleManager = await RoleManager.deploy();
+    await roleManager.waitForDeployment();
+
+    // Deploy TribeController
+    const TribeController = await ethers.getContractFactory("TribeController");
+    tribeController = await TribeController.deploy();
+    await tribeController.waitForDeployment();
+
+    // Deploy PointSystem
+    const PointSystem = await ethers.getContractFactory("PointSystem");
+    pointSystem = await PointSystem.deploy(
+      await roleManager.getAddress(),
+      await tribeController.getAddress()
+    );
+    await pointSystem.waitForDeployment();
+
+    // Deploy CollectibleController with required arguments
     const CollectibleController = await ethers.getContractFactory("CollectibleController");
-    collectibleController = await CollectibleController.deploy();
+    collectibleController = await CollectibleController.deploy(
+      await roleManager.getAddress(),
+      await tribeController.getAddress()
+    );
     await collectibleController.waitForDeployment();
+
+    // Set PointSystem in CollectibleController
+    await collectibleController.setPointSystem(await pointSystem.getAddress());
+
+    // Create a test tribe with user1 as admin
+    await tribeController.connect(user1).createTribe(
+      "Test Tribe",
+      "ipfs://metadata",
+      [],
+      0, // PUBLIC
+      0,
+      ethers.ZeroAddress
+    );
+    tribeId = 0;
+
+    // Add user2 as member
+    await tribeController.connect(user2).joinTribe(tribeId);
   });
 
-  describe("Journey 3.1: Mint Collectible (Whitelisted)", function () {
+  describe("Collectible Creation", function () {
+    it("Should create a collectible successfully", async function () {
+      const name = "Test Collectible";
+      const symbol = "TEST";
+      const metadataURI = "ipfs://test";
+      const maxSupply = 100n;
+      const price = ethers.parseEther("0.1");
+      const pointsRequired = 50n;
+
+      await expect(collectibleController.connect(user1).createCollectible(
+        tribeId,
+        name,
+        symbol,
+        metadataURI,
+        maxSupply,
+        price,
+        pointsRequired
+      )).to.emit(collectibleController, "CollectibleCreated");
+
+      const collectibleId = 0;
+      const collectible = await collectibleController.getCollectible(collectibleId);
+      
+      expect(collectible.name).to.equal(name);
+      expect(collectible.symbol).to.equal(symbol);
+      expect(collectible.metadataURI).to.equal(metadataURI);
+      expect(collectible.maxSupply).to.equal(maxSupply);
+      expect(collectible.price).to.equal(price);
+      expect(collectible.pointsRequired).to.equal(pointsRequired);
+    });
+  });
+
+  describe("Collectible Claiming", function () {
+    let collectibleId: number;
+
     beforeEach(async function () {
-      // Add user1 to whitelist for testing
-      await collectibleController.setWhitelistStatus(COLLECTIBLE_TYPE, user1.address, true);
-    });
-
-    it("Should allow whitelisted user to mint collectible", async function () {
-      const tx = await collectibleController.connect(user1).mintCollectible(COLLECTIBLE_TYPE);
+      // Create a test collectible
+      const tx = await collectibleController.connect(user1).createCollectible(
+        tribeId,
+        "Test Collectible",
+        "TEST",
+        "ipfs://test",
+        100n,
+        ethers.parseEther("0.1"),
+        50n
+      );
       const receipt = await tx.wait();
-      
-      // Check event
-      const event = receipt?.logs[0];
-      expect(event?.topics[1]).to.equal(ethers.zeroPadValue(user1.address, 32)); // indexed user
-      // collectibleType and tokenId are not indexed, so they are in the data field
-    });
-  });
-
-  describe("Journey 3.2: Mint Collectible (Not Whitelisted)", function () {
-    it("Should revert when non-whitelisted user tries to mint", async function () {
-      await expect(
-        collectibleController.connect(user2).mintCollectible(COLLECTIBLE_TYPE)
-      ).to.be.revertedWith("Preconditions not met");
-    });
-
-    it("Should verify preconditions correctly", async function () {
-      // Check non-whitelisted user
-      expect(await collectibleController.verifyPreconditionsForPurchase(user2.address, COLLECTIBLE_TYPE))
-        .to.be.false;
-
-      // Add user1 to whitelist and check again
-      await collectibleController.setWhitelistStatus(COLLECTIBLE_TYPE, user1.address, true);
-      expect(await collectibleController.verifyPreconditionsForPurchase(user1.address, COLLECTIBLE_TYPE))
-        .to.be.true;
-    });
-  });
-
-  describe("Journey 3.3: Verify Access & Generate Session Key", function () {
-    it("Should generate unique session keys", async function () {
-      const nftContract = "0x1234567890123456789012345678901234567890";
-      const tokenId = 1;
-      const signature = ethers.randomBytes(32);
-
-      const tx = await collectibleController.verifyAccessAndGenerateSessionKey(
-        user1.address,
-        nftContract,
-        tokenId,
-        signature
+      const event = receipt?.logs.find((log: Log | EventLog): log is EventLog => 
+        log instanceof EventLog && log.eventName === "CollectibleCreated"
       );
+      collectibleId = event ? Number(event.args[0]) : 0;
 
-      const receipt = await tx.wait();
-      
-      // Check event
-      const event = receipt?.logs[0];
-      expect(event?.topics[1]).to.equal(ethers.zeroPadValue(user1.address, 32)); // indexed user
-
-      // Generate the same key for comparison
-      const expectedKey = ethers.keccak256(
-        ethers.solidityPacked(
-          ["address", "address", "uint256", "bytes"],
-          [user1.address, nftContract, tokenId, signature]
-        )
+      // Award points to user2
+      await pointSystem.connect(user1).awardPoints(
+        tribeId,
+        user2.address,
+        100n,
+        ethers.keccak256(ethers.toUtf8Bytes("TEST"))
       );
-
-      // Extract session key from event
-      const sessionKey = event?.topics[2];
-      expect(sessionKey).to.equal(expectedKey);
     });
 
-    it("Should generate different keys for different parameters", async function () {
-      const nftContract = "0x1234567890123456789012345678901234567890";
-      const tokenId = 1;
-      const signature1 = ethers.randomBytes(32);
-      const signature2 = ethers.randomBytes(32);
+    it("Should allow claiming a collectible with correct payment", async function () {
+      await expect(collectibleController.connect(user2).claimCollectible(
+        tribeId,
+        collectibleId,
+        { value: ethers.parseEther("0.1") }
+      )).to.emit(collectibleController, "CollectibleClaimed")
+        .withArgs(tribeId, collectibleId, user2.address);
 
-      // Generate first key
-      const tx1 = await collectibleController.verifyAccessAndGenerateSessionKey(
-        user1.address,
-        nftContract,
-        tokenId,
-        signature1
-      );
-      const receipt1 = await tx1.wait();
-      const sessionKey1 = receipt1?.logs[0].topics[2];
-
-      // Generate second key with different signature
-      const tx2 = await collectibleController.verifyAccessAndGenerateSessionKey(
-        user1.address,
-        nftContract,
-        tokenId,
-        signature2
-      );
-      const receipt2 = await tx2.wait();
-      const sessionKey2 = receipt2?.logs[0].topics[2];
-
-      // Keys should be different
-      expect(sessionKey1).to.not.equal(sessionKey2);
+      expect(await collectibleController.balanceOf(user2.address, collectibleId)).to.equal(1n);
     });
 
-    it("Should emit WhitelistUpdated event", async function () {
-      const tx = await collectibleController.setWhitelistStatus(COLLECTIBLE_TYPE, user1.address, true);
-      const receipt = await tx.wait();
-      
-      const event = receipt?.logs[0];
-      expect(event?.topics[1]).to.equal(ethers.zeroPadValue(ethers.toBeHex(COLLECTIBLE_TYPE), 32)); // indexed collectibleType
-      expect(event?.topics[2]).to.equal(ethers.zeroPadValue(user1.address, 32)); // indexed user
+    it("Should prevent claiming with insufficient payment", async function () {
+      await expect(collectibleController.connect(user2).claimCollectible(
+        tribeId,
+        collectibleId,
+        { value: ethers.parseEther("0.05") }
+      )).to.be.revertedWith("Insufficient payment");
     });
   });
 }); 

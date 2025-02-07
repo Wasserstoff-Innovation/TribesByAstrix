@@ -1,14 +1,16 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { CollectibleController, RoleManager } from "../typechain-types";
+import { CollectibleController, RoleManager, TribeController } from "../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { EventLog, Log } from "ethers";
 
 describe("Concurrency & Scalability Tests", function () {
   let collectibleController: CollectibleController;
   let roleManager: RoleManager;
+  let tribeController: TribeController;
   let owner: SignerWithAddress;
   let users: SignerWithAddress[];
-  const COLLECTIBLE_TYPE = 1;
+  let tribeId: number;
 
   beforeEach(async function () {
     [owner, ...users] = await ethers.getSigners();
@@ -18,98 +20,120 @@ describe("Concurrency & Scalability Tests", function () {
     roleManager = await RoleManager.deploy();
     await roleManager.waitForDeployment();
 
-    // Deploy CollectibleController
+    // Deploy TribeController
+    const TribeController = await ethers.getContractFactory("TribeController");
+    tribeController = await TribeController.deploy();
+    await tribeController.waitForDeployment();
+
+    // Deploy CollectibleController with required arguments
     const CollectibleController = await ethers.getContractFactory("CollectibleController");
-    collectibleController = await CollectibleController.deploy();
+    collectibleController = await CollectibleController.deploy(
+      await roleManager.getAddress(),
+      await tribeController.getAddress()
+    );
     await collectibleController.waitForDeployment();
 
-    // Whitelist test users
+    // Create a test tribe with owner as admin
+    await tribeController.createTribe(
+      "Test Tribe",
+      "ipfs://metadata",
+      [],
+      0, // PUBLIC
+      0,
+      ethers.ZeroAddress
+    );
+    tribeId = 0;
+
+    // Add test users as members
     for (const user of users.slice(0, 5)) {
-      await collectibleController.setWhitelistStatus(COLLECTIBLE_TYPE, user.address, true);
+      await tribeController.connect(user).joinTribe(tribeId);
     }
   });
 
-  describe("Journey 7.1: High-Demand Collectible Drop", function () {
-    it("Should handle concurrent minting from whitelisted users", async function () {
-      // Create array of mint promises from whitelisted users
-      const mintPromises = users.slice(0, 5).map(user =>
-        collectibleController.connect(user).mintCollectible(COLLECTIBLE_TYPE)
+  describe("High-Demand Collectible Drop", function () {
+    let collectibleId: number;
+
+    beforeEach(async function () {
+      // Create a test collectible
+      const tx = await collectibleController.createCollectible(
+        tribeId,
+        "Test Collectible",
+        "TEST",
+        "ipfs://test",
+        100n,
+        ethers.parseEther("0.1"),
+        0n
+      );
+      const receipt = await tx.wait();
+      const event = receipt?.logs.find((log: Log | EventLog): log is EventLog => 
+        log instanceof EventLog && log.eventName === "CollectibleCreated"
+      );
+      collectibleId = event ? Number(event.args[0]) : 0;
+    });
+
+    it("Should handle concurrent claiming from multiple users", async function () {
+      // Create array of claim promises from users
+      const claimPromises = users.slice(0, 5).map(user =>
+        collectibleController.connect(user).claimCollectible(
+          tribeId,
+          collectibleId,
+          { value: ethers.parseEther("0.1") }
+        )
       );
 
-      // Execute all mints concurrently
-      const results = await Promise.allSettled(mintPromises);
+      // Execute all claims concurrently
+      const results = await Promise.allSettled(claimPromises);
 
-      // All mints should succeed since users are whitelisted
-      const successfulMints = results.filter(r => r.status === "fulfilled").length;
-      expect(successfulMints).to.equal(5);
+      // All claims should succeed
+      const successfulClaims = results.filter(r => r.status === "fulfilled").length;
+      expect(successfulClaims).to.equal(5);
 
-      // Verify events were emitted
-      for (const result of results) {
-        if (result.status === "fulfilled") {
-          const receipt = await result.value.wait();
-          const event = receipt?.logs[0];
-          expect(event?.topics[0]).to.equal(ethers.id("CollectibleMinted(address,uint256,uint256)"));
+      // Verify balances
+      for (const user of users.slice(0, 5)) {
+        expect(await collectibleController.balanceOf(user.address, collectibleId)).to.equal(1n);
+      }
+    });
+
+    it("Should handle supply limits correctly", async function () {
+      // Create limited supply collectible
+      const tx = await collectibleController.createCollectible(
+        tribeId,
+        "Limited Collectible",
+        "LTD",
+        "ipfs://limited",
+        3n, // Only 3 available
+        ethers.parseEther("0.1"),
+        0n
+      );
+      const receipt = await tx.wait();
+      const event = receipt?.logs.find((log: Log | EventLog): log is EventLog => 
+        log instanceof EventLog && log.eventName === "CollectibleCreated"
+      );
+      const limitedCollectibleId = event ? Number(event.args[0]) : 0;
+
+      // Try to claim with more users than supply
+      const claimPromises = users.slice(0, 5).map(user =>
+        collectibleController.connect(user).claimCollectible(
+          tribeId,
+          limitedCollectibleId,
+          { value: ethers.parseEther("0.1") }
+        )
+      );
+
+      const results = await Promise.allSettled(claimPromises);
+
+      // Only 3 claims should succeed
+      const successfulClaims = results.filter(r => r.status === "fulfilled").length;
+      expect(successfulClaims).to.equal(3);
+
+      // Failed claims should be due to supply limit
+      const failedClaims = results.filter(r => r.status === "rejected");
+      for (const claim of failedClaims) {
+        expect(claim.status).to.equal("rejected");
+        if (claim.status === "rejected") {
+          expect(claim.reason.message).to.include("Supply limit reached");
         }
       }
-    });
-
-    it("Should prevent non-whitelisted users from minting", async function () {
-      // Try to mint with non-whitelisted user
-      const nonWhitelistedUser = users[5];
-      await expect(
-        collectibleController.connect(nonWhitelistedUser).mintCollectible(COLLECTIBLE_TYPE)
-      ).to.be.revertedWith("Preconditions not met");
-    });
-
-    it("Should handle rapid sequential minting", async function () {
-      // Perform sequential mints from different whitelisted users
-      for (const user of users.slice(0, 5)) {
-        await expect(
-          collectibleController.connect(user).mintCollectible(COLLECTIBLE_TYPE)
-        ).to.not.be.reverted;
-      }
-    });
-  });
-
-  describe("Journey 7.2: Whitelist Management", function () {
-    it("Should handle multiple whitelist updates", async function () {
-      const updatePromises = users.slice(5, 10).map(user =>
-        collectibleController.setWhitelistStatus(COLLECTIBLE_TYPE, user.address, true)
-      );
-
-      // Execute all updates concurrently
-      await Promise.all(updatePromises);
-
-      // Verify all users are whitelisted
-      for (const user of users.slice(5, 10)) {
-        expect(await collectibleController.collectibleWhitelist(COLLECTIBLE_TYPE, user.address)).to.be.true;
-      }
-    });
-
-    it("Should handle whitelist status changes", async function () {
-      const user = users[0];
-      
-      // Toggle whitelist status multiple times
-      await collectibleController.setWhitelistStatus(COLLECTIBLE_TYPE, user.address, false);
-      expect(await collectibleController.collectibleWhitelist(COLLECTIBLE_TYPE, user.address)).to.be.false;
-
-      await collectibleController.setWhitelistStatus(COLLECTIBLE_TYPE, user.address, true);
-      expect(await collectibleController.collectibleWhitelist(COLLECTIBLE_TYPE, user.address)).to.be.true;
-
-      await collectibleController.setWhitelistStatus(COLLECTIBLE_TYPE, user.address, false);
-      expect(await collectibleController.collectibleWhitelist(COLLECTIBLE_TYPE, user.address)).to.be.false;
-    });
-
-    it("Should emit WhitelistUpdated events", async function () {
-      const user = users[0];
-      
-      await expect(collectibleController.setWhitelistStatus(COLLECTIBLE_TYPE, user.address, false))
-        .to.emit(collectibleController, "WhitelistUpdated")
-        .withArgs(COLLECTIBLE_TYPE, user.address, false);
-
-      await expect(collectibleController.setWhitelistStatus(COLLECTIBLE_TYPE, user.address, true))
-        .to.emit(collectibleController, "WhitelistUpdated")
-        .withArgs(COLLECTIBLE_TYPE, user.address, true);
     });
   });
 }); 

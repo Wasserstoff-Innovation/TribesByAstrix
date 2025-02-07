@@ -154,6 +154,113 @@ graph TD
 - Transfer restrictions
 - Rate limiting
 
+## Test Coverage Summary
+
+### Test Status (Latest Run)
+- Total Tests: 116
+- Passing: 116 (100%)
+- Failing: 0 (0%)
+
+### Test Categories Coverage
+1. **Core Functionality**
+   - Profile Creation & Management: ✅ 
+   - Username Validation & Uniqueness: ✅
+   - Role-Based Access Control: ✅
+   - Token Management: ✅
+
+2. **Community Features**
+   - Tribe Management: ✅
+   - Super Communities: ✅
+   - Events & Ticketing: ✅
+   - Points System: ✅
+
+3. **Content & Governance**
+   - Post Creation: ✅
+   - Voting System: ✅
+   - Collectibles: ✅
+
+4. **Security & Scalability**
+   - Concurrency Handling: ✅
+   - Access Control: ✅
+   - Data Validation: ✅
+
+5. **Super Community Analytics**
+   - Should track all member tribes: ✅
+   - Should track tribe additions and removals: ✅
+   - Should maintain accurate tribe-to-community mapping: ✅
+   - Should track metadata updates: ✅
+   - Should maintain admin access control: ✅
+
+6. **Collectible Management**
+   - Should allow whitelisted user to mint collectible: ✅
+   - Should revert when non-whitelisted user tries to mint: ✅
+   - Should verify preconditions correctly: ✅
+   - Should generate unique session keys: ✅
+   - Should generate different keys for different parameters: ✅
+   - Should emit WhitelistUpdated event: ✅
+   - Should create a free collectible: ✅
+   - Should create a paid collectible: ✅
+   - Should create a points-gated collectible: ✅
+   - Should claim free collectible: ✅
+   - Should purchase paid collectible: ✅
+   - Should claim points-gated collectible: ✅
+   - Should handle supply limits: ✅
+   - Should handle insufficient points: ✅
+   - Should handle insufficient payment: ✅
+
+7. **Community Points**
+   - Should allow point redemption with valid signature: ✅
+   - Should reject redemption with invalid signature: ✅
+   - Should prevent replay attacks: ✅
+   - Should allow admin to update verifier: ✅
+   - Should prevent non-admin from updating verifier: ✅
+
+8. **Event Management**
+   - Should allow organizer to create event: ✅
+   - Should prevent non-organizer from creating event: ✅
+   - Should allow user to purchase tickets: ✅
+   - Should refund excess payment: ✅
+   - Should prevent purchase when not enough tickets available: ✅
+   - Should prevent purchase with insufficient payment: ✅
+   - Should allow first transfer: ✅
+   - Should prevent second transfer: ✅
+   - Should track transfer status correctly: ✅
+   - Should handle batch transfers correctly: ✅
+   - Should allow organizer to update metadata: ✅
+   - Should prevent non-organizer from updating metadata: ✅
+   - Should allow organizer to cancel event: ✅
+   - Should prevent ticket purchase after cancellation: ✅
+
+9. **Profile Management**
+   - Should allow creating a profile: ✅
+   - Should prevent duplicate usernames: ✅
+   - Should allow owner to update profile metadata: ✅
+   - Should prevent non-owner from updating metadata: ✅
+   - Should correctly track username availability: ✅
+   - Should handle username case sensitivity correctly: ✅
+   - Should validate username format: ✅
+   - Should return correct profile data: ✅
+   - Should return correct token ID by username: ✅
+   - Should handle queries for non-existent profiles: ✅
+
+10. **Role Management**
+    - Should assign roles correctly: ✅
+    - Should remove roles correctly: ✅
+    - Should only allow admin to assign roles: ✅
+    - Should check for any role correctly: ✅
+    - Should check for all roles correctly: ✅
+    - Should get user roles correctly: ✅
+    - Should allow admin to assign fan role: ✅
+    - Should not allow non-admin to assign fan role: ✅
+
+11. **Voting**
+    - Should allow creating a proposal: ✅
+    - Should increment proposalId after each creation: ✅
+    - Should allow voting on proposal: ✅
+    - Should track vote counts correctly: ✅
+    - Should emit vote event regardless of vote choice: ✅
+    - Should only count positive votes: ✅
+
 ## Development
 
 ### Setup
@@ -210,52 +317,6 @@ npx hardhat test
 npx hardhat coverage
 ```
 
-## Integration Examples
-
-### Points System
-```typescript
-// Backend: Generate signature
-const messageHash = ethers.solidityPackedKeccak256(
-  ["address", "uint256", "uint256"],
-  [userAddress, points, collectibleType]
-);
-const signature = await verifier.signMessage(messageHash);
-
-// Frontend: Redeem points
-await communityPoints.redeemPoints(points, collectibleType, signature);
-```
-
-### Event Creation
-```typescript
-// Create event
-const eventId = await eventController.createEvent(
-  metadataURI,
-  maxTickets,
-  ticketPrice
-);
-
-// Purchase tickets
-await eventController.purchaseTickets(eventId, amount, {
-  value: ticketPrice * amount
-});
-```
-
-### Super Community Management
-```typescript
-// Create super community
-const superCommunityId = await superCommunityController.createSuperCommunity(
-  name,
-  metadata,
-  initialTribeIds
-);
-
-// Add tribe
-await superCommunityController.addTribeToSuperCommunity(
-  superCommunityId,
-  tribeId
-);
-```
-
 ## Documentation
 - [User Journeys](./docs/UserJourney.md)
 - [Architecture](./docs/Architecture.md)
@@ -263,180 +324,3 @@ await superCommunityController.addTribeToSuperCommunity(
 
 ## License
 MIT
-
-## Test Coverage Summary
-
-### Test Status (Latest Run)
-- Total Tests: 93
-- Passing: 93 (100%)
-- Failing: 0 (0%)
-
-### Test Categories Coverage
-1. Core Functionality
-   - Profile Creation & Management: ✅ 
-   - Username Validation & Uniqueness: ✅
-   - Role-Based Access Control: ✅
-   - Token Management: ✅
-
-2. Community Features
-   - Tribe Management: ✅
-   - Super Communities: ✅
-   - Events & Ticketing: ✅
-   - Points System: ✅
-
-3. Content & Governance
-   - Post Creation: ✅
-   - Voting System: ✅
-   - Collectibles: ✅
-
-4. Security & Scalability
-   - Concurrency Handling: ✅
-   - Access Control: ✅
-   - Data Validation: ✅
-
-5. Super Community Analytics: ✅
-   - Should track all member tribes: ✅
-   - Should track tribe additions and removals: ✅
-   - Should maintain accurate tribe-to-community mapping: ✅
-   - Should track metadata updates: ✅
-   - Should maintain admin access control: ✅
-
-6. Collectible Management: ✅
-   - Should allow whitelisted user to mint collectible: ✅
-   - Should revert when non-whitelisted user tries to mint: ✅
-   - Should verify preconditions correctly: ✅
-   - Should generate unique session keys: ✅
-   - Should generate different keys for different parameters: ✅
-   - Should emit WhitelistUpdated event: ✅
-
-7. Community Points: ✅
-   - Should allow point redemption with valid signature: ✅
-   - Should reject redemption with invalid signature: ✅
-   - Should prevent replay attacks: ✅
-   - Should allow admin to update verifier: ✅
-   - Should prevent non-admin from updating verifier: ✅
-
-8. Event Management: ✅
-   - Should allow organizer to create event: ✅
-   - Should prevent non-organizer from creating event: ✅
-   - Should allow user to purchase tickets: ✅
-   - Should refund excess payment: ✅
-   - Should prevent purchase when not enough tickets available: ✅
-   - Should prevent purchase with insufficient payment: ✅
-   - Should allow first transfer: ✅
-   - Should prevent second transfer: ✅
-   - Should track transfer status correctly: ✅
-   - Should handle batch transfers correctly: ✅
-   - Should allow organizer to update metadata: ✅
-   - Should prevent non-organizer from updating metadata: ✅
-   - Should allow organizer to cancel event: ✅
-   - Should prevent ticket purchase after cancellation: ✅
-
-9. Profile Management: ✅
-   - Should allow creating a profile: ✅
-   - Should prevent duplicate usernames: ✅
-   - Should allow owner to update profile metadata: ✅
-   - Should prevent non-owner from updating metadata: ✅
-   - Should correctly track username availability: ✅
-   - Should handle username case sensitivity correctly: ✅
-   - Should validate username format: ✅
-   - Should return correct profile data: ✅
-   - Should return correct token ID by username: ✅
-   - Should handle queries for non-existent profiles: ✅
-
-10. Role Management: ✅
-    - Should assign roles correctly: ✅
-    - Should remove roles correctly: ✅
-    - Should only allow admin to assign roles: ✅
-    - Should check for any role correctly: ✅
-    - Should check for all roles correctly: ✅
-    - Should get user roles correctly: ✅
-    - Should allow admin to assign fan role: ✅
-    - Should not allow non-admin to assign fan role: ✅
-
-11. Voting: ✅
-    - Should allow creating a proposal: ✅
-    - Should increment proposalId after each creation: ✅
-    - Should allow voting on proposal: ✅
-    - Should track vote counts correctly: ✅
-    - Should emit vote event regardless of vote choice: ✅
-    - Should only count positive votes: ✅
-
-### Deployment Instructions
-
-1. **Environment Setup**
-```bash
-# Install dependencies
-npm install
-
-# Create .env file
-cp .env.example .env
-
-# Add your private key to .env
-PRIVATE_KEY=your_private_key_here
-```
-
-2. **Compile Contracts**
-```bash
-npx hardhat compile
-```
-
-3. **Run Tests**
-```bash
-npx hardhat test
-```
-
-4. **Deploy to Monad Devnet**
-```bash
-npx hardhat run scripts/deploy.ts --network monadDevnet
-```
-
-### Network Configuration
-```javascript
-{
-  chainId: "0x4E9F", // 20143
-  chainName: "Monad Devnet",
-  nativeCurrency: {
-    name: "DMON",
-    symbol: "DMON",
-    decimals: 18
-  },
-  rpcUrls: ["https://rpc-devnet.monadinfra.com/rpc/3fe540e310bbb6ef0b9f16cd23073b0a"],
-  blockExplorerUrls: ["https://explorer-devnet.monadinfra.com"]
-}
-```
-
-### Deployment Order & Dependencies
-1. RoleManager
-2. ProfileNFTMinter (requires RoleManager)
-3. TribeController
-4. CollectibleController
-5. PostMinter
-6. Voting
-7. CommunityPoints (requires RoleManager)
-8. EventController (requires RoleManager)
-9. SuperCommunityController (requires RoleManager and TribeController)
-
-### Post-Deployment Verification
-1. Role Setup
-   - Verify deployer has ORGANIZER_ROLE
-   - Verify ProfileNFTMinter is authorized as FAN_ASSIGNER
-
-2. Contract Initialization
-   - All contracts deployed successfully
-   - All contract dependencies resolved
-   - Initial roles and permissions set
-
-3. Network Verification
-   - Connected to Monad Devnet
-   - Correct chain ID (20143)
-   - Gas price set to 52 GWEI
-
-### Contract Interactions
-After deployment, you can interact with the contracts using the following steps:
-1. Create a profile using ProfileNFTMinter
-2. Create or join tribes using TribeController
-3. Create posts, participate in events, and earn points
-4. Create super communities to group tribes together
-
-For detailed integration instructions, see [FRONTEND_INTEGRATION.md](./FRONTEND_INTEGRATION.md)

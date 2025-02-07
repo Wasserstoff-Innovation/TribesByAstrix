@@ -40,6 +40,20 @@ describe("Analytics & Insights Tests", function () {
     // Grant organizer role
     const ORGANIZER_ROLE = await roleManager.ORGANIZER_ROLE();
     await roleManager.grantRole(ORGANIZER_ROLE, organizer.address);
+
+    // Create test tribes
+    await Promise.all(
+      Array(3).fill(0).map((_, i) => 
+        tribeController.connect(users[i]).createTribe(
+          `Tribe ${i}`,
+          TRIBE_METADATA,
+          [users[i].address],
+          0, // PUBLIC
+          0,
+          ethers.ZeroAddress
+        )
+      )
+    );
   });
 
   describe("Journey 8.1: Super Community Analytics", function () {
@@ -53,7 +67,10 @@ describe("Analytics & Insights Tests", function () {
           await tribeController.connect(user).createTribe(
             `Tribe ${index}`,
             TRIBE_METADATA,
-            [user.address]
+            [user.address],
+            0, // PUBLIC
+            0,
+            ethers.ZeroAddress
           );
           return index;
         })
@@ -85,7 +102,10 @@ describe("Analytics & Insights Tests", function () {
       await tribeController.connect(users[3]).createTribe(
         "New Tribe",
         TRIBE_METADATA,
-        [users[3].address]
+        [users[3].address],
+        0, // PUBLIC
+        0,
+        ethers.ZeroAddress
       );
       const newTribeId = tribeIds.length;
 
@@ -120,7 +140,10 @@ describe("Analytics & Insights Tests", function () {
       await tribeController.connect(users[3]).createTribe(
         "Test Tribe",
         TRIBE_METADATA,
-        [users[3].address]
+        [users[3].address],
+        0, // PUBLIC
+        0,
+        ethers.ZeroAddress
       );
       const newTribeId = tribeIds.length;
 
