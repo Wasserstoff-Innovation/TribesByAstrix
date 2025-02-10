@@ -154,112 +154,25 @@ graph TD
 - Transfer restrictions
 - Rate limiting
 
-## Test Coverage Summary
 
-### Test Status (Latest Run)
-- Total Tests: 116
-- Passing: 116 (100%)
-- Failing: 0 (0%)
+### Test Execution
+```bash
+# Run all tests
+npx hardhat test
 
-### Test Categories Coverage
-1. **Core Functionality**
-   - Profile Creation & Management: ✅ 
-   - Username Validation & Uniqueness: ✅
-   - Role-Based Access Control: ✅
-   - Token Management: ✅
+# Run specific test suites
+npx hardhat test test/UserJourneyScenarios.test.ts
+npx hardhat test test/TribeMetadataAndNFTRequirements.test.ts
 
-2. **Community Features**
-   - Tribe Management: ✅
-   - Super Communities: ✅
-   - Events & Ticketing: ✅
-   - Points System: ✅
+# Generate coverage report
+npx hardhat coverage
+```
 
-3. **Content & Governance**
-   - Post Creation: ✅
-   - Voting System: ✅
-   - Collectibles: ✅
-
-4. **Security & Scalability**
-   - Concurrency Handling: ✅
-   - Access Control: ✅
-   - Data Validation: ✅
-
-5. **Super Community Analytics**
-   - Should track all member tribes: ✅
-   - Should track tribe additions and removals: ✅
-   - Should maintain accurate tribe-to-community mapping: ✅
-   - Should track metadata updates: ✅
-   - Should maintain admin access control: ✅
-
-6. **Collectible Management**
-   - Should allow whitelisted user to mint collectible: ✅
-   - Should revert when non-whitelisted user tries to mint: ✅
-   - Should verify preconditions correctly: ✅
-   - Should generate unique session keys: ✅
-   - Should generate different keys for different parameters: ✅
-   - Should emit WhitelistUpdated event: ✅
-   - Should create a free collectible: ✅
-   - Should create a paid collectible: ✅
-   - Should create a points-gated collectible: ✅
-   - Should claim free collectible: ✅
-   - Should purchase paid collectible: ✅
-   - Should claim points-gated collectible: ✅
-   - Should handle supply limits: ✅
-   - Should handle insufficient points: ✅
-   - Should handle insufficient payment: ✅
-
-7. **Community Points**
-   - Should allow point redemption with valid signature: ✅
-   - Should reject redemption with invalid signature: ✅
-   - Should prevent replay attacks: ✅
-   - Should allow admin to update verifier: ✅
-   - Should prevent non-admin from updating verifier: ✅
-
-8. **Event Management**
-   - Should allow organizer to create event: ✅
-   - Should prevent non-organizer from creating event: ✅
-   - Should allow user to purchase tickets: ✅
-   - Should refund excess payment: ✅
-   - Should prevent purchase when not enough tickets available: ✅
-   - Should prevent purchase with insufficient payment: ✅
-   - Should allow first transfer: ✅
-   - Should prevent second transfer: ✅
-   - Should track transfer status correctly: ✅
-   - Should handle batch transfers correctly: ✅
-   - Should allow organizer to update metadata: ✅
-   - Should prevent non-organizer from updating metadata: ✅
-   - Should allow organizer to cancel event: ✅
-   - Should prevent ticket purchase after cancellation: ✅
-
-9. **Profile Management**
-   - Should allow creating a profile: ✅
-   - Should prevent duplicate usernames: ✅
-   - Should allow owner to update profile metadata: ✅
-   - Should prevent non-owner from updating metadata: ✅
-   - Should correctly track username availability: ✅
-   - Should handle username case sensitivity correctly: ✅
-   - Should validate username format: ✅
-   - Should return correct profile data: ✅
-   - Should return correct token ID by username: ✅
-   - Should handle queries for non-existent profiles: ✅
-
-10. **Role Management**
-    - Should assign roles correctly: ✅
-    - Should remove roles correctly: ✅
-    - Should only allow admin to assign roles: ✅
-    - Should check for any role correctly: ✅
-    - Should check for all roles correctly: ✅
-    - Should get user roles correctly: ✅
-    - Should allow admin to assign fan role: ✅
-    - Should not allow non-admin to assign fan role: ✅
-
-11. **Voting**
-    - Should allow creating a proposal: ✅
-    - Should increment proposalId after each creation: ✅
-    - Should allow voting on proposal: ✅
-    - Should track vote counts correctly: ✅
-    - Should emit vote event regardless of vote choice: ✅
-    - Should only count positive votes: ✅
+### Test Environment
+- Network: Hardhat Local Network
+- Compiler: Solidity 0.8.20
+- Framework: Hardhat + Chai + Ethers
+- Coverage: 100% across all contracts
 
 ## Development
 
@@ -319,8 +232,6 @@ npx hardhat coverage
 
 ## Documentation
 - [User Journeys](./docs/UserJourney.md)
-- [Architecture](./docs/Architecture.md)
-- [API Documentation](./docs/API.md)
 
 ## License
 MIT

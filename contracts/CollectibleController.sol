@@ -34,9 +34,14 @@ contract CollectibleController is ERC1155, AccessControl {
     event CollectibleClaimed(uint256 indexed tribeId, uint256 indexed collectibleId, address indexed claimer);
     event CollectibleDeactivated(uint256 indexed collectibleId);
 
-    constructor(address _roleManager, address _tribeController) ERC1155("") {
+    constructor(
+        address _roleManager,
+        address _tribeController,
+        address _pointSystem
+    ) ERC1155("") {
         roleManager = IRoleManager(_roleManager);
         tribeController = ITribeController(_tribeController);
+        pointSystem = IPointSystem(_pointSystem);
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -83,7 +88,7 @@ contract CollectibleController is ERC1155, AccessControl {
         return collectibleId;
     }
 
-    function claimCollectible(uint256 tribeId, uint256 collectibleId) external payable onlyActiveMember(tribeId) {
+    function claimCollectible(uint256 tribeId, uint256 collectibleId) external payable {
         Collectible storage collectible = collectibles[collectibleId];
         require(collectible.isActive, "Collectible not active");
         require(collectibleTribe[collectibleId] == tribeId, "Invalid tribe");

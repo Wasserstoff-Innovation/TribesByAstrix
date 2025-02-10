@@ -26,6 +26,12 @@ const config: HardhatUserConfig = {
     localhost: {
       url: "http://127.0.0.1:8545"
     },
+    flashTestnet: {
+      url: "https://rpc.flash.fuse.io",
+      chainId: 1264453517,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      gasPrice: 5000000000, // 5 gwei
+    },
     monadDevnet: {
       url: "https://rpc-devnet.monadinfra.com/rpc/3fe540e310bbb6ef0b9f16cd23073b0a",
       chainId: 20143,
@@ -51,7 +57,7 @@ const config: HardhatUserConfig = {
     target: "ethers-v6"
   },
   paths: {
-    sources: "./contracts",
+    sources: "contracts",
     tests: "./test",
     cache: "./cache",
     artifacts: "./artifacts"

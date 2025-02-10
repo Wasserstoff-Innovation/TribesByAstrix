@@ -24,7 +24,7 @@ describe("CollectibleController", function () {
 
     // Deploy TribeController
     const TribeController = await ethers.getContractFactory("TribeController");
-    tribeController = await TribeController.deploy();
+    tribeController = await TribeController.deploy(await roleManager.getAddress());
     await tribeController.waitForDeployment();
 
     // Deploy PointSystem
@@ -39,21 +39,19 @@ describe("CollectibleController", function () {
     const CollectibleController = await ethers.getContractFactory("CollectibleController");
     collectibleController = await CollectibleController.deploy(
       await roleManager.getAddress(),
-      await tribeController.getAddress()
+      await tribeController.getAddress(),
+      await pointSystem.getAddress()
     );
     await collectibleController.waitForDeployment();
-
-    // Set PointSystem in CollectibleController
-    await collectibleController.setPointSystem(await pointSystem.getAddress());
 
     // Create a test tribe with user1 as admin
     await tribeController.connect(user1).createTribe(
       "Test Tribe",
       "ipfs://metadata",
-      [],
+      [user1.address],
       0, // PUBLIC
-      0,
-      ethers.ZeroAddress
+      0, // No entry fee
+      [] // No NFT requirements
     );
     tribeId = 0;
 
@@ -111,6 +109,13 @@ describe("CollectibleController", function () {
         log instanceof EventLog && log.eventName === "CollectibleCreated"
       );
       collectibleId = event ? Number(event.args[0]) : 0;
+
+      // Create tribe token
+      await pointSystem.connect(user1).createTribeToken(
+        tribeId,
+        "Test Token",
+        "TEST"
+      );
 
       // Award points to user2
       await pointSystem.connect(user1).awardPoints(

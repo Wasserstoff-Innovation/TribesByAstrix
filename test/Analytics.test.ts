@@ -1,217 +1,150 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { SuperCommunityController, TribeController, RoleManager } from "../typechain-types";
+import { Analytics, TribeController, RoleManager, PointSystem } from "../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { EventLog } from "ethers";
 
-describe("Analytics & Insights Tests", function () {
-  let superCommunityController: SuperCommunityController;
-  let tribeController: TribeController;
-  let roleManager: RoleManager;
-  let owner: SignerWithAddress;
-  let organizer: SignerWithAddress;
-  let users: SignerWithAddress[];
+describe("Analytics", function () {
+    let analytics: Analytics;
+    let tribeController: TribeController;
+    let roleManager: RoleManager;
+    let pointSystem: PointSystem;
+    let owner: SignerWithAddress;
+    let creator: SignerWithAddress;
+    let members: SignerWithAddress[];
+    let tribeId: number;
 
-  const COMMUNITY_NAME = "Test Super Community";
-  const COMMUNITY_METADATA = "ipfs://QmTest";
-  const TRIBE_NAME = "Test Tribe";
-  const TRIBE_METADATA = "ipfs://QmTribeTest";
-
-  beforeEach(async function () {
-    [owner, organizer, ...users] = await ethers.getSigners();
-
-    // Deploy RoleManager
-    const RoleManager = await ethers.getContractFactory("RoleManager");
-    roleManager = await RoleManager.deploy();
-    await roleManager.waitForDeployment();
-
-    // Deploy TribeController
-    const TribeController = await ethers.getContractFactory("TribeController");
-    tribeController = await TribeController.deploy();
-    await tribeController.waitForDeployment();
-
-    // Deploy SuperCommunityController
-    const SuperCommunityController = await ethers.getContractFactory("SuperCommunityController");
-    superCommunityController = await SuperCommunityController.deploy(
-      await roleManager.getAddress(),
-      await tribeController.getAddress()
-    );
-    await superCommunityController.waitForDeployment();
-
-    // Grant organizer role
-    const ORGANIZER_ROLE = await roleManager.ORGANIZER_ROLE();
-    await roleManager.grantRole(ORGANIZER_ROLE, organizer.address);
-
-    // Create test tribes
-    await Promise.all(
-      Array(3).fill(0).map((_, i) => 
-        tribeController.connect(users[i]).createTribe(
-          `Tribe ${i}`,
-          TRIBE_METADATA,
-          [users[i].address],
-          0, // PUBLIC
-          0,
-          ethers.ZeroAddress
-        )
-      )
-    );
-  });
-
-  describe("Journey 8.1: Super Community Analytics", function () {
-    let superCommunityId: number;
-    let tribeIds: number[];
+    const sampleMetadata = {
+        name: 'Test Tribe',
+        description: 'A test tribe for analytics',
+        avatar: '/test.svg',
+        coverImage: '/test-banner.png'
+    };
 
     beforeEach(async function () {
-      // Create multiple tribes
-      tribeIds = await Promise.all(
-        users.slice(0, 3).map(async (user, index) => {
-          await tribeController.connect(user).createTribe(
-            `Tribe ${index}`,
-            TRIBE_METADATA,
-            [user.address],
+        [owner, creator, ...members] = await ethers.getSigners();
+
+        // Deploy RoleManager first
+        const RoleManager = await ethers.getContractFactory("RoleManager");
+        roleManager = await RoleManager.deploy();
+        await roleManager.waitForDeployment();
+
+        // Deploy TribeController with RoleManager address
+        const TribeController = await ethers.getContractFactory("TribeController");
+        tribeController = await TribeController.deploy(await roleManager.getAddress());
+        await tribeController.waitForDeployment();
+
+        // Deploy PointSystem with RoleManager and TribeController addresses
+        const PointSystem = await ethers.getContractFactory("PointSystem");
+        pointSystem = await PointSystem.deploy(
+            await roleManager.getAddress(),
+            await tribeController.getAddress()
+        );
+        await pointSystem.waitForDeployment();
+
+        // Deploy Analytics with TribeController and PointSystem addresses
+        const Analytics = await ethers.getContractFactory("Analytics");
+        analytics = await Analytics.deploy(
+            await tribeController.getAddress(),
+            await pointSystem.getAddress()
+        );
+        await analytics.waitForDeployment();
+
+        // Grant creator role
+        await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("CREATOR_ROLE")), creator.address);
+
+        // Create a test tribe
+        const tx = await tribeController.connect(creator).createTribe(
+            sampleMetadata.name,
+            JSON.stringify(sampleMetadata),
+            [creator.address],
             0, // PUBLIC
-            0,
-            ethers.ZeroAddress
-          );
-          return index;
-        })
-      );
+            0, // No entry fee
+            [] // No NFT requirements
+        );
+        const receipt = await tx.wait();
+        const event = receipt?.logs.find(x => x instanceof EventLog && x.eventName === "TribeCreated") as EventLog;
+        tribeId = event ? Number(event.args[0]) : 0;
 
-      // Create super community with these tribes
-      await superCommunityController.connect(organizer).createSuperCommunity(
-        COMMUNITY_NAME,
-        COMMUNITY_METADATA,
-        tribeIds
-      );
-      superCommunityId = 0;
+        // Add some members to the tribe
+        for (let i = 0; i < 5; i++) {
+            await tribeController.connect(members[i]).joinTribe(tribeId);
+            // Add some points with action type
+            await pointSystem.connect(creator).awardPoints(
+                tribeId, 
+                members[i].address, 
+                (i + 1) * 100,
+                ethers.encodeBytes32String("CUSTOM")
+            );
+        }
     });
 
-    it("Should track all member tribes", async function () {
-      const memberTribes = await superCommunityController.getSuperCommunityTribes(superCommunityId);
-      expect(memberTribes.length).to.equal(tribeIds.length);
-      
-      for (const tribeId of tribeIds) {
-        // Convert BigNumber to number for comparison
-        const tribeIdNum = Number(tribeId);
-        expect(memberTribes.map(t => Number(t))).to.include(tribeIdNum);
-        expect(Number(await superCommunityController.tribeSuperCommunity(tribeId))).to.equal(superCommunityId);
-      }
+    describe("Member Queries", function () {
+        it("Should get paginated list of tribe members", async function () {
+            await analytics.updateMemberCache(tribeId);
+            const [memberList, statuses, total] = await analytics.getTribeMembers(tribeId, 0, 3);
+            
+            expect(total).to.equal(6); // 5 members + creator
+            expect(memberList.length).to.equal(3); // Requested limit
+            expect(statuses.length).to.equal(3);
+            
+            // All returned members should be active
+            for (let status of statuses) {
+                expect(status).to.equal(1); // ACTIVE
+            }
+        });
+
+        it("Should get most active members based on points", async function () {
+            await analytics.updateMemberCache(tribeId);
+            const [activeMembers, scores] = await analytics.getMostActiveMembers(tribeId, 0, 3);
+            
+            expect(activeMembers.length).to.equal(3);
+            expect(scores.length).to.equal(3);
+            
+            // Scores should be in descending order
+            for (let i = 0; i < scores.length - 1; i++) {
+                expect(scores[i]).to.be.gte(scores[i + 1]);
+            }
+        });
     });
 
-    it("Should track tribe additions and removals", async function () {
-      // Create a new tribe
-      await tribeController.connect(users[3]).createTribe(
-        "New Tribe",
-        TRIBE_METADATA,
-        [users[3].address],
-        0, // PUBLIC
-        0,
-        ethers.ZeroAddress
-      );
-      const newTribeId = tribeIds.length;
+    describe("Tribe Analytics", function () {
+        it("Should get popular tribes", async function () {
+            const [tribeIds, memberCounts, names] = await analytics.getPopularTribes(0, 5);
+            
+            expect(tribeIds.length).to.equal(5);
+            expect(memberCounts.length).to.equal(5);
+            expect(names.length).to.equal(5);
+        });
 
-      // Add to super community
-      await expect(superCommunityController.connect(organizer).addTribeToSuperCommunity(superCommunityId, newTribeId))
-        .to.emit(superCommunityController, "TribeJoinedSuperCommunity")
-        .withArgs(superCommunityId, newTribeId);
-
-      // Verify addition
-      let memberTribes = await superCommunityController.getSuperCommunityTribes(superCommunityId);
-      expect(memberTribes.map(t => Number(t))).to.include(newTribeId);
-
-      // Remove from super community
-      await expect(superCommunityController.connect(organizer).removeTribeFromSuperCommunity(superCommunityId, newTribeId))
-        .to.emit(superCommunityController, "TribeLeftSuperCommunity")
-        .withArgs(superCommunityId, newTribeId);
-
-      // Verify removal
-      memberTribes = await superCommunityController.getSuperCommunityTribes(superCommunityId);
-      expect(memberTribes.map(t => Number(t))).to.not.include(newTribeId);
+        it("Should handle pagination correctly", async function () {
+            await analytics.updateMemberCache(tribeId);
+            
+            // Get first page
+            const [members1] = await analytics.getTribeMembers(tribeId, 0, 3);
+            // Get second page
+            const [members2] = await analytics.getTribeMembers(tribeId, 3, 3);
+            
+            // No duplicate members between pages
+            const allMembers = [...members1, ...members2];
+            const uniqueMembers = new Set(allMembers);
+            expect(uniqueMembers.size).to.equal(allMembers.length);
+        });
     });
 
-    it("Should maintain accurate tribe-to-community mapping", async function () {
-      // Create two super communities
-      await superCommunityController.connect(organizer).createSuperCommunity(
-        "Second Community",
-        COMMUNITY_METADATA,
-        []
-      );
+    describe("Activity Scores", function () {
+        it("Should calculate member activity scores correctly", async function () {
+            // Get activity score for the most active member
+            const score = await analytics.getMemberActivityScore(tribeId, members[4].address);
+            expect(score).to.equal(500); // 5 * 100 points
+        });
 
-      // Create a new tribe
-      await tribeController.connect(users[3]).createTribe(
-        "Test Tribe",
-        TRIBE_METADATA,
-        [users[3].address],
-        0, // PUBLIC
-        0,
-        ethers.ZeroAddress
-      );
-      const newTribeId = tribeIds.length;
-
-      // Add to first super community
-      await superCommunityController.connect(organizer).addTribeToSuperCommunity(0, newTribeId);
-      expect(Number(await superCommunityController.tribeSuperCommunity(newTribeId))).to.equal(0);
-
-      // Try to add to second super community (should fail)
-      await expect(
-        superCommunityController.connect(organizer).addTribeToSuperCommunity(1, newTribeId)
-      ).to.be.revertedWith("Tribe already in super community");
-
-      // Remove from first super community
-      await superCommunityController.connect(organizer).removeTribeFromSuperCommunity(0, newTribeId);
-      expect(Number(await superCommunityController.tribeSuperCommunity(newTribeId))).to.equal(0);
-
-      // Now should be able to add to second super community
-      await superCommunityController.connect(organizer).addTribeToSuperCommunity(1, newTribeId);
-      expect(Number(await superCommunityController.tribeSuperCommunity(newTribeId))).to.equal(1);
+        it("Should handle invalid queries gracefully", async function () {
+            // Query with invalid offset
+            const [members, statuses, total] = await analytics.getTribeMembers(tribeId, 1000, 10);
+            expect(members.length).to.equal(0);
+            expect(statuses.length).to.equal(0);
+            expect(total).to.equal(6);
+        });
     });
-  });
-
-  describe("Journey 8.2: Super Community Metadata", function () {
-    let superCommunityId: number;
-
-    beforeEach(async function () {
-      // Create super community
-      await superCommunityController.connect(organizer).createSuperCommunity(
-        COMMUNITY_NAME,
-        COMMUNITY_METADATA,
-        []
-      );
-      superCommunityId = 0;
-    });
-
-    it("Should track metadata updates", async function () {
-      const newName = "Updated Community";
-      const newMetadata = "ipfs://QmNewTest";
-
-      await superCommunityController.connect(organizer).updateSuperCommunityMetadata(
-        superCommunityId,
-        newName,
-        newMetadata
-      );
-
-      const superComm = await superCommunityController.superCommunities(superCommunityId);
-      expect(superComm.name).to.equal(newName);
-      expect(superComm.metadata).to.equal(newMetadata);
-    });
-
-    it("Should maintain admin access control", async function () {
-      // Non-admin should not be able to update metadata
-      await expect(
-        superCommunityController.connect(users[0]).updateSuperCommunityMetadata(
-          superCommunityId,
-          "New Name",
-          "New Metadata"
-        )
-      ).to.be.revertedWith("Not admin");
-
-      // Original admin should still be able to update
-      await expect(
-        superCommunityController.connect(organizer).updateSuperCommunityMetadata(
-          superCommunityId,
-          "Admin Update",
-          "Admin Metadata"
-        )
-      ).to.not.be.reverted;
-    });
-  });
 }); 

@@ -1,76 +1,96 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "./interfaces/ITribeController.sol";
+import "./interfaces/IRoleManager.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+
 /**
  * TribeController:
  * Manages tribes, including creation, updates, and member management.
  */
-contract TribeController {
+contract TribeController is ITribeController, Initializable {
     uint256 public nextTribeId;
+    uint256 public nextMergeRequestId;
 
-    enum JoinType { PUBLIC, PRIVATE, INVITE_ONLY }
-    enum MemberStatus { PENDING, ACTIVE, BANNED }
-
-    struct TribeConfig {
-        JoinType joinType;
-        uint256 entryFee;
-        address collectibleRequirement;
-    }
-
-    struct Tribe {
+    struct TribeStorage {
         string name;
         string metadata;
         address admin;
         address[] whitelist;
-        TribeConfig config;
+        JoinType joinType;
+        uint256 entryFee;
+        NFTRequirement[] nftRequirements;
+        mapping(bytes32 => InviteCode) inviteCodes;
+        bool canMerge;
+        bool isActive;
     }
 
-    mapping(uint256 => Tribe) public tribes;
-    mapping(uint256 => mapping(address => MemberStatus)) public memberStatus;
+    // Internal mappings
+    mapping(uint256 => TribeStorage) private tribes;
+    mapping(uint256 => mapping(address => MemberStatus)) private memberStatuses;
+    mapping(uint256 => MergeRequest) private mergeRequests;
+    mapping(uint256 => uint256) private memberCounts;
+    mapping(uint256 => mapping(address => bool)) public isMember;
+    mapping(uint256 => mapping(bytes32 => bool)) public inviteCodes;
 
-    event TribeCreated(
-        uint256 indexed tribeId,
-        address indexed creator,
-        string tribeName,
-        JoinType joinType
-    );
-    event TribeUpdated(uint256 indexed tribeId, string newMetadata);
-    event TribeConfigUpdated(
-        uint256 indexed tribeId,
-        JoinType joinType,
-        uint256 entryFee,
-        address collectibleRequirement
-    );
-    event MemberJoined(uint256 indexed tribeId, address indexed member);
-    event JoinRequested(uint256 indexed tribeId, address indexed requester);
-    event MembershipUpdated(uint256 indexed tribeId, address indexed member, MemberStatus status);
+    IRoleManager public roleManager;
+
+    constructor(address _roleManager) {
+        roleManager = IRoleManager(_roleManager);
+        nextTribeId = 0;
+        nextMergeRequestId = 0;
+    }
+
+    modifier onlyTribeAdmin(uint256 tribeId) {
+        require(
+            tribes[tribeId].admin == msg.sender || 
+            roleManager.hasRole(keccak256(bytes("MODERATOR_ROLE")), msg.sender),
+            "Not tribe admin"
+        );
+        _;
+    }
 
     function createTribe(
-        string calldata tribeName,
-        string calldata tribeMetadata,
-        address[] calldata whitelist,
+        string calldata name,
+        string calldata metadata,
+        address[] calldata admins,
         JoinType joinType,
         uint256 entryFee,
-        address collectibleRequirement
+        NFTRequirement[] calldata nftRequirements
     ) external returns (uint256) {
         uint256 tribeId = nextTribeId++;
         
-        tribes[tribeId] = Tribe({
-            name: tribeName,
-            metadata: tribeMetadata,
-            admin: msg.sender,
-            whitelist: whitelist,
-            config: TribeConfig({
-                joinType: joinType,
-                entryFee: entryFee,
-                collectibleRequirement: collectibleRequirement
-            })
-        });
+        TribeStorage storage newTribe = tribes[tribeId];
+        newTribe.name = name;
+        newTribe.metadata = metadata;
+        newTribe.admin = msg.sender;
+        newTribe.whitelist = admins;
+        newTribe.joinType = joinType;
+        newTribe.entryFee = entryFee;
+        
+        // Manually copy NFTRequirements
+        for (uint256 i = 0; i < nftRequirements.length; i++) {
+            newTribe.nftRequirements.push(NFTRequirement({
+                nftContract: nftRequirements[i].nftContract,
+                nftType: nftRequirements[i].nftType,
+                isMandatory: nftRequirements[i].isMandatory,
+                minAmount: nftRequirements[i].minAmount,
+                tokenIds: nftRequirements[i].tokenIds
+            }));
+        }
+        
+        newTribe.canMerge = true;
+        newTribe.isActive = true;
 
         // Auto-add creator as active member
-        memberStatus[tribeId][msg.sender] = MemberStatus.ACTIVE;
+        memberStatuses[tribeId][msg.sender] = MemberStatus.ACTIVE;
+        memberCounts[tribeId] = 1;
 
-        emit TribeCreated(tribeId, msg.sender, tribeName, joinType);
+        emit TribeCreated(tribeId, msg.sender, name, joinType);
         return tribeId;
     }
 
@@ -78,83 +98,288 @@ contract TribeController {
         uint256 tribeId,
         string calldata newMetadata,
         address[] calldata updatedWhitelist
-    ) external {
-        require(tribes[tribeId].admin == msg.sender, "Not tribe admin");
-
+    ) external onlyTribeAdmin(tribeId) {
         tribes[tribeId].metadata = newMetadata;
         tribes[tribeId].whitelist = updatedWhitelist;
-        emit TribeUpdated(tribeId, newMetadata);
+        emit TribeConfigUpdated(tribeId, tribes[tribeId].joinType, tribes[tribeId].entryFee);
     }
 
-    function updateTribeJoiningCriteria(
+    function updateTribeConfig(
         uint256 tribeId,
         JoinType joinType,
         uint256 entryFee,
-        address collectibleRequirement
-    ) external {
-        require(tribes[tribeId].admin == msg.sender, "Not tribe admin");
+        NFTRequirement[] calldata nftRequirements
+    ) external onlyTribeAdmin(tribeId) {
+        TribeStorage storage tribe = tribes[tribeId];
+        tribe.joinType = joinType;
+        tribe.entryFee = entryFee;
+        
+        // Clear existing requirements and copy new ones
+        delete tribe.nftRequirements;
+        for (uint256 i = 0; i < nftRequirements.length; i++) {
+            tribe.nftRequirements.push(NFTRequirement({
+                nftContract: nftRequirements[i].nftContract,
+                nftType: nftRequirements[i].nftType,
+                isMandatory: nftRequirements[i].isMandatory,
+                minAmount: nftRequirements[i].minAmount,
+                tokenIds: nftRequirements[i].tokenIds
+            }));
+        }
 
-        tribes[tribeId].config = TribeConfig({
-            joinType: joinType,
-            entryFee: entryFee,
-            collectibleRequirement: collectibleRequirement
-        });
-
-        emit TribeConfigUpdated(tribeId, joinType, entryFee, collectibleRequirement);
+        emit TribeConfigUpdated(tribeId, joinType, entryFee);
     }
 
     function joinTribe(uint256 tribeId) external {
-        require(tribes[tribeId].config.joinType == JoinType.PUBLIC, "Tribe is not public");
-        require(memberStatus[tribeId][msg.sender] != MemberStatus.BANNED, "User is banned");
-        require(memberStatus[tribeId][msg.sender] != MemberStatus.ACTIVE, "Already a member");
-
-        memberStatus[tribeId][msg.sender] = MemberStatus.ACTIVE;
+        require(tribeId < nextTribeId, "Invalid tribe ID");
+        require(!isMember[tribeId][msg.sender], "Already a member");
+        require(memberStatuses[tribeId][msg.sender] != MemberStatus.BANNED, "User is banned");
+        
+        TribeStorage storage tribe = tribes[tribeId];
+        require(tribe.isActive, "Tribe not active");
+        require(
+            tribe.joinType != JoinType.PRIVATE && 
+            tribe.joinType != JoinType.INVITE_CODE,
+            "Tribe not public or requires invite code"
+        );
+        
+        if (tribe.joinType == JoinType.NFT_GATED || 
+            tribe.joinType == JoinType.MULTI_NFT || 
+            tribe.joinType == JoinType.ANY_NFT) {
+            require(_validateNFTRequirements(tribeId, msg.sender), "NFT requirements not met");
+        }
+        
+        memberStatuses[tribeId][msg.sender] = MemberStatus.ACTIVE;
+        isMember[tribeId][msg.sender] = true;
+        memberCounts[tribeId]++;
+        
         emit MemberJoined(tribeId, msg.sender);
+        emit MembershipUpdated(tribeId, msg.sender, MemberStatus.ACTIVE);
     }
 
     function requestToJoinTribe(uint256 tribeId) external payable {
-        require(tribes[tribeId].config.joinType != JoinType.PUBLIC, "Use joinTribe for public tribes");
-        require(memberStatus[tribeId][msg.sender] != MemberStatus.BANNED, "User is banned");
-        require(memberStatus[tribeId][msg.sender] != MemberStatus.ACTIVE, "Already a member");
-        require(msg.value >= tribes[tribeId].config.entryFee, "Insufficient entry fee");
+        TribeStorage storage tribe = tribes[tribeId];
+        require(tribe.isActive, "Tribe not active");
+        require(tribe.joinType != JoinType.PUBLIC, "Use joinTribe for public tribes");
+        require(memberStatuses[tribeId][msg.sender] != MemberStatus.BANNED, "User is banned");
+        require(memberStatuses[tribeId][msg.sender] != MemberStatus.ACTIVE, "Already a member");
+        require(msg.value >= tribe.entryFee, "Insufficient entry fee");
 
-        // If there's a collectible requirement, check if user has it
-        if (tribes[tribeId].config.collectibleRequirement != address(0)) {
-            // TODO: Add collectible check logic
-            revert("Collectible verification not implemented");
-        }
-
-        memberStatus[tribeId][msg.sender] = MemberStatus.PENDING;
-        emit JoinRequested(tribeId, msg.sender);
+        memberStatuses[tribeId][msg.sender] = MemberStatus.PENDING;
+        emit MembershipUpdated(tribeId, msg.sender, MemberStatus.PENDING);
     }
 
-    function approveMember(uint256 tribeId, address member) external {
-        require(tribes[tribeId].admin == msg.sender, "Not tribe admin");
-        require(memberStatus[tribeId][member] == MemberStatus.PENDING, "Member not pending");
-
-        memberStatus[tribeId][member] = MemberStatus.ACTIVE;
+    function approveMember(uint256 tribeId, address member) external onlyTribeAdmin(tribeId) {
+        require(memberStatuses[tribeId][member] == MemberStatus.PENDING, "Member not pending");
+        memberStatuses[tribeId][member] = MemberStatus.ACTIVE;
+        isMember[tribeId][member] = true;
+        memberCounts[tribeId]++;
         emit MembershipUpdated(tribeId, member, MemberStatus.ACTIVE);
     }
 
-    function rejectMember(uint256 tribeId, address member) external {
-        require(tribes[tribeId].admin == msg.sender, "Not tribe admin");
-        require(memberStatus[tribeId][member] == MemberStatus.PENDING, "Member not pending");
-
+    function rejectMember(uint256 tribeId, address member) external onlyTribeAdmin(tribeId) {
+        require(memberStatuses[tribeId][member] == MemberStatus.PENDING, "Member not pending");
+        delete memberStatuses[tribeId][member]; // This effectively sets it to the first enum value (NONE)
+        
         // Return entry fee if applicable
-        if (tribes[tribeId].config.entryFee > 0) {
-            payable(member).transfer(tribes[tribeId].config.entryFee);
+        uint256 entryFee = tribes[tribeId].entryFee;
+        if (entryFee > 0) {
+            payable(member).transfer(entryFee);
         }
+        
+        emit MembershipUpdated(tribeId, member, MemberStatus.NONE);
+    }
 
-        memberStatus[tribeId][member] = MemberStatus.BANNED;
+    function banMember(uint256 tribeId, address member) external onlyTribeAdmin(tribeId) {
+        require(memberStatuses[tribeId][member] == MemberStatus.ACTIVE, "Member not active");
+        memberStatuses[tribeId][member] = MemberStatus.BANNED;
+        memberCounts[tribeId]--;
         emit MembershipUpdated(tribeId, member, MemberStatus.BANNED);
     }
 
-    function banMember(uint256 tribeId, address member) external {
-        require(tribes[tribeId].admin == msg.sender, "Not tribe admin");
-        require(memberStatus[tribeId][member] == MemberStatus.ACTIVE, "Member not active");
+    function joinTribeWithCode(uint256 tribeId, bytes32 inviteCode) external {
+        require(tribeId < nextTribeId, "Invalid tribe ID");
+        require(!isMember[tribeId][msg.sender], "Already a member");
+        require(memberStatuses[tribeId][msg.sender] != MemberStatus.BANNED, "User is banned");
+        
+        TribeStorage storage tribe = tribes[tribeId];
+        require(tribe.isActive, "Tribe not active");
+        require(
+            tribe.joinType == JoinType.INVITE_CODE,
+            "Tribe does not use invite codes"
+        );
+        
+        InviteCode storage invite = tribe.inviteCodes[inviteCode];
+        require(invite.codeHash == inviteCode, "Invalid invite code");
+        require(invite.expiryTime == 0 || invite.expiryTime > block.timestamp, "Invite code expired");
+        require(invite.usedCount < invite.maxUses, "Invite code expired");
+        
+        invite.usedCount++;
+        memberStatuses[tribeId][msg.sender] = MemberStatus.ACTIVE;
+        isMember[tribeId][msg.sender] = true;
+        memberCounts[tribeId]++;
+        
+        emit MemberJoined(tribeId, msg.sender);
+        emit MembershipUpdated(tribeId, msg.sender, MemberStatus.ACTIVE);
+    }
 
-        memberStatus[tribeId][member] = MemberStatus.BANNED;
-        emit MembershipUpdated(tribeId, member, MemberStatus.BANNED);
+    function createInviteCode(
+        uint256 tribeId,
+        string calldata code,
+        uint256 maxUses,
+        uint256 expiryTime
+    ) external onlyTribeAdmin(tribeId) {
+        require(tribes[tribeId].joinType == JoinType.INVITE_CODE, "Tribe does not use invite codes");
+        bytes32 codeHash = keccak256(abi.encodePacked(code));
+        require(tribes[tribeId].inviteCodes[codeHash].codeHash == bytes32(0), "Code already exists");
+
+        tribes[tribeId].inviteCodes[codeHash] = InviteCode({
+            codeHash: codeHash,
+            maxUses: maxUses,
+            usedCount: 0,
+            expiryTime: expiryTime
+        });
+
+        emit InviteCodeCreated(tribeId, codeHash, maxUses, expiryTime);
+    }
+
+    function requestMerge(uint256 sourceTribeId, uint256 targetTribeId) external onlyTribeAdmin(sourceTribeId) {
+        require(tribes[sourceTribeId].isActive && tribes[targetTribeId].isActive, "Tribes must be active");
+        require(tribes[sourceTribeId].canMerge, "Source tribe cannot be merged");
+        
+        uint256 requestId = nextMergeRequestId++;
+        mergeRequests[requestId] = MergeRequest({
+            sourceTribeId: sourceTribeId,
+            targetTribeId: targetTribeId,
+            requestTime: block.timestamp,
+            approved: false
+        });
+
+        emit MergeRequested(requestId, sourceTribeId, targetTribeId);
+    }
+
+    function approveMerge(uint256 mergeRequestId) external {
+        MergeRequest storage request = mergeRequests[mergeRequestId];
+        require(tribes[request.targetTribeId].admin == msg.sender, "Not target tribe admin");
+        require(!request.approved, "Already approved");
+
+        request.approved = true;
+        emit MergeApproved(mergeRequestId);
+    }
+
+    function executeMerge(uint256 mergeRequestId) external {
+        MergeRequest storage request = mergeRequests[mergeRequestId];
+        require(request.approved, "Merge not approved");
+        
+        uint256 sourceTribeId = request.sourceTribeId;
+        uint256 targetTribeId = request.targetTribeId;
+
+        // Transfer all members from source to target
+        for (uint256 i = 0; i < tribes[sourceTribeId].whitelist.length; i++) {
+            address member = tribes[sourceTribeId].whitelist[i];
+            if (memberStatuses[sourceTribeId][member] == MemberStatus.ACTIVE) {
+                memberStatuses[targetTribeId][member] = MemberStatus.ACTIVE;
+                emit MembershipUpdated(targetTribeId, member, MemberStatus.ACTIVE);
+            }
+        }
+
+        // Update member count
+        memberCounts[targetTribeId] += memberCounts[sourceTribeId];
+
+        // Deactivate source tribe
+        tribes[sourceTribeId].isActive = false;
+
+        emit MergeExecuted(mergeRequestId, sourceTribeId, targetTribeId);
+    }
+
+    function _validateNFTRequirements(uint256 tribeId, address user) internal view returns (bool) {
+        NFTRequirement[] memory requirements = tribes[tribeId].nftRequirements;
+        if (requirements.length == 0) return true;
+
+        JoinType joinType = tribes[tribeId].joinType;
+        if (joinType == JoinType.MULTI_NFT) {
+            // All mandatory NFTs must be held
+            for (uint i = 0; i < requirements.length; i++) {
+                if (requirements[i].isMandatory && !_validateSingleNFTRequirement(requirements[i], user)) {
+                    return false;
+                }
+            }
+            return true;
+        } else if (joinType == JoinType.ANY_NFT) {
+            // At least one NFT must be held
+            for (uint i = 0; i < requirements.length; i++) {
+                if (_validateSingleNFTRequirement(requirements[i], user)) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            // NFT_GATED - Default behavior, all NFTs must be held
+            for (uint i = 0; i < requirements.length; i++) {
+                if (!_validateSingleNFTRequirement(requirements[i], user)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    function _validateSingleNFTRequirement(NFTRequirement memory req, address user) internal view returns (bool) {
+        if (req.nftContract == address(0)) return false;
+        
+        if (req.nftType == NFTType.ERC721) {
+            try IERC721(req.nftContract).balanceOf(user) returns (uint256 balance) {
+                if (balance < req.minAmount) return false;
+                if (req.tokenIds.length == 0) return true; // If no specific tokens required, just check balance
+                
+                // Check specific token IDs if specified
+                for (uint i = 0; i < req.tokenIds.length; i++) {
+                    try IERC721(req.nftContract).ownerOf(req.tokenIds[i]) returns (address owner) {
+                        if (owner != user) return false;
+                    } catch {
+                        return false;
+                    }
+                }
+                return true;
+            } catch {
+                return false;
+            }
+        } else if (req.nftType == NFTType.ERC1155) {
+            if (req.tokenIds.length == 0) return false; // ERC1155 must specify token IDs
+            
+            for (uint i = 0; i < req.tokenIds.length; i++) {
+                try IERC1155(req.nftContract).balanceOf(user, req.tokenIds[i]) returns (uint256 balance) {
+                    if (balance < req.minAmount) return false;
+                } catch {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    function revokeInviteCode(uint256 tribeId, string calldata code) external onlyTribeAdmin(tribeId) {
+        require(tribes[tribeId].joinType == JoinType.INVITE_CODE, "Tribe does not use invite codes");
+        bytes32 codeHash = keccak256(abi.encodePacked(code));
+        require(tribes[tribeId].inviteCodes[codeHash].codeHash == codeHash, "Code does not exist");
+        delete tribes[tribeId].inviteCodes[codeHash];
+        emit InviteCodeRevoked(tribeId, codeHash);
+    }
+
+    function cancelMerge(uint256 mergeRequestId) external {
+        MergeRequest storage request = mergeRequests[mergeRequestId];
+        require(!request.approved, "Merge already approved");
+        require(
+            msg.sender == tribes[request.sourceTribeId].admin || 
+            msg.sender == tribes[request.targetTribeId].admin,
+            "Not authorized"
+        );
+        delete mergeRequests[mergeRequestId];
+        emit MergeCancelled(mergeRequestId);
+    }
+
+    function getMergeRequest(uint256 requestId) external view returns (MergeRequest memory) {
+        return mergeRequests[requestId];
     }
 
     // Existing view functions
@@ -177,10 +402,64 @@ contract TribeController {
     }
 
     function getMemberStatus(uint256 tribeId, address member) external view returns (MemberStatus) {
-        return memberStatus[tribeId][member];
+        return memberStatuses[tribeId][member];
     }
 
-    function getTribeConfig(uint256 tribeId) external view returns (TribeConfig memory) {
-        return tribes[tribeId].config;
+    function getTribeConfigView(uint256 tribeId) external view returns (TribeConfigView memory) {
+        TribeStorage storage tribe = tribes[tribeId];
+        NFTRequirement[] memory requirements = new NFTRequirement[](tribe.nftRequirements.length);
+        for (uint i = 0; i < tribe.nftRequirements.length; i++) {
+            requirements[i] = tribe.nftRequirements[i];
+        }
+        return TribeConfigView({
+            joinType: tribe.joinType,
+            entryFee: tribe.entryFee,
+            nftRequirements: requirements,
+            canMerge: tribe.canMerge
+        });
+    }
+
+    function getMemberCount(uint256 tribeId) external view returns (uint256) {
+        return memberCounts[tribeId];
+    }
+
+    function getUserTribes(address user) external view returns (uint256[] memory tribeIds) {
+        // First, count how many tribes the user is a member of
+        uint256 count = 0;
+        for (uint256 i = 0; i < nextTribeId; i++) {
+            if (memberStatuses[i][user] == MemberStatus.ACTIVE) {
+                count++;
+            }
+        }
+
+        // Create array of appropriate size
+        tribeIds = new uint256[](count);
+        
+        // Fill array with tribe IDs
+        uint256 index = 0;
+        for (uint256 i = 0; i < nextTribeId; i++) {
+            if (memberStatuses[i][user] == MemberStatus.ACTIVE) {
+                tribeIds[index] = i;
+                index++;
+            }
+        }
+
+        return tribeIds;
+    }
+
+    function getInviteCodeStatus(uint256 tribeId, string calldata code) 
+        external 
+        view
+        returns (bool valid, uint256 remainingUses) 
+    {
+        require(tribes[tribeId].joinType == JoinType.INVITE_CODE, "Tribe does not use invite codes");
+        bytes32 codeHash = keccak256(abi.encodePacked(code));
+        InviteCode storage invite = tribes[tribeId].inviteCodes[codeHash];
+        
+        if (invite.codeHash != codeHash) return (false, 0);
+        if (invite.expiryTime != 0 && invite.expiryTime <= block.timestamp) return (false, 0);
+        if (invite.usedCount >= invite.maxUses) return (false, 0);
+        
+        return (true, invite.maxUses - invite.usedCount);
     }
 } 

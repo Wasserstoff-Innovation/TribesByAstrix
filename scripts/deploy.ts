@@ -23,10 +23,13 @@ async function main() {
   console.log("TribeController deployed to:", await tribeController.getAddress());
 
   // Deploy CollectibleController
-  const CollectibleController = await ethers.getContractFactory("CollectibleController");
-  const collectibleController = await CollectibleController.deploy();
-  await collectibleController.waitForDeployment();
-  console.log("CollectibleController deployed to:", await collectibleController.getAddress());
+    const CollectibleController = await ethers.getContractFactory("CollectibleController");
+    const collectibleController = await CollectibleController.deploy(
+        await roleManager.getAddress(),
+        await tribeController.getAddress()
+   );
+   await collectibleController.waitForDeployment();
+   console.log("CollectibleController deployed to:", await collectibleController.getAddress());
 
   // Deploy PostMinter
   const PostMinter = await ethers.getContractFactory("PostMinter");
