@@ -18,7 +18,7 @@ async function main() {
 
   // Deploy TribeController
   const TribeController = await ethers.getContractFactory("TribeController");
-  const tribeController = await TribeController.deploy();
+  const tribeController = await TribeController.deploy(await roleManager.getAddress());
   await tribeController.waitForDeployment();
   console.log("TribeController deployed to:", await tribeController.getAddress());
 
@@ -26,14 +26,19 @@ async function main() {
     const CollectibleController = await ethers.getContractFactory("CollectibleController");
     const collectibleController = await CollectibleController.deploy(
         await roleManager.getAddress(),
-        await tribeController.getAddress()
+        await tribeController.getAddress(),
+        await profileNFTMinter.getAddress()
    );
    await collectibleController.waitForDeployment();
    console.log("CollectibleController deployed to:", await collectibleController.getAddress());
 
   // Deploy PostMinter
   const PostMinter = await ethers.getContractFactory("PostMinter");
-  const postMinter = await PostMinter.deploy();
+  const postMinter = await PostMinter.deploy(
+    await roleManager.getAddress(),
+    await tribeController.getAddress(),
+    await profileNFTMinter.getAddress()
+  );
   await postMinter.waitForDeployment();
   console.log("PostMinter deployed to:", await postMinter.getAddress());
 

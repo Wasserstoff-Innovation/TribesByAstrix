@@ -24,24 +24,28 @@ tribes-by-astrix/
   │       ├─ IEventController.sol
   │       └─ ICommunityPoints.sol
   ├─ test/
-  │   ├─ core/
-  │   │   ├─ RoleManager.test.ts
-  │   │   ├─ ProfileNFTMinter.test.ts
-  │   │   └─ TribeController.test.ts
-  │   ├─ community/
-  │   │   ├─ CommunityPoints.test.ts
-  │   │   ├─ EventController.test.ts
-  │   │   └─ SuperCommunityController.test.ts
-  │   └─ content/
-  │       ├─ PostMinter.test.ts
-  │       ├─ CollectibleController.test.ts
-  │       └─ Voting.test.ts
+  │   ├─ unit/
+  │   │   ├─ NFTController.test.ts
+  │   │   ├─ TribeController.test.ts
+  │   │   └─ ... other unit tests
+  │   ├─ integration/
+  │   │   └─ ... integration tests
+  │   ├─ journey/
+  │   │   └─ ... user journey tests
+  │   ├─ helpers/
+  │   │   └─ testSetup.ts           # Test environment setup
+  │   └─ utils/
+  │       └─ TestLogger.ts          # Test logging utility
+  ├─ public/
+  │   ├─ index.html                 # Test report template
+  │   ├─ generate-report.js         # Report generation script
+  │   ├─ run-tests.sh              # Test execution script
+  │   └─ report/                    # Generated test reports
+  │       ├─ test-results.json      # Latest test results
+  │       ├─ test-results.csv       # CSV export
+  │       └─ test-history.json      # Historical test data
   ├─ scripts/
   │   └─ deploy.ts
-  ├─ docs/
-  │   ├─ UserJourney.md
-  │   ├─ Architecture.md
-  │   └─ API.md
   ├─ hardhat.config.ts
   └─ package.json
 ```
@@ -154,25 +158,55 @@ graph TD
 - Transfer restrictions
 - Rate limiting
 
+## Test Execution and Reporting
 
-### Test Execution
+### Running Tests
 ```bash
-# Run all tests
-npx hardhat test
+# Run all tests with report generation
+npm test
 
 # Run specific test suites
-npx hardhat test test/UserJourneyScenarios.test.ts
-npx hardhat test test/TribeMetadataAndNFTRequirements.test.ts
+npm run test:unit
+npm run test:integration
+npm run test:journey
 
-# Generate coverage report
-npx hardhat coverage
+# Generate and view test report
+npm run report
 ```
 
-### Test Environment
-- Network: Hardhat Local Network
-- Compiler: Solidity 0.8.20
-- Framework: Hardhat + Chai + Ethers
-- Coverage: 100% across all contracts
+### Test Report Features
+- **Interactive Web Interface**: View test results in a user-friendly web interface
+- **Real-time Filtering**: Filter tests by:
+  - Test name (search)
+  - Test suite
+  - Test status (passed/failed)
+- **Visualizations**:
+  - Pass/fail ratio charts
+  - Historical trends
+  - System resource usage
+- **Detailed Test Information**:
+  - Test output with colored log levels
+  - Error details with stack traces
+  - Test duration and timestamps
+- **Historical Data**:
+  - Track test runs over time
+  - Monitor pass/fail trends
+  - Track performance metrics
+
+### Report Generation
+The test reporting system generates three types of reports:
+1. **HTML Report** (`http://localhost:3000`):
+   - Interactive web interface
+   - Real-time filtering and search
+   - Data visualizations
+2. **JSON Report** (`public/report/test-results.json`):
+   - Structured test data
+   - System information
+   - Raw test output
+3. **CSV Export** (`public/report/test-results.csv`):
+   - Spreadsheet-compatible format
+   - Test execution history
+   - Summary statistics
 
 ## Development
 

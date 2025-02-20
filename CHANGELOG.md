@@ -1,5 +1,99 @@
 # Changelog
 
+## [0.3.4] - 2024-02-20
+
+### Enhanced Test Reporting System
+- Implemented new interactive HTML test report:
+  ```html
+  - Real-time test result filtering and search
+  - Suite-based filtering
+  - Status-based filtering (passed/failed)
+  - Interactive error message display
+  ```
+- Added comprehensive test output formatting:
+  ```typescript
+  - Colored log levels
+  - Formatted error stacks
+  - Structured test output
+  ```
+- Added test history tracking:
+  ```json
+  - Historical test runs
+  - Pass/fail trends
+  - Duration tracking
+  - System resource monitoring
+  ```
+- Enhanced visualization:
+  ```
+  - Doughnut chart for pass/fail ratio
+  - Line chart for historical trends
+  - System resource usage displays
+  ```
+
+### Technical Improvements
+- Added TestLogger utility:
+  ```typescript
+  - Structured test result logging
+  - System resource monitoring
+  - CSV and JSON report generation
+  ```
+- Enhanced test setup:
+  ```typescript
+  - Console output capture
+  - Error context preservation
+  - System information gathering
+  ```
+- Added report generation scripts:
+  ```bash
+  - HTML report generation
+  - JSON report processing
+  - CSV export functionality
+  ```
+
+### Documentation Updates
+- Added test reporting documentation
+- Updated file structure documentation
+- Added test execution instructions
+- Added report viewing instructions 
+
+## [0.3.3] - 2024-02-09
+
+### Added Point System Test Scenarios
+- Added comprehensive user flow testing for point system:
+  ```
+  - Basic actions: Posts (100), Comments (20), Likes (5)
+  - Milestone tracking: Multiple posts, comments, likes
+  - Community engagement: Cross-user interactions
+  - Point redemption: Accumulation and spending
+  ```
+- Added detailed engagement tracking scenarios
+- Added point redemption flow with proper token approval
+- Added community interaction simulations
+
+### Enhanced Documentation
+- Updated UserJourney.md with detailed test scenarios
+- Added code examples for point calculations
+- Added clear point value documentation
+- Restructured documentation for better readability
+- Added detailed test statistics and categories
+
+### Technical Improvements
+- Fixed point redemption test cases
+  - Added proper token approval flow
+  - Fixed ERC20 allowance handling
+  - Added balance verification steps
+- Enhanced test logging and verification
+- Added comprehensive point tracking validation
+
+### Test Coverage Updates
+- Added new test categories:
+  - User Authentication: 15 tests
+  - Point System: 25 tests
+  - Post Management: 35 tests
+  - Collectibles: 22 tests
+  - Analytics: 20 tests
+- Total test count: 117 tests (100% passing)
+
 ## [0.3.2] - 2024-02-08
 
 ### Updated Test Coverage
@@ -204,4 +298,4 @@
 3. Enhance Collectible Management contract
 4. Implement Event Management contract
 5. Enhance Super Community contract with new features
-6. Implement edge case handling mechanisms 
+6. Implement edge case handling mechanisms

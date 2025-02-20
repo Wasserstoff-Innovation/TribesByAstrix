@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { CommunityPoints, RoleManager } from "../typechain-types";
+import { CommunityPoints, RoleManager } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 describe("CommunityPoints", function () {

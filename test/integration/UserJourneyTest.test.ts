@@ -1,7 +1,7 @@
 // test/UserJourney.test.ts
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { TribeController, SuperCommunityController, RoleManager } from "../typechain-types";
+import { TribeController, SuperCommunityController, RoleManager } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 describe("User Journey: Tribe Management", function () {
@@ -22,7 +22,7 @@ describe("User Journey: Tribe Management", function () {
 
     // Deploy TribeController
     const TribeController = await ethers.getContractFactory("TribeController");
-    tribeController = await TribeController.deploy();
+    tribeController = await TribeController.deploy(roleManager.target);
     await tribeController.waitForDeployment();
 
     // Deploy SuperCommunityController
@@ -62,10 +62,10 @@ describe("User Journey: Tribe Management", function () {
       expect(storedWhitelist).to.deep.equal(whitelist);
       
       // Verify tribe config
-      const config = await tribeController.getTribeConfig(tribeId);
+      const config = await tribeController.getTribeConfigView(tribeId);
       expect(config.joinType).to.equal(joinType);
       expect(config.entryFee).to.equal(entryFee);
-      expect(config.collectibleRequirement).to.equal(collectibleRequirement);
+      expect(config.collectibleRequirements).to.deep.equal(collectibleRequirement);
 
       // Verify creator is active member
       expect(await tribeController.getMemberStatus(tribeId, user1.address)).to.equal(1); // ACTIVE
@@ -125,7 +125,7 @@ describe("User Journey: Tribe Management", function () {
         newCollectibleRequirement
       )).to.not.be.reverted;
 
-      const config = await tribeController.getTribeConfig(tribeId);
+      const config = await tribeController.getTribeConfigView(tribeId);
       expect(config.joinType).to.equal(newJoinType);
       expect(config.entryFee).to.equal(newEntryFee);
     });

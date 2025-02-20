@@ -14,6 +14,34 @@ interface IPostMinter {
         TIP
     }
 
+    enum PostType {
+        TEXT,
+        RICH_MEDIA,
+        EVENT,
+        POLL,
+        PROJECT_UPDATE,
+        COMMUNITY_UPDATE,
+        ENCRYPTED
+    }
+
+    struct PostMetadata {
+        string title;
+        string content;
+        string[] attachments;
+        string[] tags;
+        uint256 createdAt;
+        PostType postType;
+        mapping(string => string) additionalData;
+    }
+
+    struct BatchPostData {
+        string metadata;
+        bool isGated;
+        address collectibleContract;
+        uint256 collectibleId;
+        PostType postType;
+    }
+
     event PostCreated(uint256 indexed postId, uint256 indexed tribeId, address indexed creator, string metadata);
     event EncryptedPostCreated(uint256 indexed postId, uint256 indexed tribeId, address indexed creator, string metadata, bytes32 encryptionKeyHash, address accessSigner);
     event SignatureGatedPostCreated(uint256 indexed postId, uint256 indexed tribeId, address indexed creator, string metadata, bytes32 encryptionKeyHash, address accessSigner, address collectibleContract, uint256 collectibleId);
@@ -22,6 +50,8 @@ interface IPostMinter {
     event PostReported(uint256 indexed postId, address indexed reporter, string reason);
     event ViewerAuthorized(uint256 indexed postId, address indexed viewer);
     event TribeKeyUpdated(uint256 indexed tribeId, bytes32 indexed keyHash);
+    event PostTypeCooldownUpdated(PostType indexed postType, uint256 cooldown);
+    event BatchPostsCreated(uint256 indexed tribeId, address indexed creator, uint256[] postIds);
 
     function createPost(
         uint256 tribeId,
@@ -135,4 +165,19 @@ interface IPostMinter {
         uint256[] memory postIds,
         uint256 total
     );
+
+    function createBatchPosts(
+        uint256 tribeId,
+        BatchPostData[] calldata posts
+    ) external returns (uint256[] memory postIds);
+
+    function setPostTypeCooldown(PostType postType, uint256 cooldown) external;
+    
+    function getPostTypeCooldown(PostType postType) external view returns (uint256);
+    
+    function validateMetadata(string memory metadata, PostType postType) external pure returns (bool);
+    
+    function getRemainingCooldown(address user, PostType postType) external view returns (uint256);
+    
+    function getBatchPostingLimits() external view returns (uint256 maxBatchSize, uint256 batchCooldown);
 } 

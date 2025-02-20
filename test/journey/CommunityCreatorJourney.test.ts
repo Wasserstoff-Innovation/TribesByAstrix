@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { TribeController, RoleManager, ContentManager, PointSystem } from "../typechain-types";
+import { TribeController, RoleManager, ContentManager, PointSystem } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog } from "ethers";
 
@@ -25,7 +25,7 @@ describe("Community Creator Journey", function () {
 
     // Deploy TribeController
     const TribeController = await ethers.getContractFactory("TribeController");
-    tribeController = await TribeController.deploy();
+    tribeController = await TribeController.deploy(roleManager.target);
     await tribeController.waitForDeployment();
 
     // Deploy ContentManager
@@ -54,7 +54,7 @@ describe("Community Creator Journey", function () {
       [creator.address],
       0, // PUBLIC
       0,
-      ethers.ZeroAddress
+      []
     );
     tribeId = 0;
 

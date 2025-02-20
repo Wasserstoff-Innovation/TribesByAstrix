@@ -1,0 +1,88 @@
+[
+  {
+    "timestamp": "2025-02-20T14:08:36.131Z",
+    "summary": {
+      "total": 208,
+      "passed": 188,
+      "failed": 20,
+      "duration": 4740,
+      "startTime": "2025-02-20T14:08:36.131Z",
+      "endTime": "2025-02-20T14:08:42.001Z"
+    },
+    "systemInfo": {
+      "memory": {
+        "Mach Virtual Memory Statistics": "(page size of 16384 bytes)",
+        "Pages free": "5904.",
+        "Pages active": "482991.",
+        "Pages inactive": "479337.",
+        "Pages speculative": "1478.",
+        "Pages throttled": "0.",
+        "Pages wired down": "146287.",
+        "Pages purgeable": "26618.",
+        "\"Translation faults\"": "3165043916.",
+        "Pages copy-on-write": "55241193.",
+        "Pages zero filled": "1457149269.",
+        "Pages reactivated": "586560403.",
+        "Pages purged": "133423364.",
+        "File-backed pages": "233507.",
+        "Anonymous pages": "730299.",
+        "Pages stored in compressor": "1649519.",
+        "Pages occupied by compressor": "414235.",
+        "Decompressions": "521351230.",
+        "Compressions": "575778245.",
+        "Pageins": "26403391.",
+        "Pageouts": "1172362.",
+        "Swapins": "1481747.",
+        "Swapouts": "2371098."
+      },
+      "cpu": "CPU usage: 3.49% user, 9.2% sys, 87.47% idle",
+      "disk": [
+        "Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on",
+        "/dev/disk3s5   460Gi    92Gi   335Gi    22%    2.0M  3.5G    0%   /System/Volumes/Data"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-02-20T14:01:21.356Z",
+    "summary": {
+      "total": 208,
+      "passed": 188,
+      "failed": 20,
+      "duration": 4531,
+      "startTime": "2025-02-20T14:01:21.356Z",
+      "endTime": "2025-02-20T14:01:27.021Z"
+    },
+    "systemInfo": {
+      "memory": {
+        "Mach Virtual Memory Statistics": "(page size of 16384 bytes)",
+        "Pages free": "57947.",
+        "Pages active": "429762.",
+        "Pages inactive": "427906.",
+        "Pages speculative": "3131.",
+        "Pages throttled": "0.",
+        "Pages wired down": "157572.",
+        "Pages purgeable": "9397.",
+        "\"Translation faults\"": "3159569356.",
+        "Pages copy-on-write": "55139164.",
+        "Pages zero filled": "1453952286.",
+        "Pages reactivated": "586328127.",
+        "Pages purged": "133381850.",
+        "File-backed pages": "238469.",
+        "Anonymous pages": "622330.",
+        "Pages stored in compressor": "1716844.",
+        "Pages occupied by compressor": "454105.",
+        "Decompressions": "521135173.",
+        "Compressions": "575595072.",
+        "Pageins": "26380653.",
+        "Pageouts": "1172211.",
+        "Swapins": "1481203.",
+        "Swapouts": "2371098."
+      },
+      "cpu": "CPU usage: 8.4% user, 9.22% sys, 82.72% idle",
+      "disk": [
+        "Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on",
+        "/dev/disk3s5   460Gi    92Gi   335Gi    22%    2.0M  3.5G    0%   /System/Volumes/Data"
+      ]
+    }
+  }
+]

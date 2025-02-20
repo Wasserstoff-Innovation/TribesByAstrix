@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { TribeController, RoleManager, CollectibleController, PointSystem } from "../typechain-types";
+import { TribeController, RoleManager, CollectibleController, PointSystem } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog, Log } from "ethers";
 

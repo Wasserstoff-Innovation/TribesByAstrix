@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { CollectibleController, RoleManager, TribeController } from "../typechain-types";
+import { CollectibleController, RoleManager, TribeController } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog, Log } from "ethers";
 
@@ -22,14 +22,14 @@ describe("Concurrency & Scalability Tests", function () {
 
     // Deploy TribeController
     const TribeController = await ethers.getContractFactory("TribeController");
-    tribeController = await TribeController.deploy();
+    tribeController = await TribeController.deploy(roleManager.target);
     await tribeController.waitForDeployment();
 
     // Deploy CollectibleController with required arguments
     const CollectibleController = await ethers.getContractFactory("CollectibleController");
     collectibleController = await CollectibleController.deploy(
       await roleManager.getAddress(),
-      await tribeController.getAddress()
+      await tribeController.getAddress(),
     );
     await collectibleController.waitForDeployment();
 

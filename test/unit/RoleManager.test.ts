@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { RoleManager } from "../typechain-types";
+import { RoleManager } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { TribeController } from "../typechain-types";
+import { TribeController } from "../../typechain-types";
 
 describe("RoleManager", function () {
   let roleManager: RoleManager;
@@ -20,7 +20,7 @@ describe("RoleManager", function () {
     await roleManager.waitForDeployment();
 
     const TribeController = await ethers.getContractFactory("TribeController");
-    tribeController = await TribeController.deploy();
+    tribeController = await TribeController.deploy(roleManager.target);
     await tribeController.waitForDeployment();
   });
 
@@ -114,7 +114,7 @@ describe("RoleManager", function () {
         [user1.address],
         0, // PUBLIC
         0,
-        ethers.ZeroAddress
+        []
       )).to.not.be.reverted;
     });
   });

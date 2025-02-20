@@ -46,8 +46,8 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
     mapping(uint256 => mapping(address => bytes32)) private postDecryptionKeys;
     
     // Rate limiting
-    mapping(address => uint256) public lastPostTime;
-    uint256 public constant POST_COOLDOWN = 1 minutes;
+    mapping(address => mapping(PostType => uint256)) public lastPostTimeByType;
+    mapping(address => uint256) public lastBatchTime;
     
     // Content moderation
     mapping(uint256 => uint256) public reportCount;
@@ -63,6 +63,12 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
     mapping(address => uint256[]) private _userPostIds; // user => postIds
     mapping(uint256 => mapping(address => uint256[])) private _tribeUserPostIds; // tribeId => user => postIds
 
+    // New state variables for improved rate limiting
+    mapping(PostType => uint256) public postTypeCooldowns;
+    uint256 public constant MAX_BATCH_POSTS = 5;
+    uint256 public constant BATCH_POST_COOLDOWN = 5 minutes;
+    bytes32 public constant RATE_LIMIT_MANAGER_ROLE = keccak256("RATE_LIMIT_MANAGER_ROLE");
+
     constructor(
         address _roleManager,
         address _tribeController,
@@ -72,6 +78,16 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         tribeController = ITribeController(_tribeController);
         collectibleController = ICollectibleController(_collectibleController);
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(RATE_LIMIT_MANAGER_ROLE, msg.sender);
+
+        // Initialize default cooldowns
+        postTypeCooldowns[PostType.TEXT] = 1 minutes;
+        postTypeCooldowns[PostType.RICH_MEDIA] = 2 minutes;
+        postTypeCooldowns[PostType.EVENT] = 30 seconds;
+        postTypeCooldowns[PostType.POLL] = 5 minutes;
+        postTypeCooldowns[PostType.PROJECT_UPDATE] = 2 minutes;
+        postTypeCooldowns[PostType.COMMUNITY_UPDATE] = 5 minutes;
+        postTypeCooldowns[PostType.ENCRYPTED] = 2 minutes;
     }
 
     modifier onlyTribeMember(uint256 tribeId) {
@@ -87,12 +103,26 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         _;
     }
 
-    modifier notTooFrequent() {
-        require(
-            block.timestamp >= lastPostTime[msg.sender] + POST_COOLDOWN,
-            "Please wait before posting again"
-        );
+    modifier notTooFrequent(PostType postType) {
+        if (!hasRole(RATE_LIMIT_MANAGER_ROLE, msg.sender)) {
+            require(
+                block.timestamp >= lastPostTimeByType[msg.sender][postType] + postTypeCooldowns[postType],
+                "Please wait before posting again"
+            );
+        }
         _;
+        lastPostTimeByType[msg.sender][postType] = block.timestamp;
+    }
+
+    modifier notTooFrequentBatch() {
+        if (!hasRole(RATE_LIMIT_MANAGER_ROLE, msg.sender)) {
+            require(
+                block.timestamp >= lastBatchTime[msg.sender] + BATCH_POST_COOLDOWN,
+                "Please wait before batch posting"
+            );
+        }
+        _;
+        lastBatchTime[msg.sender] = block.timestamp;
     }
 
     function createPost(
@@ -101,8 +131,22 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         bool isGated,
         address collectibleContract,
         uint256 collectibleId
-    ) external onlyTribeMember(tribeId) notTooFrequent whenNotPaused returns (uint256) {
-        require(bytes(metadata).length > 0, "Invalid metadata");
+    ) external override onlyTribeMember(tribeId) notTooFrequent(PostType.TEXT) whenNotPaused returns (uint256) {
+        // Parse metadata to determine post type
+        PostType postType = PostType.TEXT;
+        bytes memory metadataBytes = bytes(metadata);
+        
+        // Check for post type in metadata
+        if (_containsField(metadataBytes, "\"type\":\"EVENT\"")) {
+            postType = PostType.EVENT;
+        } else if (_containsField(metadataBytes, "\"type\":\"RICH_MEDIA\"")) {
+            postType = PostType.RICH_MEDIA;
+        }
+
+        // Validate metadata based on post type
+        if (!validateMetadata(metadata, postType)) {
+            revert("Invalid metadata format");
+        }
         
         if (isGated) {
             require(
@@ -137,7 +181,6 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         _userPostIds[msg.sender].push(postId);
         _tribeUserPostIds[tribeId][msg.sender].push(postId);
 
-        lastPostTime[msg.sender] = block.timestamp;
         emit PostCreated(postId, tribeId, msg.sender, metadata);
         return postId;
     }
@@ -148,7 +191,7 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         bool isGated,
         address collectibleContract,
         uint256 collectibleId
-    ) external onlyTribeMember(postData[parentPostId].tribeId) notTooFrequent whenNotPaused returns (uint256) {
+    ) external onlyTribeMember(postData[parentPostId].tribeId) notTooFrequent(PostType.TEXT) whenNotPaused returns (uint256) {
         require(parentPostId < nextPostId, "Invalid parent post");
         require(!postData[parentPostId].isDeleted, "Parent post deleted");
 
@@ -169,7 +212,7 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         string memory metadata,
         bytes32 encryptionKeyHash,
         address accessSigner
-    ) external onlyTribeMember(tribeId) notTooFrequent whenNotPaused returns (uint256) {
+    ) external onlyTribeMember(tribeId) notTooFrequent(PostType.ENCRYPTED) whenNotPaused returns (uint256) {
         require(bytes(metadata).length > 0, "Invalid metadata");
         require(encryptionKeyHash != bytes32(0), "Invalid encryption key hash");
         require(accessSigner != address(0), "Invalid access signer");
@@ -204,7 +247,6 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         _userPostIds[msg.sender].push(postId);
         _tribeUserPostIds[tribeId][msg.sender].push(postId);
 
-        lastPostTime[msg.sender] = block.timestamp;
         emit EncryptedPostCreated(postId, tribeId, msg.sender, metadata, encryptionKeyHash, accessSigner);
         return postId;
     }
@@ -216,7 +258,7 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         address accessSigner,
         address collectibleContract,
         uint256 collectibleId
-    ) external onlyTribeMember(tribeId) notTooFrequent whenNotPaused returns (uint256) {
+    ) external onlyTribeMember(tribeId) notTooFrequent(PostType.TEXT) whenNotPaused returns (uint256) {
         require(bytes(metadata).length > 0, "Invalid metadata");
         require(encryptionKeyHash != bytes32(0), "Invalid encryption key hash");
         require(accessSigner != address(0), "Invalid access signer");
@@ -251,7 +293,6 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         _userPostIds[msg.sender].push(postId);
         _tribeUserPostIds[tribeId][msg.sender].push(postId);
 
-        lastPostTime[msg.sender] = block.timestamp;
         emit SignatureGatedPostCreated(
             postId,
             tribeId,
@@ -268,6 +309,7 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
     function deletePost(uint256 postId) external override onlyPostCreator(postId) whenNotPaused nonReentrant {
         require(!postData[postId].isDeleted, "Post already deleted");
         postData[postId].isDeleted = true;
+        emit PostDeleted(postId, msg.sender);
     }
 
     function reportPost(uint256 postId, string calldata reason) external override whenNotPaused nonReentrant {
@@ -279,7 +321,10 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
 
         if (reportCount[postId] >= REPORT_THRESHOLD) {
             postData[postId].isDeleted = true;
+            emit PostDeleted(postId, msg.sender);
         }
+        
+        emit PostReported(postId, msg.sender, reason);
     }
 
     function authorizeViewer(uint256 postId, address viewer) external override onlyPostCreator(postId) whenNotPaused {
@@ -295,6 +340,11 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         require(!postData[postId].isDeleted, "Post deleted");
         require(!hasInteracted[postId][msg.sender][interactionType], "Already interacted");
         require(canViewPost(postId, msg.sender), "Cannot view post");
+        
+        // Prevent self-likes
+        if (interactionType == InteractionType.LIKE) {
+            require(postData[postId].creator != msg.sender, "Cannot like own post");
+        }
 
         hasInteracted[postId][msg.sender][interactionType] = true;
         interactionCounts[postId][interactionType]++;
@@ -426,7 +476,14 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         uint256 total
     ) {
         uint256[] storage allPosts = _tribePostIds[tribeId];
-        total = allPosts.length;
+        total = 0;
+        
+        // Count only non-deleted posts
+        for (uint256 i = 0; i < allPosts.length; i++) {
+            if (!postData[allPosts[i]].isDeleted) {
+                total++;
+            }
+        }
         
         if (offset >= total) {
             return (new uint256[](0), total);
@@ -440,8 +497,18 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         uint256 resultLength = end - offset;
         postIds = new uint256[](resultLength);
         
-        for (uint256 i = 0; i < resultLength; i++) {
-            postIds[i] = allPosts[total - (offset + i + 1)]; // Return most recent first
+        // Fill array with non-deleted posts
+        uint256 currentIndex = 0;
+        uint256 skipped = 0;
+        for (uint256 i = 0; i < allPosts.length && currentIndex < resultLength; i++) {
+            if (!postData[allPosts[i]].isDeleted) {
+                if (skipped >= offset) {
+                    postIds[currentIndex] = allPosts[i];
+                    currentIndex++;
+                } else {
+                    skipped++;
+                }
+            }
         }
         
         return (postIds, total);
@@ -456,7 +523,14 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         uint256 total
     ) {
         uint256[] storage allPosts = _userPostIds[user];
-        total = allPosts.length;
+        total = 0;
+        
+        // Count only non-deleted posts
+        for (uint256 i = 0; i < allPosts.length; i++) {
+            if (!postData[allPosts[i]].isDeleted) {
+                total++;
+            }
+        }
         
         if (offset >= total) {
             return (new uint256[](0), total);
@@ -470,8 +544,18 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         uint256 resultLength = end - offset;
         postIds = new uint256[](resultLength);
         
-        for (uint256 i = 0; i < resultLength; i++) {
-            postIds[i] = allPosts[total - (offset + i + 1)]; // Return most recent first
+        // Fill array with non-deleted posts
+        uint256 currentIndex = 0;
+        uint256 skipped = 0;
+        for (uint256 i = 0; i < allPosts.length && currentIndex < resultLength; i++) {
+            if (!postData[allPosts[i]].isDeleted) {
+                if (skipped >= offset) {
+                    postIds[currentIndex] = allPosts[i];
+                    currentIndex++;
+                } else {
+                    skipped++;
+                }
+            }
         }
         
         return (postIds, total);
@@ -571,5 +655,125 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         }
         
         return (postIds, total);
+    }
+
+    // New function to validate metadata
+    function validateMetadata(string memory metadata, PostType postType) public pure override returns (bool) {
+        bytes memory metadataBytes = bytes(metadata);
+        if (metadataBytes.length == 0) return false;
+        
+        // Basic JSON validation (opening/closing braces)
+        if (metadataBytes[0] != "{" || metadataBytes[metadataBytes.length - 1] != "}") {
+            return false;
+        }
+
+        // For testing purposes, we'll do basic string checks
+        // In production, we would use a proper JSON parser
+        bool hasTitle = _containsField(metadataBytes, "\"title\"");
+        bool hasContent = _containsField(metadataBytes, "\"content\"");
+        
+        if (!hasTitle || !hasContent) {
+            return false;
+        }
+
+        // Additional validation for specific post types
+        if (postType == PostType.EVENT) {
+            if (!_containsField(metadataBytes, "\"eventDetails\"")) {
+                return false;
+            }
+        } else if (postType == PostType.RICH_MEDIA) {
+            if (!_containsField(metadataBytes, "\"mediaContent\"")) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function _containsField(bytes memory json, string memory field) private pure returns (bool) {
+        bytes memory fieldBytes = bytes(field);
+        bytes memory jsonBytes = json;
+        
+        if (jsonBytes.length < fieldBytes.length) return false;
+        
+        for (uint i = 0; i < jsonBytes.length - fieldBytes.length; i++) {
+            bool found = true;
+            for (uint j = 0; j < fieldBytes.length; j++) {
+                if (jsonBytes[i + j] != fieldBytes[j]) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found) return true;
+        }
+        return false;
+    }
+
+    // New batch posting function
+    function createBatchPosts(
+        uint256 tribeId,
+        BatchPostData[] calldata posts
+    ) external override onlyTribeMember(tribeId) whenNotPaused returns (uint256[] memory) {
+        require(posts.length <= MAX_BATCH_POSTS, "Too many posts in batch");
+        require(
+            block.timestamp >= lastBatchTime[msg.sender] + BATCH_POST_COOLDOWN,
+            "Please wait before batch posting"
+        );
+
+        uint256[] memory postIds = new uint256[](posts.length);
+        
+        for (uint256 i = 0; i < posts.length; i++) {
+            require(validateMetadata(posts[i].metadata, posts[i].postType), "Invalid metadata format");
+            
+            uint256 postId = nextPostId++;
+            postData[postId] = PostData({
+                id: postId,
+                creator: msg.sender,
+                tribeId: tribeId,
+                metadata: posts[i].metadata,
+                isGated: posts[i].isGated,
+                collectibleContract: posts[i].collectibleContract,
+                collectibleId: posts[i].collectibleId,
+                isEncrypted: false,
+                encryptionKeyHash: bytes32(0),
+                accessSigner: address(0),
+                parentPostId: 0,
+                createdAt: block.timestamp,
+                isDeleted: false
+            });
+
+            _tribePostIds[tribeId].push(postId);
+            _userPostIds[msg.sender].push(postId);
+            _tribeUserPostIds[tribeId][msg.sender].push(postId);
+            
+            postIds[i] = postId;
+            emit PostCreated(postId, tribeId, msg.sender, posts[i].metadata);
+        }
+
+        emit BatchPostsCreated(tribeId, msg.sender, postIds);
+        return postIds;
+    }
+
+    // Rate limit management functions
+    function setPostTypeCooldown(PostType postType, uint256 cooldown) external override onlyRole(RATE_LIMIT_MANAGER_ROLE) {
+        postTypeCooldowns[postType] = cooldown;
+        emit PostTypeCooldownUpdated(postType, cooldown);
+    }
+
+    function getPostTypeCooldown(PostType postType) external view override returns (uint256) {
+        return postTypeCooldowns[postType];
+    }
+
+    function getRemainingCooldown(address user, PostType postType) external view override returns (uint256) {
+        uint256 lastPost = lastPostTimeByType[user][postType];
+        uint256 cooldown = postTypeCooldowns[postType];
+        uint256 nextAllowedTime = lastPost + cooldown;
+        
+        if (block.timestamp >= nextAllowedTime) return 0;
+        return nextAllowedTime - block.timestamp;
+    }
+
+    function getBatchPostingLimits() external pure override returns (uint256 maxBatchSize, uint256 batchCooldown) {
+        return (MAX_BATCH_POSTS, BATCH_POST_COOLDOWN);
     }
 } 
