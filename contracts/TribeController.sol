@@ -137,8 +137,8 @@ contract TribeController is ITribeController, Initializable {
         TribeStorage storage tribe = tribes[tribeId];
         require(tribe.isActive, "Tribe not active");
         require(
-            tribe.joinType != JoinType.PRIVATE && 
-            tribe.joinType != JoinType.INVITE_CODE,
+            tribe.joinType == JoinType.PUBLIC || 
+            (tribe.joinType != JoinType.PRIVATE && tribe.joinType != JoinType.INVITE_CODE),
             "Tribe not public or requires invite code"
         );
         
@@ -151,6 +151,7 @@ contract TribeController is ITribeController, Initializable {
         memberStatuses[tribeId][msg.sender] = MemberStatus.ACTIVE;
         isMember[tribeId][msg.sender] = true;
         memberCounts[tribeId]++;
+        tribe.whitelist.push(msg.sender);
         
         emit MemberJoined(tribeId, msg.sender);
         emit MembershipUpdated(tribeId, msg.sender, MemberStatus.ACTIVE);
@@ -173,6 +174,7 @@ contract TribeController is ITribeController, Initializable {
         memberStatuses[tribeId][member] = MemberStatus.ACTIVE;
         isMember[tribeId][member] = true;
         memberCounts[tribeId]++;
+        tribes[tribeId].whitelist.push(member);
         emit MembershipUpdated(tribeId, member, MemberStatus.ACTIVE);
     }
 
@@ -210,8 +212,14 @@ contract TribeController is ITribeController, Initializable {
         
         InviteCode storage invite = tribe.inviteCodes[inviteCode];
         require(invite.codeHash == inviteCode, "Invalid invite code");
-        require(invite.expiryTime == 0 || invite.expiryTime > block.timestamp, "Invite code expired");
-        require(invite.usedCount < invite.maxUses, "Invite code expired");
+        
+        // Check expiry first
+        if (invite.expiryTime > 0) {
+            require(block.timestamp <= invite.expiryTime, "Invite code expired");
+        }
+        
+        // Then check usage limit
+        require(invite.maxUses > invite.usedCount, "Invite code fully used");
         
         invite.usedCount++;
         memberStatuses[tribeId][msg.sender] = MemberStatus.ACTIVE;
@@ -229,6 +237,9 @@ contract TribeController is ITribeController, Initializable {
         uint256 expiryTime
     ) external onlyTribeAdmin(tribeId) {
         require(tribes[tribeId].joinType == JoinType.INVITE_CODE, "Tribe does not use invite codes");
+        require(maxUses > 0, "Invalid max uses");
+        require(expiryTime == 0 || expiryTime > block.timestamp, "Invalid expiry time");
+        
         bytes32 codeHash = keccak256(abi.encodePacked(code));
         require(tribes[tribeId].inviteCodes[codeHash].codeHash == bytes32(0), "Code already exists");
 

@@ -114,7 +114,7 @@ after(function() {
     }
 });
 
-beforeEach(function() {
+beforeEach(async function() {
     try {
         // Store current test reference
         const currentTest = this.currentTest as Test;
@@ -125,8 +125,13 @@ beforeEach(function() {
         const fullTitle = currentTest?.fullTitle() || '';
         const description = currentTest?.parent?.suites?.[0]?.title || '';
         
-        // Clear previous test outputs
+        // Clear previous test outputs and state
         testOutputs.clear();
+        
+        // Reset contract states if needed
+        if (this.currentTest?.parent?.title.includes('State Reset')) {
+            await resetContractStates();
+        }
         
         console.log(`Starting test: ${suiteName} - ${testName}`);
         logger.startSuite(suiteName, description);
@@ -136,6 +141,12 @@ beforeEach(function() {
         throw error;
     }
 });
+
+// Add state reset function
+async function resetContractStates() {
+    // Reset contract states between tests if needed
+    // This will be implemented based on specific contract requirements
+}
 
 afterEach(function() {
     try {

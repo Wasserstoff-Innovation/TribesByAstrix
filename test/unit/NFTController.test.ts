@@ -139,6 +139,32 @@ describe(chalk.blue("NFT Controller Unit Tests"), function () {
                     0
                 )
             ).to.be.revertedWith("Invalid name");
+
+            // Test with empty symbol
+            await expect(
+                collectibleController.connect(creator).createCollectible(
+                    tribeId,
+                    "Test NFT",
+                    "", // Empty symbol
+                    "ipfs://test",
+                    100,
+                    ethers.parseEther("0.1"),
+                    0
+                )
+            ).to.be.revertedWith("Invalid symbol");
+
+            // Test with empty metadata URI
+            await expect(
+                collectibleController.connect(creator).createCollectible(
+                    tribeId,
+                    "Test NFT",
+                    "TEST",
+                    "", // Empty metadata URI
+                    100,
+                    ethers.parseEther("0.1"),
+                    0
+                )
+            ).to.be.revertedWith("Invalid metadata URI");
         });
     });
 

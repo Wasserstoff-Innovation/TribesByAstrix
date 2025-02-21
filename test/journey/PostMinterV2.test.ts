@@ -9,6 +9,7 @@ describe("PostMinterV2", function () {
     let roleManager: RoleManager;
     let tribeController: TribeController;
     let collectibleController: CollectibleController;
+    let pointSystem: any;
     let owner: SignerWithAddress;
     let admin: SignerWithAddress;
     let user1: SignerWithAddress;
@@ -28,12 +29,20 @@ describe("PostMinterV2", function () {
         tribeController = await TribeController.deploy(await roleManager.getAddress());
         await tribeController.waitForDeployment();
 
+        // Deploy PointSystem
+        const PointSystem = await ethers.getContractFactory("PointSystem");
+        pointSystem = await PointSystem.deploy(
+            await roleManager.getAddress(),
+            await tribeController.getAddress()
+        );
+        await pointSystem.waitForDeployment();
+
         // Deploy CollectibleController
         const CollectibleController = await ethers.getContractFactory("CollectibleController");
         collectibleController = await CollectibleController.deploy(
             await roleManager.getAddress(),
             await tribeController.getAddress(),
-            ethers.ZeroAddress // Point system address not needed for these tests
+            await pointSystem.getAddress()
         );
         await collectibleController.waitForDeployment();
 
@@ -61,9 +70,25 @@ describe("PostMinterV2", function () {
         ) as EventLog;
         tribeId = event ? Number(event.args[0]) : 0;
 
-        // Add users to tribe
-        await tribeController.connect(user1).joinTribe(tribeId);
-        await tribeController.connect(user2).joinTribe(tribeId);
+        // Add users to tribe and verify their membership
+        const users = [admin, user1, user2];
+        for (const user of users) {
+            const status = await tribeController.getMemberStatus(tribeId, user.address);
+            if (Number(status) === 0) { // NONE
+                const tx = await tribeController.connect(user).joinTribe(tribeId);
+                await tx.wait(); // Wait for transaction confirmation
+                
+                // Verify membership status
+                const newStatus = await tribeController.getMemberStatus(tribeId, user.address);
+                if (Number(newStatus) !== 1) { // ACTIVE is index 1
+                    throw new Error(`Failed to set member status to ACTIVE for ${user.address}`);
+                }
+            }
+        }
+
+        // Wait for rate limit
+        await ethers.provider.send("evm_increaseTime", [61]);
+        await ethers.provider.send("evm_mine", []);
     });
 
     describe("Basic Post Creation", function () {
@@ -444,10 +469,49 @@ describe("PostMinterV2", function () {
 
         describe("Project Posts", function () {
             it("Should create a project update post with milestones", async function () {
-                const metadata = {
+                // First create the original project post
+                const projectMetadata = {
+                    type: "PROJECT",
+                    title: "New Project",
+                    content: "Project description...",
+                    team: [
+                        {
+                            address: await admin.getAddress(),
+                            role: "admin",
+                            permissions: ["UPDATE", "DELETE"]
+                        }
+                    ],
+                    projectDetails: {
+                        projectId: "PROJ-001",
+                        phase: "planning",
+                        completionPercentage: 0
+                    },
+                    tags: ["project", "new"]
+                };
+
+                const projectTx = await postMinter.connect(admin).createPost(
+                    tribeId,
+                    JSON.stringify(projectMetadata),
+                    false,
+                    ethers.ZeroAddress,
+                    0
+                );
+                const projectReceipt = await projectTx.wait();
+                const projectEvent = projectReceipt?.logs.find(
+                    x => x instanceof EventLog && x.eventName === "PostCreated"
+                ) as EventLog;
+                const projectPostId = projectEvent ? Number(projectEvent.args[0]) : 0;
+
+                // Wait for rate limit
+                await ethers.provider.send("evm_increaseTime", [61]); // 61 seconds
+                await ethers.provider.send("evm_mine", []);
+
+                // Now create the update post
+                const updateMetadata = {
                     type: "PROJECT_UPDATE",
                     title: "Q1 Project Progress",
                     content: "Detailed progress report...",
+                    projectPostId: projectPostId,
                     projectDetails: {
                         projectId: "PROJ-001",
                         phase: "development",
@@ -471,7 +535,7 @@ describe("PostMinterV2", function () {
                 await expect(
                     postMinter.connect(admin).createPost(
                         tribeId,
-                        JSON.stringify(metadata),
+                        JSON.stringify(updateMetadata),
                         false,
                         ethers.ZeroAddress,
                         0
@@ -605,10 +669,32 @@ describe("PostMinterV2", function () {
             let originalPostId: number;
 
             beforeEach(async function () {
+                // Add users to tribe if not already members
+                const user1Status = await tribeController.getMemberStatus(tribeId, user1.address);
+                const user2Status = await tribeController.getMemberStatus(tribeId, user2.address);
+
+                if (Number(user1Status) === 0) { // NONE
+                    await tribeController.connect(user1).joinTribe(tribeId);
+                }
+                if (Number(user2Status) === 0) { // NONE
+                    await tribeController.connect(user2).joinTribe(tribeId);
+                }
+
+                // Wait for rate limit
+                await ethers.provider.send("evm_increaseTime", [61]); // 61 seconds
+                await ethers.provider.send("evm_mine", []);
+
                 const metadata = {
-                    type: "PROJECT_UPDATE",
+                    type: "PROJECT",
                     title: "Initial Title",
                     content: "Initial content",
+                    team: [
+                        {
+                            address: await user1.getAddress(),
+                            role: "admin",
+                            permissions: ["UPDATE", "DELETE"]
+                        }
+                    ],
                     projectDetails: {
                         phase: "planning",
                         completionPercentage: 0

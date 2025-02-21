@@ -141,6 +141,10 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
             postType = PostType.EVENT;
         } else if (_containsField(metadataBytes, "\"type\":\"RICH_MEDIA\"")) {
             postType = PostType.RICH_MEDIA;
+        } else if (_containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"")) {
+            postType = PostType.PROJECT_UPDATE;
+            // Validate project update permissions
+            require(_validateProjectUpdatePermissions(metadata), "Insufficient permissions");
         }
 
         // Validate metadata based on post type
@@ -775,5 +779,196 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
 
     function getBatchPostingLimits() external pure override returns (uint256 maxBatchSize, uint256 batchCooldown) {
         return (MAX_BATCH_POSTS, BATCH_POST_COOLDOWN);
+    }
+
+    // Add new function for updating posts
+    function updatePost(uint256 postId, string memory metadata) external {
+        require(postData[postId].creator == msg.sender, "Not post creator");
+        require(!postData[postId].isDeleted, "Post deleted");
+        
+        postData[postId].metadata = metadata;
+        emit PostUpdated(postId, msg.sender, metadata);
+    }
+
+    // Add new event
+    event PostUpdated(uint256 indexed postId, address indexed updater, string metadata);
+
+    // Add new function to validate project update permissions
+    function _validateProjectUpdatePermissions(string memory metadata) internal view returns (bool) {
+        bytes memory metadataBytes = bytes(metadata);
+        if (!_containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"")) {
+            return true;
+        }
+
+        uint256 projectPostId = _parseProjectPostId(metadataBytes);
+        if (projectPostId == type(uint256).max) {
+            return false;
+        }
+
+        // Get the original post
+        PostData storage originalPost = postData[projectPostId];
+        
+        // Check if the post exists and is not deleted
+        if (originalPost.isDeleted) {
+            return false;
+        }
+
+        // Allow the original post creator to update
+        if (originalPost.creator == msg.sender) {
+            return true;
+        }
+
+        // Check team permissions in the original post metadata
+        bytes memory originalMetadataBytes = bytes(originalPost.metadata);
+        return _checkUserUpdatePermission(originalMetadataBytes);
+    }
+
+    function _parseProjectPostId(bytes memory metadataBytes) internal pure returns (uint256) {
+        bytes memory projectPostIdField = bytes("\"projectPostId\":");
+        bytes memory originalPostIdField = bytes("\"originalPostId\":");
+        
+        // Try projectPostId first
+        uint256 projectId = _findAndParseId(metadataBytes, projectPostIdField);
+        if (projectId != type(uint256).max) {
+            return projectId;
+        }
+        
+        // Try originalPostId if projectPostId not found
+        return _findAndParseId(metadataBytes, originalPostIdField);
+    }
+
+    function _findAndParseId(bytes memory metadataBytes, bytes memory idField) internal pure returns (uint256) {
+        // Find id field in metadata
+        for (uint i = 0; i < metadataBytes.length - idField.length; i++) {
+            bool found = true;
+            for (uint j = 0; j < idField.length; j++) {
+                if (metadataBytes[i + j] != idField[j]) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found) {
+                // Parse the id value
+                uint256 startIndex = i + idField.length;
+                while (startIndex < metadataBytes.length && 
+                       (metadataBytes[startIndex] == ' ' || metadataBytes[startIndex] == '"' || 
+                        metadataBytes[startIndex] == ':')) {
+                    startIndex++;
+                }
+                
+                uint256 endIndex = startIndex;
+                uint256 id;
+                while (endIndex < metadataBytes.length && 
+                       metadataBytes[endIndex] >= '0' && metadataBytes[endIndex] <= '9') {
+                    uint256 digit = uint8(metadataBytes[endIndex]) - 48;
+                    if (id > (type(uint256).max - digit) / 10) {
+                        // Would overflow
+                        return type(uint256).max;
+                    }
+                    id = id * 10 + digit;
+                    endIndex++;
+                }
+                return id;
+            }
+        }
+        return type(uint256).max;
+    }
+
+    function _checkUserUpdatePermission(bytes memory originalMetadataBytes) internal view returns (bool) {
+        bytes memory teamField = bytes("\"team\":[");
+        
+        // Find team array in metadata
+        for (uint i = 0; i < originalMetadataBytes.length - teamField.length; i++) {
+            bool found = true;
+            for (uint j = 0; j < teamField.length; j++) {
+                if (originalMetadataBytes[i + j] != teamField[j]) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found) {
+                // Found team array, now look for the current user's entry
+                bytes memory addressField = abi.encodePacked("\"address\":\"", toAsciiString(msg.sender), "\"");
+                uint256 teamIndex = i + teamField.length;
+                
+                while (teamIndex < originalMetadataBytes.length && originalMetadataBytes[teamIndex] != ']') {
+                    bool foundUser = true;
+                    for (uint j = 0; j < addressField.length; j++) {
+                        if (teamIndex + j >= originalMetadataBytes.length || 
+                            originalMetadataBytes[teamIndex + j] != addressField[j]) {
+                            foundUser = false;
+                            break;
+                        }
+                    }
+                    
+                    if (foundUser) {
+                        // Found user, now check for UPDATE permission
+                        bytes memory permissionsField = bytes("\"permissions\":");
+                        uint256 permissionIndex = teamIndex;
+                        
+                        // Look for permissions field
+                        while (permissionIndex < originalMetadataBytes.length && originalMetadataBytes[permissionIndex] != ']') {
+                            bool foundPermissions = true;
+                            for (uint j = 0; j < permissionsField.length; j++) {
+                                if (permissionIndex + j >= originalMetadataBytes.length || 
+                                    originalMetadataBytes[permissionIndex + j] != permissionsField[j]) {
+                                    foundPermissions = false;
+                                    break;
+                                }
+                            }
+                            
+                            if (foundPermissions) {
+                                // Skip whitespace and opening brackets/quotes
+                                permissionIndex += permissionsField.length;
+                                while (permissionIndex < originalMetadataBytes.length && 
+                                       (originalMetadataBytes[permissionIndex] == ' ' || 
+                                        originalMetadataBytes[permissionIndex] == '[' || 
+                                        originalMetadataBytes[permissionIndex] == '"')) {
+                                    permissionIndex++;
+                                }
+                                
+                                // Check for "UPDATE" in either string or array format
+                                bytes memory updatePermission = bytes("UPDATE");
+                                bool hasUpdate = true;
+                                for (uint j = 0; j < updatePermission.length; j++) {
+                                    if (permissionIndex + j >= originalMetadataBytes.length || 
+                                        originalMetadataBytes[permissionIndex + j] != updatePermission[j]) {
+                                        hasUpdate = false;
+                                        break;
+                                    }
+                                }
+                                if (hasUpdate) {
+                                    return true;
+                                }
+                            }
+                            permissionIndex++;
+                        }
+                        return false;
+                    }
+                    teamIndex++;
+                }
+                break;
+            }
+        }
+        return false;
+    }
+
+    // Helper function to convert address to ASCII string
+    function toAsciiString(address x) internal pure returns (string memory) {
+        bytes memory s = new bytes(40);
+        for (uint i = 0; i < 20; i++) {
+            bytes1 b = bytes1(uint8(uint(uint160(x)) / (2**(8*(19 - i)))));
+            bytes1 hi = bytes1(uint8(b) / 16);
+            bytes1 lo = bytes1(uint8(b) - 16 * uint8(hi));
+            s[2*i] = char(hi);
+            s[2*i+1] = char(lo);            
+        }
+        return string(s);
+    }
+
+    // Helper function to convert byte to char
+    function char(bytes1 b) internal pure returns (bytes1 c) {
+        if (uint8(b) < 10) return bytes1(uint8(b) + 0x30);
+        else return bytes1(uint8(b) + 0x57);
     }
 } 

@@ -520,20 +520,53 @@ describe("Tribe Metadata and NFT Requirements", function () {
         });
 
         it("Should handle invite code expiry correctly", async function () {
-            // Create expiring invite code
-            const expiringCode = "EXPIRE123";
-            const expiringCodeBytes32 = ethers.keccak256(ethers.toUtf8Bytes(expiringCode));
-            const now = Math.floor(Date.now() / 1000);
-            await tribeController.connect(creator).createInviteCode(
-                tribeId,
-                expiringCode,
-                5,
-                now + 3600 // expires in 1 hour
+            // Create tribe with INVITE_CODE join type
+            const tx = await tribeController.connect(creator).createTribe(
+                "Invite Only Tribe",
+                JSON.stringify({ name: "Invite Only Tribe", description: "A test tribe" }),
+                [], // No additional admins
+                6, // INVITE_CODE join type
+                0, // No entry fee
+                [] // No NFT requirements
             );
+            const receipt = await tx.wait();
+            const event = receipt?.logs.find(x => x instanceof EventLog && x.eventName === "TribeCreated") as EventLog;
+            const tribeId = event ? Number(event.args[0]) : 0;
 
-            // Should work before expiry
-            await expect(tribeController.connect(user1).joinTribeWithCode(tribeId, expiringCodeBytes32))
-                .to.emit(tribeController, "MembershipUpdated");
+            // Get current block timestamp
+            const blockNumBefore = await ethers.provider.getBlockNumber();
+            const blockBefore = await ethers.provider.getBlock(blockNumBefore);
+            const currentTime = blockBefore!.timestamp;
+            const expiryTime = currentTime + 3600; // 1 hour from now
+
+            // Create invite code that expires in 1 hour
+            const inviteCode = "TEST123";
+            const inviteCodeBytes32 = ethers.keccak256(ethers.toUtf8Bytes(inviteCode));
+            await tribeController.connect(creator).createInviteCode(tribeId, inviteCode, 1, expiryTime);
+
+            // Fast forward time to just after expiry
+            await ethers.provider.send("evm_increaseTime", [3601]);
+            await ethers.provider.send("evm_mine", []);
+
+            // Try to join with expired code
+            await expect(
+                tribeController.connect(user1).joinTribeWithCode(tribeId, inviteCodeBytes32)
+            ).to.be.revertedWith("Invite code expired");
+        });
+
+        it("Should enforce invite code usage limits", async function () {
+            // Create invite code with 2 uses
+            const inviteCode = "LIMITED123";
+            const inviteCodeBytes32 = ethers.keccak256(ethers.toUtf8Bytes(inviteCode));
+            await tribeController.connect(creator).createInviteCode(tribeId, inviteCode, 2, 0);
+
+            // Use up the limit
+            await tribeController.connect(user1).joinTribeWithCode(tribeId, inviteCodeBytes32);
+            await tribeController.connect(user2).joinTribeWithCode(tribeId, inviteCodeBytes32);
+
+            // Third attempt should fail
+            await expect(tribeController.connect(users[2]).joinTribeWithCode(tribeId, inviteCodeBytes32))
+                .to.be.revertedWith("Invite code fully used");
         });
     });
 
@@ -728,7 +761,7 @@ describe("Tribe Metadata and NFT Requirements", function () {
 
             // Third attempt should fail
             await expect(tribeController.connect(users[2]).joinTribeWithCode(tribeId, inviteCodeBytes32))
-                .to.be.revertedWith("Invite code expired");
+                .to.be.revertedWith("Invite code fully used");
         });
     });
 

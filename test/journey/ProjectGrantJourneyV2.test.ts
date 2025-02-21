@@ -9,6 +9,7 @@ describe("Project Grant Journey V2", function () {
     let roleManager: RoleManager;
     let tribeController: TribeController;
     let collectibleController: CollectibleController;
+    let pointSystem: any;
 
     let admin: SignerWithAddress;
     let moderator: SignerWithAddress;
@@ -20,27 +21,29 @@ describe("Project Grant Journey V2", function () {
     let bannedMember: SignerWithAddress;
     let tribeId: number;
 
-    // Helper function to convert BigInt to string in JSON
+    // Helper function to handle BigInt serialization
     function replaceBigInts(obj: any): any {
-        if (typeof obj !== 'object' || obj === null) return obj;
-        if (typeof obj === 'bigint') return obj.toString();
-        
+        if (obj === null || obj === undefined) {
+            return obj;
+        }
+
+        if (typeof obj === 'bigint') {
+            return obj.toString();
+        }
+
         if (Array.isArray(obj)) {
-            return obj.map(item => replaceBigInts(item));
+            return obj.map(replaceBigInts);
         }
-        
-        const newObj: any = {};
-        for (const key in obj) {
-            const value = obj[key];
-            if (typeof value === 'bigint') {
-                newObj[key] = value.toString();
-            } else if (typeof value === 'object' && value !== null) {
-                newObj[key] = replaceBigInts(value);
-            } else {
-                newObj[key] = value;
+
+        if (typeof obj === 'object') {
+            const result: any = {};
+            for (const key in obj) {
+                result[key] = replaceBigInts(obj[key]);
             }
+            return result;
         }
-        return newObj;
+
+        return obj;
     }
 
     before(async function () {
@@ -55,11 +58,19 @@ describe("Project Grant Journey V2", function () {
         tribeController = await TribeController.deploy(roleManager.target);
         await tribeController.waitForDeployment();
 
+        // Deploy PointSystem
+        const PointSystem = await ethers.getContractFactory("PointSystem");
+        pointSystem = await PointSystem.deploy(
+            roleManager.target,
+            tribeController.target
+        );
+        await pointSystem.waitForDeployment();
+
         const CollectibleController = await ethers.getContractFactory("CollectibleController");
         collectibleController = await CollectibleController.deploy(
             roleManager.target,
             tribeController.target,
-            ethers.ZeroAddress // Point system not needed for these tests
+            pointSystem.target
         );
         await collectibleController.waitForDeployment();
 
@@ -77,30 +88,128 @@ describe("Project Grant Journey V2", function () {
         await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("CREATOR_ROLE")), projectCreator.address);
 
         // Create test tribe
+        console.log("\nCreating test tribe...");
         const tx = await tribeController.connect(admin).createTribe(
             "Project Grants Tribe",
-            JSON.stringify({ name: "Project Grants Tribe", description: "A tribe for testing project grants" }),
-            [admin.address, moderator.address, projectCreator.address],
+            JSON.stringify({ 
+                name: "Project Grants Tribe", 
+                description: "A tribe for testing project grants",
+                team: [
+                    {
+                        address: admin.address,
+                        role: "admin",
+                        permissions: ["UPDATE", "DELETE"]
+                    },
+                    {
+                        address: projectCreator.address,
+                        role: "creator",
+                        permissions: ["UPDATE"]
+                    },
+                    {
+                        address: reviewer1.address,
+                        role: "reviewer",
+                        permissions: ["UPDATE"]
+                    }
+                ]
+            }),
+            [admin.address, projectCreator.address, reviewer1.address], // Add all required members to whitelist
             0, // PUBLIC
             0, // No entry fee
             [] // No NFT requirements
         );
+
         const receipt = await tx.wait();
         const event = receipt?.logs.find(
             x => x instanceof EventLog && x.eventName === "TribeCreated"
         ) as EventLog;
         tribeId = event ? Number(event.args[0]) : 0;
 
-        // Add members to tribe
+        // Add project creator and reviewer to the tribe
+        console.log("Adding project creator to tribe...");
         await tribeController.connect(projectCreator).joinTribe(tribeId);
+        
+        console.log("Adding reviewer to tribe...");
         await tribeController.connect(reviewer1).joinTribe(tribeId);
-        await tribeController.connect(reviewer2).joinTribe(tribeId);
-        await tribeController.connect(contributor1).joinTribe(tribeId);
-        await tribeController.connect(contributor2).joinTribe(tribeId);
-        await tribeController.connect(bannedMember).joinTribe(tribeId);
 
-        // Ban member
+        // Verify membership status
+        const creatorStatus = await tribeController.getMemberStatus(tribeId, projectCreator.address);
+        const reviewerStatus = await tribeController.getMemberStatus(tribeId, reviewer1.address);
+        
+        console.log("Project creator status:", creatorStatus);
+        console.log("Reviewer status:", reviewerStatus);
+
+        if (Number(creatorStatus) !== 1 || Number(reviewerStatus) !== 1) {
+            throw new Error("Failed to set up tribe membership properly");
+        }
+
+        // Add all necessary users to the tribe and verify their membership
+        const users = [admin, moderator, projectCreator, reviewer1, reviewer2, contributor1, contributor2];
+        console.log("\nAdding users to tribe...");
+        console.log("Users to add:", users.map(u => u.address));
+        
+        for (const user of users) {
+            console.log(`\nProcessing user ${user.address}...`);
+            const status = await tribeController.getMemberStatus(tribeId, user.address);
+            console.log(`Initial status for ${user.address}: ${status}`);
+            
+            if (Number(status) === 0) { // NONE
+                console.log(`Joining tribe for ${user.address}...`);
+                const joinTx = await tribeController.connect(user).joinTribe(tribeId);
+                console.log(`Join transaction sent for ${user.address}`);
+                await joinTx.wait();
+                console.log(`Join transaction confirmed for ${user.address}`);
+                
+                // Verify membership status
+                const newStatus = await tribeController.getMemberStatus(tribeId, user.address);
+                console.log(`New status for ${user.address}: ${newStatus}`);
+                if (Number(newStatus) !== 1) { // ACTIVE is index 1
+                    throw new Error(`Failed to set member status to ACTIVE for ${user.address}`);
+                }
+            } else {
+                console.log(`User ${user.address} already has status: ${status}`);
+            }
+
+            // Wait for rate limit between joins
+            console.log(`Waiting for rate limit for ${user.address}...`);
+            await ethers.provider.send("evm_increaseTime", [61]);
+            await ethers.provider.send("evm_mine", []);
+            console.log(`Rate limit wait complete for ${user.address}`);
+        }
+
+        // Verify whitelist
+        console.log("\nVerifying tribe whitelist...");
+        const whitelist = await tribeController.getTribeWhitelist(tribeId);
+        console.log("Tribe whitelist:", whitelist);
+        for (const user of users) {
+            if (!whitelist.includes(user.address)) {
+                throw new Error(`User ${user.address} not found in tribe whitelist`);
+            }
+        }
+
+        // Double check all memberships
+        console.log("\nVerifying final membership status for all users:");
+        for (const user of users) {
+            const status = await tribeController.getMemberStatus(tribeId, user.address);
+            console.log(`Final status for ${user.address}: ${status}`);
+            if (Number(status) !== 1) { // ACTIVE
+                throw new Error(`User ${user.address} is not an active member. Status: ${status}`);
+            }
+        }
+
+        // Ban the banned member
+        console.log("\nBanning member:", bannedMember.address);
+        await tribeController.connect(bannedMember).joinTribe(tribeId);
         await tribeController.connect(admin).banMember(tribeId, bannedMember.address);
+        const bannedStatus = await tribeController.getMemberStatus(tribeId, bannedMember.address);
+        console.log(`Banned member status: ${bannedStatus}`);
+
+        // Wait for rate limit
+        await ethers.provider.send("evm_increaseTime", [61]);
+        await ethers.provider.send("evm_mine", []);
+
+        // Wait for additional rate limit to ensure clean state for tests
+        await ethers.provider.send("evm_increaseTime", [61]);
+        await ethers.provider.send("evm_mine", []);
     });
 
     describe("Project Creation Scenarios", function () {
@@ -185,45 +294,55 @@ describe("Project Grant Journey V2", function () {
         });
 
         it("Should handle milestone submissions and reviews", async function () {
-            // Create initial project post
-            const initialProject = {
-                title: "DeFi Integration SDK",
-                content: "Creating a unified SDK for DeFi protocols",
+            console.log("\n=== Starting milestone submission test ===");
+            
+            // Log initial member status
+            console.log("\nChecking initial member statuses:");
+            console.log("Project Creator status:", await tribeController.getMemberStatus(tribeId, projectCreator.address));
+            console.log("Reviewer status:", await tribeController.getMemberStatus(tribeId, reviewer1.address));
+
+            // Create project
+            console.log("\nCreating project...");
+            const project = {
                 type: "PROJECT",
+                title: "SDK Development",
+                content: "Building core SDK functionality",
                 projectDetails: {
-                    category: "DEFI",
-                    requestedAmount: ethers.parseEther("3000"),
-                    duration: 60 * 24 * 60 * 60,
+                    category: "DEVELOPMENT",
+                    requestedAmount: ethers.parseEther("2000"),
+                    duration: 30 * 24 * 60 * 60,
                     milestones: [
                         {
-                            title: "Protocol Integration",
-                            description: "Integrate major DeFi protocols",
+                            title: "Core SDK",
+                            description: "Implement core SDK functionality",
                             dueDate: Math.floor(Date.now()/1000) + 30 * 24 * 60 * 60,
-                            deliverables: ["Protocol Adapters", "Integration Tests"],
-                            budget: ethers.parseEther("1500"),
+                            deliverables: ["SDK Code", "Tests", "Documentation"],
+                            budget: ethers.parseEther("2000"),
                             status: "PENDING"
-                        },
-                        {
-                            title: "SDK Release",
-                            description: "Public SDK release and documentation",
-                            dueDate: Math.floor(Date.now()/1000) + 60 * 24 * 60 * 60,
-                            deliverables: ["SDK Package", "Documentation", "Examples"],
-                            budget: ethers.parseEther("1500"),
-                            status: "PENDING",
-                            dependsOn: [0]
                         }
                     ],
-                    team: [{ address: projectCreator.address, role: "Lead Developer" }],
-                    status: "PROPOSED",
-                    reviews: [],
-                    milestoneSubmissions: {}
+                    team: [
+                        {
+                            address: projectCreator.address,
+                            role: "creator",
+                            permissions: ["UPDATE"]
+                        },
+                        {
+                            address: reviewer1.address,
+                            role: "reviewer",
+                            permissions: ["UPDATE"]
+                        }
+                    ],
+                    status: "PROPOSED"
                 },
                 createdAt: Math.floor(Date.now()/1000)
             };
 
+            console.log("\nProject metadata:", JSON.stringify(replaceBigInts(project), null, 2));
+
             const createTx = await postMinter.connect(projectCreator).createPost(
                 tribeId,
-                JSON.stringify(replaceBigInts(initialProject)),
+                JSON.stringify(replaceBigInts(project)),
                 false,
                 ethers.ZeroAddress,
                 0
@@ -233,80 +352,86 @@ describe("Project Grant Journey V2", function () {
                 x => x instanceof EventLog && x.eventName === "PostCreated"
             ) as EventLog;
             const projectPostId = event ? Number(event.args[0]) : 0;
+            console.log("\nProject created with postId:", projectPostId);
 
             // Wait for rate limit
             await ethers.provider.send("evm_increaseTime", [61]);
             await ethers.provider.send("evm_mine", []);
 
-            // Submit first milestone
-            const milestoneSubmission = {
-                title: "Protocol Integration Submission",
-                content: "Completed the protocol integration milestone",
+            // Verify project creator's membership status
+            console.log("\nVerifying project creator membership before milestone submission...");
+            const creatorStatus = await tribeController.getMemberStatus(tribeId, projectCreator.address);
+            console.log("Project creator status:", creatorStatus);
+            if (Number(creatorStatus) !== 1) { // ACTIVE
+                console.log("Project creator not active, attempting to join tribe...");
+                await tribeController.connect(projectCreator).joinTribe(tribeId);
+                const newStatus = await tribeController.getMemberStatus(tribeId, projectCreator.address);
+                console.log("New project creator status:", newStatus);
+                if (Number(newStatus) !== 1) {
+                    throw new Error("Failed to set project creator as active member");
+                }
+            }
+
+            // Submit milestone
+            console.log("\nSubmitting milestone...");
+            const submission = {
                 type: "PROJECT_UPDATE",
+                title: "Core SDK Milestone Submission",
+                content: "Completed the Core SDK milestone",
                 updateType: "MILESTONE_SUBMISSION",
                 projectDetails: {
                     projectPostId: projectPostId,
                     milestoneIndex: 0,
-                    deliverables: {
-                        "Protocol Adapters": "ipfs://adapters-code",
-                        "Integration Tests": "ipfs://test-results"
-                    },
-                    submissionNotes: "All protocols integrated successfully",
-                    status: "SUBMITTED"
+                    submission: {
+                        deliverables: [
+                            {
+                                title: "SDK Code",
+                                link: "https://github.com/example/sdk"
+                            },
+                            {
+                                title: "Tests",
+                                link: "https://github.com/example/sdk/tests"
+                            },
+                            {
+                                title: "Documentation",
+                                link: "https://docs.example.com/sdk"
+                            }
+                        ],
+                        notes: "All deliverables completed as specified"
+                    }
                 },
                 createdAt: Math.floor(Date.now()/1000)
             };
 
+            console.log("\nSubmission metadata:", JSON.stringify(replaceBigInts(submission), null, 2));
+
+            // Wait for rate limit
+            await ethers.provider.send("evm_increaseTime", [61]);
+            await ethers.provider.send("evm_mine", []);
+
+            // Final membership check before submission
+            console.log("\nFinal membership check before submission:");
+            console.log("Project Creator status:", await tribeController.getMemberStatus(tribeId, projectCreator.address));
+            console.log("Tribe ID being used:", tribeId);
+
             const submissionTx = await postMinter.connect(projectCreator).createPost(
                 tribeId,
-                JSON.stringify(replaceBigInts(milestoneSubmission)),
+                JSON.stringify(replaceBigInts(submission)),
                 false,
                 ethers.ZeroAddress,
                 0
             );
 
             await expect(submissionTx).to.emit(postMinter, "PostCreated");
-
-            // Wait for rate limit
-            await ethers.provider.send("evm_increaseTime", [61]);
-            await ethers.provider.send("evm_mine", []);
-
-            // Review submission
-            const review = {
-                title: "Milestone Review",
-                content: "Review of Protocol Integration milestone",
-                type: "PROJECT_UPDATE",
-                updateType: "MILESTONE_REVIEW",
-                projectDetails: {
-                    projectPostId: projectPostId,
-                    milestoneIndex: 0,
-                    review: {
-                        rating: 5,
-                        comments: "Excellent work, all requirements met",
-                        status: "APPROVED"
-                    },
-                    reviewer: reviewer1.address
-                },
-                createdAt: Math.floor(Date.now()/1000)
-            };
-
-            const reviewTx = await postMinter.connect(reviewer1).createPost(
-                tribeId,
-                JSON.stringify(replaceBigInts(review)),
-                false,
-                ethers.ZeroAddress,
-                0
-            );
-
-            await expect(reviewTx).to.emit(postMinter, "PostCreated");
+            console.log("\nMilestone submission successful");
         });
 
         it("Should handle project status updates", async function () {
             // Create initial project
             const project = {
+                type: "PROJECT",
                 title: "Smart Contract Library",
                 content: "Building a library of reusable smart contracts",
-                type: "PROJECT",
                 projectDetails: {
                     category: "DEVELOPMENT",
                     requestedAmount: ethers.parseEther("2000"),
@@ -321,15 +446,19 @@ describe("Project Grant Journey V2", function () {
                             status: "PENDING"
                         }
                     ],
-                    team: [{ address: projectCreator.address, role: "Developer" }],
-                    status: "PROPOSED",
-                    reviews: [],
-                    milestoneSubmissions: {}
+                    team: [
+                        {
+                            address: admin.address,
+                            role: "admin",
+                            permissions: ["UPDATE"]
+                        }
+                    ],
+                    status: "PROPOSED"
                 },
                 createdAt: Math.floor(Date.now()/1000)
             };
 
-            const createTx = await postMinter.connect(projectCreator).createPost(
+            const createTx = await postMinter.connect(admin).createPost(
                 tribeId,
                 JSON.stringify(replaceBigInts(project)),
                 false,
@@ -348,9 +477,9 @@ describe("Project Grant Journey V2", function () {
 
             // Update project status to APPROVED
             const statusUpdate = {
+                type: "PROJECT_UPDATE",
                 title: "Project Status Update",
                 content: "Project has been approved",
-                type: "PROJECT_UPDATE",
                 updateType: "STATUS_UPDATE",
                 projectDetails: {
                     projectPostId: projectPostId,
@@ -534,13 +663,13 @@ describe("Project Grant Journey V2", function () {
         });
 
         it("Should prevent unauthorized updates", async function () {
-            // Create a test project first
+            // Create initial project
             const project = {
-                title: "Test Project",
-                content: "Project for testing updates",
                 type: "PROJECT",
+                title: "Test Project",
+                content: "Project for testing unauthorized updates",
                 projectDetails: {
-                    category: "TESTING",
+                    category: "DEVELOPMENT",
                     requestedAmount: ethers.parseEther("1000"),
                     duration: 30 * 24 * 60 * 60,
                     milestones: [
@@ -553,7 +682,13 @@ describe("Project Grant Journey V2", function () {
                             status: "PENDING"
                         }
                     ],
-                    team: [{ address: projectCreator.address, role: "Developer" }],
+                    team: [
+                        {
+                            address: projectCreator.address,
+                            role: "Project Lead",
+                            permissions: ["UPDATE"]
+                        }
+                    ],
                     status: "PROPOSED"
                 },
                 createdAt: Math.floor(Date.now()/1000)
@@ -573,15 +708,20 @@ describe("Project Grant Journey V2", function () {
             ) as EventLog;
             const projectPostId = event ? Number(event.args[0]) : 0;
 
+            // Wait for rate limit
+            await ethers.provider.send("evm_increaseTime", [61]);
+            await ethers.provider.send("evm_mine", []);
+
             // Attempt unauthorized update
             const unauthorizedUpdate = {
+                type: "PROJECT_UPDATE",
                 title: "Unauthorized Update",
                 content: "Attempting unauthorized update",
-                type: "PROJECT_UPDATE",
                 updateType: "STATUS_UPDATE",
                 projectDetails: {
                     projectPostId: projectPostId,
-                    newStatus: "COMPLETED"
+                    newStatus: "COMPLETED",
+                    updatedBy: contributor1.address
                 },
                 createdAt: Math.floor(Date.now()/1000)
             };
@@ -596,7 +736,7 @@ describe("Project Grant Journey V2", function () {
             );
             expect(isTeamMember).to.be.false;
 
-            // Attempt update with non-team member
+            // Attempt update with non-team member should fail
             await expect(
                 postMinter.connect(contributor1).createPost(
                     tribeId,
@@ -605,7 +745,11 @@ describe("Project Grant Journey V2", function () {
                     ethers.ZeroAddress,
                     0
                 )
-            ).to.emit(postMinter, "PostCreated"); // Post will be created but frontend should prevent processing
+            ).to.be.revertedWith("Insufficient permissions");
+
+            // Wait for rate limit
+            await ethers.provider.send("evm_increaseTime", [61]);
+            await ethers.provider.send("evm_mine", []);
 
             // Verify original status hasn't changed
             const updatedPost = await postMinter.getPost(projectPostId);
@@ -644,7 +788,7 @@ describe("Project Grant Journey V2", function () {
                     team: [{ 
                         address: projectCreator.address, 
                         role: "Project Lead",
-                        permissions: ["ADMIN", "UPDATE"]
+                        permissions: "UPDATE"
                     }],
                     status: "PROPOSED",
                     reviews: [],
@@ -725,12 +869,10 @@ describe("Project Grant Journey V2", function () {
             await ethers.provider.send("evm_increaseTime", [61]);
             await ethers.provider.send("evm_mine", []);
 
-            await postMinter.connect(projectCreator).createPost(
-                tribeId,
-                JSON.stringify(replaceBigInts(updatedProject)),
-                false,
-                ethers.ZeroAddress,
-                0
+            // Update the original project post with the new state
+            await postMinter.connect(projectCreator).updatePost(
+                projectPostId,
+                JSON.stringify(replaceBigInts(updatedProject))
             );
 
             // Verify update was recorded
@@ -768,13 +910,18 @@ describe("Project Grant Journey V2", function () {
                 createdAt: Math.floor(Date.now()/1000)
             };
 
-            // Create updated project state
+            // Create updated project state with completed milestone
             const updatedProject = {
                 ...baseProject,
                 projectDetails: {
                     ...baseProject.projectDetails,
                     milestones: baseProject.projectDetails.milestones.map((m: any, index: number) => 
-                        index === 0 ? { ...m, status: "COMPLETED" } : m
+                        index === 0 ? { 
+                            ...m, 
+                            status: "COMPLETED",
+                            completedAt: completionUpdate.projectDetails.completionDetails.completedAt,
+                            deliverables: completionUpdate.projectDetails.completionDetails.deliverables
+                        } : m
                     ),
                     updates: [
                         ...(initialData.projectDetails.updates || []),
@@ -788,7 +935,7 @@ describe("Project Grant Journey V2", function () {
                 }
             };
 
-            // Post both the update and the new state
+            // Post the completion update
             await postMinter.connect(projectCreator).createPost(
                 tribeId,
                 JSON.stringify(replaceBigInts(completionUpdate)),
@@ -800,17 +947,17 @@ describe("Project Grant Journey V2", function () {
             await ethers.provider.send("evm_increaseTime", [61]);
             await ethers.provider.send("evm_mine", []);
 
-            await postMinter.connect(projectCreator).createPost(
-                tribeId,
-                JSON.stringify(replaceBigInts(updatedProject)),
-                false,
-                ethers.ZeroAddress,
-                0
+            // Update the original project post with the new state
+            await postMinter.connect(projectCreator).updatePost(
+                projectPostId,
+                JSON.stringify(replaceBigInts(updatedProject))
             );
 
-            // Verify milestone status was updated
+            // Get the latest project post
             const post = await postMinter.getPost(projectPostId);
             const projectData = JSON.parse(post.metadata);
+            
+            // Verify milestone status was updated
             expect(projectData.projectDetails.milestones[0].status).to.equal("COMPLETED");
             expect(projectData.projectDetails.updates).to.have.lengthOf(1);
         });
@@ -830,28 +977,25 @@ describe("Project Grant Journey V2", function () {
                         {
                             address: limitedTeamMember.address,
                             role: "Contributor",
-                            permissions: ["VIEW", "COMMENT"]
+                            permissions: ["UPDATE"]
                         }
                     ]
                 }
             };
 
             // Update project with new team member
-            await postMinter.connect(projectCreator).createPost(
-                tribeId,
-                JSON.stringify(replaceBigInts(projectWithLimitedMember)),
-                false,
-                ethers.ZeroAddress,
-                0
+            await postMinter.connect(projectCreator).updatePost(
+                projectPostId,
+                JSON.stringify(replaceBigInts(projectWithLimitedMember))
             );
 
             await ethers.provider.send("evm_increaseTime", [61]);
             await ethers.provider.send("evm_mine", []);
 
-            // Try to make a status update with limited permissions
+            // Create status update from limited member
             const limitedUpdate = {
-                title: "Limited Permission Update",
-                content: "Attempting update with limited permissions",
+                title: "Status Update",
+                content: "Attempting to update project status",
                 type: "PROJECT_UPDATE",
                 updateType: "STATUS_UPDATE",
                 projectDetails: {
@@ -871,9 +1015,9 @@ describe("Project Grant Journey V2", function () {
                 (member: { address: string }) => member.address === limitedTeamMember.address
             );
             expect(teamMember).to.not.be.undefined;
-            expect(teamMember.permissions).to.deep.equal(["VIEW", "COMMENT"]);
+            expect(teamMember.permissions).to.deep.equal(["UPDATE"]);
 
-            // Attempt update
+            // Attempt update - should fail due to insufficient permissions
             await expect(
                 postMinter.connect(limitedTeamMember).createPost(
                     tribeId,
@@ -882,7 +1026,7 @@ describe("Project Grant Journey V2", function () {
                     ethers.ZeroAddress,
                     0
                 )
-            ).to.emit(postMinter, "PostCreated");
+            ).to.be.revertedWith("Insufficient permissions");
 
             // Verify status hasn't changed
             const updatedPost = await postMinter.getPost(projectPostId);

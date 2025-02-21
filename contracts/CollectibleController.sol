@@ -39,6 +39,10 @@ contract CollectibleController is ERC1155, AccessControl {
         address _tribeController,
         address _pointSystem
     ) ERC1155("") {
+        require(_roleManager != address(0), "Invalid role manager address");
+        require(_tribeController != address(0), "Invalid tribe controller address");
+        require(_pointSystem != address(0), "Invalid point system address");
+        
         roleManager = IRoleManager(_roleManager);
         tribeController = ITribeController(_tribeController);
         pointSystem = IPointSystem(_pointSystem);
@@ -68,6 +72,11 @@ contract CollectibleController is ERC1155, AccessControl {
         uint256 price,
         uint256 pointsRequired
     ) external onlyTribeAdmin(tribeId) returns (uint256) {
+        require(bytes(name).length > 0, "Invalid name");
+        require(bytes(symbol).length > 0, "Invalid symbol");
+        require(bytes(metadataURI).length > 0, "Invalid metadata URI");
+        require(maxSupply > 0, "Invalid supply");
+        
         uint256 collectibleId = collectibleCount[tribeId];
         
         collectibles[collectibleId] = Collectible({

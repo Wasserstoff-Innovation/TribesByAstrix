@@ -70,7 +70,7 @@ contract ProjectController is IProjectController, AccessControl {
 
     function validateAndCreateProject(uint256 postId) external returns (uint256) {
         // Get post data
-        (,address creator, uint256 tribeId, string memory metadata,,,,,) = postMinter.getPost(postId);
+        (,address creator, uint256 tribeId, ,,,,,) = postMinter.getPost(postId);
         
         // Verify caller is post creator
         require(msg.sender == creator, "Not post creator");
@@ -109,8 +109,11 @@ contract ProjectController is IProjectController, AccessControl {
 
     function validateAndCreateUpdate(uint256 postId) external {
         // Get post data
-        (,address creator, uint256 tribeId, string memory metadata,,,,,) = postMinter.getPost(postId);
+        (,address creator, uint256 tribeId, ,,,,,) = postMinter.getPost(postId);
         
+        // Verify caller is post creator
+        require(msg.sender == creator, "Not post creator");
+
         // Parse update metadata
         UpdateMetadata memory updateData = _parseUpdateMetadata();
         
@@ -173,6 +176,15 @@ contract ProjectController is IProjectController, AccessControl {
         
         IProjectController.Milestone storage milestone = project.milestones[milestoneIndex];
         require(milestone.status == IProjectController.MilestoneStatus.IN_PROGRESS, "Invalid status");
+        require(bytes(deliverableURI).length > 0, "Invalid deliverable URI");
+        
+        // Check dependencies
+        for (uint256 i = 0; i < milestone.dependencies.length; i++) {
+            require(
+                project.milestones[milestone.dependencies[i]].status == IProjectController.MilestoneStatus.COMPLETED,
+                "Dependencies not completed"
+            );
+        }
         
         milestone.deliverables = deliverableURI;
         milestone.status = IProjectController.MilestoneStatus.UNDER_REVIEW;
@@ -194,6 +206,21 @@ contract ProjectController is IProjectController, AccessControl {
         milestone.status = approved ? IProjectController.MilestoneStatus.COMPLETED : IProjectController.MilestoneStatus.REJECTED;
         milestone.completedAt = approved ? block.timestamp : 0;
         milestone.reviewer = msg.sender;
+        
+        // Update project status if all milestones are completed
+        if (approved) {
+            bool allCompleted = true;
+            for (uint256 i = 0; i < project.milestoneCount; i++) {
+                if (project.milestones[i].status != IProjectController.MilestoneStatus.COMPLETED) {
+                    allCompleted = false;
+                    break;
+                }
+            }
+            if (allCompleted) {
+                project.status = IProjectController.ProjectStatus.COMPLETED;
+                emit ProjectStatusUpdated(projectId, IProjectController.ProjectStatus.COMPLETED);
+            }
+        }
         
         emit MilestoneUpdated(projectId, milestoneIndex, milestone.status);
     }
@@ -223,6 +250,7 @@ contract ProjectController is IProjectController, AccessControl {
     }
 
     function getMilestone(uint256 projectId, uint256 milestoneIndex) external view returns (IProjectController.Milestone memory) {
+        require(milestoneIndex < projects[projectId].milestoneCount, "Invalid milestone");
         return projects[projectId].milestones[milestoneIndex];
     }
 
@@ -230,9 +258,11 @@ contract ProjectController is IProjectController, AccessControl {
     function _parseAndValidateMetadata() internal view returns (ProjectMetadata memory) {
         // For testing purposes, we'll create a simple project
         // In production, this would parse JSON metadata
+        uint256 currentTime = block.timestamp;
+        
         ProjectMetadata memory projectData;
         projectData.totalBudget = 1000 ether;
-        projectData.startDate = block.timestamp + 1 days;
+        projectData.startDate = currentTime + 1 days;
         projectData.duration = 30 days;
 
         // Create test milestones
@@ -243,7 +273,7 @@ contract ProjectController is IProjectController, AccessControl {
         milestones[0] = IProjectController.Milestone({
             title: "Test Milestone 1",
             budget: 500 ether,
-            deadline: block.timestamp + 15 days,
+            deadline: currentTime + 15 days,
             status: IProjectController.MilestoneStatus.PENDING,
             dependencies: noDeps,
             deliverables: "",
@@ -257,7 +287,7 @@ contract ProjectController is IProjectController, AccessControl {
         milestones[1] = IProjectController.Milestone({
             title: "Test Milestone 2",
             budget: 500 ether,
-            deadline: block.timestamp + 30 days,
+            deadline: currentTime + 30 days,
             status: IProjectController.MilestoneStatus.PENDING,
             dependencies: deps,
             deliverables: "",
@@ -285,9 +315,35 @@ contract ProjectController is IProjectController, AccessControl {
         require(milestoneIndex < project.milestoneCount, "Invalid milestone");
         
         IProjectController.Milestone storage milestone = project.milestones[milestoneIndex];
-        milestone.status = IProjectController.MilestoneStatus.IN_PROGRESS;
         
+        // Check dependencies
+        for (uint256 i = 0; i < milestone.dependencies.length; i++) {
+            require(
+                project.milestones[milestone.dependencies[i]].status == IProjectController.MilestoneStatus.COMPLETED,
+                "Dependencies not completed"
+            );
+        }
+        
+        // Update milestone status
+        milestone.status = IProjectController.MilestoneStatus.COMPLETED;
+        milestone.completedAt = block.timestamp;
+        
+        // Update project metadata
         emit MilestoneUpdated(projectId, milestoneIndex, milestone.status);
+
+        // Check if all milestones are completed
+        bool allCompleted = true;
+        for (uint256 i = 0; i < project.milestoneCount; i++) {
+            if (project.milestones[i].status != IProjectController.MilestoneStatus.COMPLETED) {
+                allCompleted = false;
+                break;
+            }
+        }
+        
+        if (allCompleted) {
+            project.status = IProjectController.ProjectStatus.COMPLETED;
+            emit ProjectStatusUpdated(projectId, IProjectController.ProjectStatus.COMPLETED);
+        }
     }
 
     function _handleStatusUpdate(uint256 projectId, IProjectController.ProjectStatus newStatus) internal {

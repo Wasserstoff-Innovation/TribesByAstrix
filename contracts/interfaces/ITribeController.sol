@@ -108,6 +108,7 @@ interface ITribeController {
     function getMergeRequest(uint256 requestId) external view returns (MergeRequest memory);
     function getInviteCodeStatus(uint256 tribeId, string calldata code) external view returns (bool valid, uint256 remainingUses);
     function getMemberCount(uint256 tribeId) external view returns (uint256);
+    function getTribeWhitelist(uint256 tribeId) external view returns (address[] memory);
 
     // Get all tribes a user is a member of
     function getUserTribes(address user) external view returns (uint256[] memory tribeIds);

@@ -10,6 +10,7 @@ describe("Post Journey V2", function () {
     let roleManager: RoleManager;
     let tribeController: TribeController;
     let collectibleController: CollectibleController;
+    let pointSystem: any;
 
     // User accounts
     let owner: SignerWithAddress;
@@ -39,11 +40,19 @@ describe("Post Journey V2", function () {
         tribeController = await TribeController.deploy(await roleManager.getAddress());
         await tribeController.waitForDeployment();
 
+        // Deploy PointSystem
+        const PointSystem = await ethers.getContractFactory("PointSystem");
+        pointSystem = await PointSystem.deploy(
+            await roleManager.getAddress(),
+            await tribeController.getAddress()
+        );
+        await pointSystem.waitForDeployment();
+
         const CollectibleController = await ethers.getContractFactory("CollectibleController");
         collectibleController = await CollectibleController.deploy(
             await roleManager.getAddress(),
             await tribeController.getAddress(),
-            ethers.ZeroAddress // Point system not needed for these tests
+            await pointSystem.getAddress()
         );
         await collectibleController.waitForDeployment();
 
@@ -340,11 +349,19 @@ describe("Post Journey V2", function () {
             tribeController = await TribeController.deploy(await roleManager.getAddress());
             await tribeController.waitForDeployment();
 
+            // Deploy PointSystem
+            const PointSystem = await ethers.getContractFactory("PointSystem");
+            pointSystem = await PointSystem.deploy(
+                await roleManager.getAddress(),
+                await tribeController.getAddress()
+            );
+            await pointSystem.waitForDeployment();
+
             const CollectibleController = await ethers.getContractFactory("CollectibleController");
             collectibleController = await CollectibleController.deploy(
                 await roleManager.getAddress(),
                 await tribeController.getAddress(),
-                ethers.ZeroAddress // Point system not needed for these tests
+                await pointSystem.getAddress()
             );
             await collectibleController.waitForDeployment();
 

@@ -25,11 +25,20 @@ describe("Concurrency & Scalability Tests", function () {
     tribeController = await TribeController.deploy(roleManager.target);
     await tribeController.waitForDeployment();
 
+    // Deploy PointSystem
+    const PointSystem = await ethers.getContractFactory("PointSystem");
+    const pointSystem = await PointSystem.deploy(
+        roleManager.target,
+        tribeController.target
+    );
+    await pointSystem.waitForDeployment();
+
     // Deploy CollectibleController with required arguments
     const CollectibleController = await ethers.getContractFactory("CollectibleController");
     collectibleController = await CollectibleController.deploy(
-      await roleManager.getAddress(),
-      await tribeController.getAddress(),
+        await roleManager.getAddress(),
+        await tribeController.getAddress(),
+        await pointSystem.getAddress()
     );
     await collectibleController.waitForDeployment();
 
@@ -37,10 +46,10 @@ describe("Concurrency & Scalability Tests", function () {
     await tribeController.createTribe(
       "Test Tribe",
       "ipfs://metadata",
-      [],
+      [], // No additional admins
       0, // PUBLIC
-      0,
-      ethers.ZeroAddress
+      0, // No entry fee
+      [] // No NFT requirements
     );
     tribeId = 0;
 

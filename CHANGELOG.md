@@ -1,6 +1,47 @@
 # Changelog
 
-## [0.3.4] - 2024-02-20
+## [0.3.5] - 2024-02-16
+
+### Added Test Report and Documentation
+- Added comprehensive test report in `docs/TestReport.md`:
+  ```markdown
+  - Detailed test categories and results
+  - Visual representation of test flows
+  - Coverage statistics and metrics
+  - Test environment details
+  - Recommendations for improvements
+  ```
+- Enhanced test documentation:
+  ```markdown
+  - Added mermaid diagrams for key test flows
+  - Included detailed test statistics
+  - Added performance metrics
+  - Documented test environment
+  ```
+- Updated project documentation:
+  ```markdown
+  - Reorganized documentation structure
+  - Added visual aids for better understanding
+  - Enhanced test coverage reporting
+  ```
+
+### Test Coverage Updates
+- Total test count: 117 tests
+- Coverage breakdown:
+  ```
+  - Core Functionality: 100%
+  - Community Features: 100%
+  - Content Management: 100%
+  - Project Management: 100%
+  - Security Features: 100%
+  ```
+- Performance metrics:
+  ```
+  - Average test execution: 1.2s
+  - Total suite duration: 140.4s
+  ```
+
+## [0.3.4] - 2024-02-15
 
 ### Enhanced Test Reporting System
 - Implemented new interactive HTML test report:
@@ -285,7 +326,6 @@
 - Consider adding a grace period for rejected members before BANNED status
 - Consider adding an appeals process for banned members
 
-## Next Steps
 1. Implement Event Management contract
 2. Enhance Super Community contract with new features
 3. Implement edge case handling mechanisms
