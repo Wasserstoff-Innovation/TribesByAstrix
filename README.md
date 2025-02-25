@@ -1,53 +1,44 @@
 # Tribes by Astrix
 
-A decentralized platform for community management and engagement, featuring points, events, and super communities.
+A decentralized platform for community management and engagement, featuring points, events, and super communities. Built for both web3 natives and newcomers, Tribes by Astrix enables vibrant digital communities with powerful on-chain tools.
 
 ## Project Structure
 
 ```
 tribes-by-astrix/
   ├─ contracts/
-  │   ├─ core/
-  │   │   ├─ RoleManager.sol          # Role-based access control
-  │   │   ├─ ProfileNFTMinter.sol     # Profile NFT management
-  │   │   └─ TribeController.sol      # Tribe creation and management
-  │   ├─ community/
-  │   │   ├─ CommunityPoints.sol      # Points system & redemption
-  │   │   ├─ EventController.sol      # Event & ticket management
-  │   │   └─ SuperCommunityController.sol # Multi-tribe management
-  │   ├─ content/
-  │   │   ├─ PostMinter.sol          # Content posting
-  │   │   ├─ CollectibleController.sol # NFT collectibles
-  │   │   └─ Voting.sol              # Governance
-  │   └─ interfaces/
-  │       ├─ ITribeController.sol
-  │       ├─ IEventController.sol
-  │       └─ ICommunityPoints.sol
+  │   ├─ RoleManager.sol          # Role-based access control
+  │   ├─ ProfileNFTMinter.sol     # Profile NFT management
+  │   ├─ TribeController.sol      # Tribe creation and management
+  │   ├─ PointSystem.sol          # Points system & tracking
+  │   ├─ EventController.sol      # Event & ticket management
+  │   ├─ SuperCommunityController.sol # Multi-tribe management
+  │   ├─ PostMinter.sol           # Content posting
+  │   ├─ PostFeedManager.sol      # Content feed management
+  │   ├─ CollectibleController.sol # NFT collectibles
+  │   ├─ CommunityPoints.sol      # Points redemption
+  │   ├─ ProjectController.sol    # Project management
+  │   ├─ Analytics.sol            # Analytics tracking
+  │   ├─ ContentManager.sol       # Content management
+  │   ├─ Voting.sol               # Governance
+  │   ├─ interfaces/              # Contract interfaces
+  │   ├─ libraries/               # Utility libraries
+  │   └─ constants/               # Contract constants
   ├─ test/
-  │   ├─ unit/
-  │   │   ├─ NFTController.test.ts
-  │   │   ├─ TribeController.test.ts
-  │   │   └─ ... other unit tests
-  │   ├─ integration/
-  │   │   └─ ... integration tests
-  │   ├─ journey/
-  │   │   └─ ... user journey tests
-  │   ├─ helpers/
-  │   │   └─ testSetup.ts           # Test environment setup
-  │   └─ utils/
-  │       └─ TestLogger.ts          # Test logging utility
-  ├─ public/
-  │   ├─ index.html                 # Test report template
-  │   ├─ generate-report.js         # Report generation script
-  │   ├─ run-tests.sh              # Test execution script
-  │   └─ report/                    # Generated test reports
-  │       ├─ test-results.json      # Latest test results
-  │       ├─ test-results.csv       # CSV export
-  │       └─ test-history.json      # Historical test data
+  │   ├─ unit/                    # Unit tests
+  │   ├─ integration/             # Integration tests
+  │   ├─ journey/                 # User journey tests
+  │   ├─ helpers/                 # Test helpers
+  │   └─ utils/                   # Test utilities
   ├─ scripts/
-  │   └─ deploy.ts
-  ├─ hardhat.config.ts
-  └─ package.json
+  │   └─ deploy.ts                # Deployment script
+  ├─ public/                      # Test reports and UI
+  ├─ docs/                        # Documentation
+  ├─ abis/                        # Contract ABIs
+  ├─ typechain-types/             # TypeScript types
+  ├─ hardhat.config.ts            # Hardhat configuration
+  ├─ CHANGELOG.md                 # Change log
+  └─ package.json                 # Project dependencies
 ```
 
 ## Core Components & Flow
@@ -74,33 +65,40 @@ graph TD
 
 - **TribeController.sol**: Base community management
   - Tribe creation and configuration
-  - Whitelist-based membership
+  - Membership management
   - Admin controls
   - Parent-child tribe relationships
 
 ### 2. Community Layer
 ```mermaid
 graph TD
-    A[User] -->|Earns Points| B[CommunityPoints]
-    A -->|Buys Tickets| C[EventController]
-    D[TribeController] -->|Joins| E[SuperCommunityController]
-    B -->|Redeems for| F[CollectibleController]
-    C -->|Issues| F
+    A[User] -->|Earns Points| B[PointSystem]
+    A -->|Redeems Points| C[CommunityPoints]
+    A -->|Buys Tickets| D[EventController]
+    E[TribeController] -->|Joins| F[SuperCommunityController]
+    C -->|Redeems for| G[CollectibleController]
+    D -->|Issues| G
 ```
 
-- **CommunityPoints.sol**: Points system (New)
-  - Off-chain points tracking
+- **PointSystem.sol**: Points tracking
+  - Activity-based point earning
+  - Tribe-specific point balances
+  - Milestone tracking
+  - Leaderboard functionality
+
+- **CommunityPoints.sol**: Points redemption
+  - Off-chain points verification
   - On-chain redemption with signatures
   - Anti-replay protection
   - Points-to-collectibles conversion
 
-- **EventController.sol**: Event management (New)
+- **EventController.sol**: Event management
   - ERC1155-based ticketing
   - One-time transfer restriction
   - Attendance tracking
   - Event lifecycle
 
-- **SuperCommunityController.sol**: Multi-tribe management (New)
+- **SuperCommunityController.sol**: Multi-tribe management
   - Tribe grouping and hierarchy
   - Cross-tribe operations
   - Unified governance
@@ -110,21 +108,37 @@ graph TD
 ```mermaid
 graph TD
     A[User] -->|Creates| B[PostMinter]
-    A -->|Mints| C[CollectibleController]
-    A -->|Participates in| D[Voting]
-    B -->|Triggers| E[CommunityPoints]
+    B -->|Manages| C[PostFeedManager]
+    A -->|Mints| D[CollectibleController]
+    A -->|Creates| E[ProjectController]
+    A -->|Participates in| F[Voting]
+    B -->|Triggers| G[PointSystem]
+    F -->|Influences| E
+    E -->|Manages| H[Analytics]
 ```
 
 - **PostMinter.sol**: Content creation
   - Post creation and management
   - Tribe-specific content
+  - Encrypted/gated posts
   - Point earning triggers
+
+- **PostFeedManager.sol**: Feed management
+  - Post feed organization
+  - Content discoverability
+  - Feed customization
 
 - **CollectibleController.sol**: NFT management
   - ERC1155 collectibles
   - Event tickets
   - Limited editions
   - Redemption mechanics
+
+- **ProjectController.sol**: Project management
+  - Project creation and funding
+  - Milestone tracking
+  - Review process
+  - Fund disbursement
 
 - **Voting.sol**: Governance
   - Proposal creation
@@ -135,16 +149,16 @@ graph TD
 ## Key Features
 
 ### 1. Points System
-- Off-chain points earning
+- Activity-based points earning
+- Milestone tracking
+- Off-chain points calculation
 - Signature-based redemption
-- Collectible rewards
-- Activity tracking
 
 ### 2. Event Management
-- Ticket minting
+- Ticket minting and sales
 - Transfer restrictions
 - Attendance tracking
-- Event lifecycle
+- Event lifecycle management
 
 ### 3. Super Communities
 - Multi-tribe management
@@ -152,51 +166,68 @@ graph TD
 - Cross-tribe operations
 - Unified governance
 
-### 4. Security Features
+### 4. Project Management
+- Project creation and funding
+- Milestone-based development
+- Review and approval process
+- Analytics and reporting
+
+### 5. Security Features
 - Role-Based Access Control (RBAC)
 - Signature verification
 - Transfer restrictions
 - Rate limiting
 
-## Test Execution and Reporting
+## Deployment
 
-### Test Coverage and Reports
-Comprehensive test coverage is maintained across all components. View the detailed test report in [Test Report](docs/TestReport.md).
+### Supported Networks
+- Fuse Testnet
+- Monad Devnet
+- Local Hardhat Network
 
-```mermaid
-graph TD
-    A[Test Suite] --> B[Core Tests]
-    A --> C[Community Tests]
-    A --> D[Content Tests]
-    A --> E[Project Tests]
-    A --> F[Security Tests]
-    
-    B --> B1[Profile Management]
-    B --> B2[Role Management]
-    
-    C --> C1[Tribe Management]
-    C --> C2[Super Communities]
-    C --> C3[Events]
-    
-    D --> D1[Post Creation]
-    D --> D2[Voting System]
-    D --> D3[Collectibles]
-    
-    E --> E1[Project Creation]
-    E --> E2[Milestone Management]
-    E --> E3[Review Process]
-    
-    F --> F1[Concurrency]
-    F --> F2[Access Control]
-    F --> F3[Data Validation]
+### Deployment Commands
+```bash
+# Deploy to Fuse Testnet
+npm run deploy-fuse
+
+# Deploy to Monad Devnet
+npm run deploy-monad
+
+# Deploy to local Hardhat network
+npx hardhat run scripts/deploy.ts --network localhost
 ```
 
-### Test Statistics
-- Total Tests: 117
-- Coverage: 100%
-- Average Execution Time: 1.2s per test
+### Deployment Verification
+The deployment script includes verification steps:
+1. RoleManager deployment and initial setup
+2. Contract deployment with proper constructor arguments
+3. Role assignment and authorization
+4. Final contract address reporting
 
-### Running Tests
+## Development
+
+### Prerequisites
+- Node.js (v16+)
+- npm or yarn
+- Hardhat
+
+### Setup
+```bash
+# Clone the repository
+git clone https://github.com/your-username/tribes-by-astrix.git
+
+# Install dependencies
+cd tribes-by-astrix
+npm install
+
+# Compile contracts
+npm run compile
+
+# Run tests
+npm test
+```
+
+### Testing
 ```bash
 # Run all tests with report generation
 npm test
@@ -208,100 +239,30 @@ npm run test:journey
 
 # Generate and view test report
 npm run report
+npm run report:serve
 ```
+
+## Test Report and Documentation
+
+The project includes a comprehensive test report system that tracks test execution, results, and coverage. View the detailed test report in [Test Report](docs/TestReport.md).
+
+### Test Statistics
+- Total Tests: 117+
+- Coverage: 100%
+- Average Execution Time: 1.2s per test
 
 ### Test Report Features
-- **Interactive Web Interface**: View test results in a user-friendly web interface
-- **Real-time Filtering**: Filter tests by:
-  - Test name (search)
-  - Test suite
-  - Test status (passed/failed)
-- **Visualizations**:
-  - Pass/fail ratio charts
-  - Historical trends
-  - System resource usage
-- **Detailed Test Information**:
-  - Test output with colored log levels
-  - Error details with stack traces
-  - Test duration and timestamps
-- **Historical Data**:
-  - Track test runs over time
-  - Monitor pass/fail trends
-  - Track performance metrics
-
-### Report Generation
-The test reporting system generates three types of reports:
-1. **HTML Report** (`http://localhost:3000`):
-   - Interactive web interface
-   - Real-time filtering and search
-   - Data visualizations
-2. **JSON Report** (`public/report/test-results.json`):
-   - Structured test data
-   - System information
-   - Raw test output
-3. **CSV Export** (`public/report/test-results.csv`):
-   - Spreadsheet-compatible format
-   - Test execution history
-   - Summary statistics
-
-## Development
-
-### Setup
-```bash
-# Install dependencies
-npm install
-
-# Install dev dependencies
-npm install --save-dev @openzeppelin/contracts @nomicfoundation/hardhat-toolbox
-
-# Compile contracts
-npx hardhat compile
-
-# Run tests
-npx hardhat test
-```
-
-### Deployment
-```bash
-# Set up environment variables in .env
-PRIVATE_KEY=your_private_key_here
-
-# Deploy to Monad Devnet
-npx hardhat run scripts/deploy.ts --network monadDevnet
-```
-
-#### Network Details
-- **Network Name**: Monad Devnet
-- **Chain ID**: 20143
-- **Currency Symbol**: DMON
-- **RPC URL**: rpc-devnet.monadinfra.com/rpc/api-key
-- **Gas Price**: 52 GWEI
-
-#### Deployment Order
-1. Deploy RoleManager
-2. Deploy TribeController
-3. Deploy SuperCommunityController (requires RoleManager and TribeController addresses)
-4. Deploy EventController (requires RoleManager address)
-5. Deploy CommunityPoints (requires RoleManager address)
-6. Deploy remaining contracts with their dependencies
-
-#### Post Deployment
-After deployment, verify the contract addresses and update them in your frontend configuration.
-
-### Testing
-```bash
-# Run specific test suite
-npx hardhat test test/community/CommunityPoints.test.ts
-
-# Run all tests
-npx hardhat test
-
-# Generate coverage
-npx hardhat coverage
-```
-
-## Documentation
-- [User Journeys](./docs/UserJourney.md)
+- Interactive HTML interface
+- Real-time filtering
+- Test execution history
+- Pass/fail visualizations
+- System resource usage tracking
 
 ## License
-MIT
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Contributors
+
+- Astrix Team
+- Community Contributors

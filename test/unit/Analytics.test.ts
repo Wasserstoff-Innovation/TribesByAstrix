@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Analytics, TribeController, RoleManager, PointSystem, PostMinter } from "../../typechain-types";
+import { Analytics, TribeController, RoleManager, PointSystem, PostMinter, CollectibleController, PostFeedManager } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog } from "ethers";
 
@@ -28,12 +28,10 @@ describe("Analytics", function () {
     let tribeController: TribeController;
     let pointSystem: PointSystem;
     let postMinter: PostMinter;
+    let collectibleController: CollectibleController;
+    let feedManager: PostFeedManager;
     let owner: SignerWithAddress;
-    let admin: SignerWithAddress;
-    let user1: SignerWithAddress;
-    let user2: SignerWithAddress;
-    let creator: SignerWithAddress;
-    let members: SignerWithAddress[];
+    let users: SignerWithAddress[];
     let tribeId: number;
 
     const sampleMetadata = {
@@ -44,8 +42,8 @@ describe("Analytics", function () {
     };
 
     beforeEach(async function () {
-        [owner, admin, user1, user2] = await ethers.getSigners();
-
+        [owner, ...users] = await ethers.getSigners();
+        
         // Deploy RoleManager
         const RoleManager = await ethers.getContractFactory("RoleManager");
         roleManager = await RoleManager.deploy();
@@ -64,14 +62,32 @@ describe("Analytics", function () {
         );
         await pointSystem.waitForDeployment();
 
+        // Deploy CollectibleController
+        const CollectibleController = await ethers.getContractFactory("CollectibleController");
+        collectibleController = await CollectibleController.deploy(
+            await roleManager.getAddress(),
+            await tribeController.getAddress(),
+            await pointSystem.getAddress()
+        );
+        await collectibleController.waitForDeployment();
+
+        // Deploy PostFeedManager
+        const PostFeedManager = await ethers.getContractFactory("PostFeedManager");
+        feedManager = await PostFeedManager.deploy(await tribeController.getAddress());
+        await feedManager.waitForDeployment();
+
         // Deploy PostMinter
         const PostMinter = await ethers.getContractFactory("PostMinter");
         postMinter = await PostMinter.deploy(
             await roleManager.getAddress(),
             await tribeController.getAddress(),
-            await pointSystem.getAddress()
+            await collectibleController.getAddress(),
+            await feedManager.getAddress()
         );
         await postMinter.waitForDeployment();
+
+        // Grant admin role to PostMinter in PostFeedManager
+        await feedManager.grantRole(await feedManager.DEFAULT_ADMIN_ROLE(), await postMinter.getAddress());
 
         // Deploy Analytics
         const Analytics = await ethers.getContractFactory("Analytics");
@@ -82,37 +98,20 @@ describe("Analytics", function () {
         );
         await analytics.waitForDeployment();
 
-        // Setup roles
-        await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("ADMIN_ROLE")), admin.address);
-
-        // Get remaining signers for creator and members
-        const allSigners = await ethers.getSigners();
-        creator = allSigners[4]; // Use 5th signer as creator
-        members = allSigners.slice(5); // Use remaining signers as members
-
-        // Create a test tribe
-        const tx = await tribeController.connect(creator).createTribe(
-            sampleMetadata.name,
-            JSON.stringify(sampleMetadata),
+        // Create a test tribe with owner as admin
+        await tribeController.createTribe(
+            "Test Tribe",
+            "ipfs://metadata",
             [], // No additional admins
             0, // PUBLIC
             0, // No entry fee
             [] // No NFT requirements
         );
-        const receipt = await tx.wait();
-        const event = receipt?.logs.find(x => x instanceof EventLog && x.eventName === "TribeCreated") as EventLog;
-        tribeId = event ? Number(event.args[0]) : 0;
+        tribeId = 0;
 
-        // Add some members to the tribe
-        for (let i = 0; i < 5; i++) {
-            await tribeController.connect(members[i]).joinTribe(tribeId);
-            // Add some points with action type
-            await pointSystem.connect(creator).awardPoints(
-                tribeId, 
-                members[i].address, 
-                (i + 1) * 100,
-                ethers.encodeBytes32String("CUSTOM")
-            );
+        // Add test users as members
+        for (const user of users.slice(0, 5)) {
+            await tribeController.connect(user).joinTribe(tribeId);
         }
     });
 
@@ -216,7 +215,7 @@ describe("Analytics", function () {
             await ethers.provider.send("evm_mine", []);
             
             // Get activity score for the most active member
-            const score = await analytics.getMemberActivityScore.staticCall(tribeId, members[4].address);
+            const score = await analytics.getMemberActivityScore.staticCall(tribeId, users[4].address);
             expect(Number(score)).to.equal(0); // Currently returns 0 as per contract
         });
 

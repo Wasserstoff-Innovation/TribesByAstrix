@@ -1,5 +1,58 @@
 # Changelog
 
+## [0.3.6] - 2024-02-25
+
+### Fixed Deployment Script
+- Updated deployment script to match test requirements:
+  ```typescript
+  - Added missing PointSystem deployment (required by CollectibleController)
+  - Added PostFeedManager deployment (required by PostMinter)
+  - Fixed constructor arguments for CollectibleController
+  - Fixed constructor arguments for PostMinter (now requires 4 parameters)
+  - Added admin role assignment for PostMinter in PostFeedManager
+  ```
+- Enhanced deployment output with more details:
+  ```
+  - Added PointSystem address to output
+  - Added PostFeedManager address to output
+  - Improved deployment verification steps
+  ```
+- Ensured consistent deployment across environments:
+  ```
+  - Local Hardhat network
+  - Fuse testnet
+  - Monad devnet
+  ```
+
+### Structure Updates
+- Reorganized file structure:
+  ```
+  - Flattened contracts directory structure (removed nested directories)
+  - Updated imports for better organization
+  - Ensured consistent contract naming
+  ```
+- Updated project documentation:
+  ```markdown
+  - Updated contract interactions diagram
+  - Added deployment instructions
+  - Improved README organization
+  - Updated contract dependencies
+  ```
+
+### Code Quality Improvements
+- Fixed test cases for updated contracts:
+  ```typescript
+  - Updated PostMinter tests with new constructor parameters
+  - Updated journey tests for PostMinter V2
+  - Fixed ProjectController tests
+  ```
+- Enhanced code quality and readability:
+  ```typescript
+  - Fixed linting issues
+  - Improved error messages
+  - Enhanced documentation
+  ```
+
 ## [0.3.5] - 2024-02-16
 
 ### Added Test Report and Documentation
@@ -95,7 +148,7 @@
 - Added test reporting documentation
 - Updated file structure documentation
 - Added test execution instructions
-- Added report viewing instructions 
+- Added report viewing instructions
 
 ## [0.3.3] - 2024-02-09
 

@@ -69,7 +69,7 @@ contract ProjectController is IProjectController, AccessControl {
     }
 
     function validateAndCreateProject(uint256 postId) external returns (uint256) {
-        // Get post data
+        // Get post data and use all variables
         (,address creator, uint256 tribeId, ,,,,,) = postMinter.getPost(postId);
         
         // Verify caller is post creator

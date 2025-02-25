@@ -21,23 +21,39 @@ async function main() {
   const tribeController = await TribeController.deploy(await roleManager.getAddress());
   await tribeController.waitForDeployment();
   console.log("TribeController deployed to:", await tribeController.getAddress());
+  
+  // Deploy PointSystem first (needed for CollectibleController)
+  const PointSystem = await ethers.getContractFactory("PointSystem");
+  const pointSystem = await PointSystem.deploy(
+    await roleManager.getAddress(),
+    await tribeController.getAddress()
+  );
+  await pointSystem.waitForDeployment();
+  console.log("PointSystem deployed to:", await pointSystem.getAddress());
 
   // Deploy CollectibleController
-    const CollectibleController = await ethers.getContractFactory("CollectibleController");
-    const collectibleController = await CollectibleController.deploy(
-        await roleManager.getAddress(),
-        await tribeController.getAddress(),
-        await profileNFTMinter.getAddress()
-   );
-   await collectibleController.waitForDeployment();
-   console.log("CollectibleController deployed to:", await collectibleController.getAddress());
+  const CollectibleController = await ethers.getContractFactory("CollectibleController");
+  const collectibleController = await CollectibleController.deploy(
+    await roleManager.getAddress(),
+    await tribeController.getAddress(),
+    await pointSystem.getAddress()
+  );
+  await collectibleController.waitForDeployment();
+  console.log("CollectibleController deployed to:", await collectibleController.getAddress());
+
+  // Deploy PostFeedManager
+  const PostFeedManager = await ethers.getContractFactory("PostFeedManager");
+  const postFeedManager = await PostFeedManager.deploy(await tribeController.getAddress());
+  await postFeedManager.waitForDeployment();
+  console.log("PostFeedManager deployed to:", await postFeedManager.getAddress());
 
   // Deploy PostMinter
   const PostMinter = await ethers.getContractFactory("PostMinter");
   const postMinter = await PostMinter.deploy(
     await roleManager.getAddress(),
     await tribeController.getAddress(),
-    await profileNFTMinter.getAddress()
+    await collectibleController.getAddress(),
+    await postFeedManager.getAddress()
   );
   await postMinter.waitForDeployment();
   console.log("PostMinter deployed to:", await postMinter.getAddress());
@@ -80,12 +96,17 @@ async function main() {
   await roleManager.authorizeFanAssigner(await profileNFTMinter.getAddress());
   await roleManager.grantRole(ORGANIZER_ROLE, deployer.address);
 
+  // Grant admin role to PostMinter in PostFeedManager
+  await postFeedManager.grantRole(await postFeedManager.DEFAULT_ADMIN_ROLE(), await postMinter.getAddress());
+
   console.log("\nContract Addresses:");
   console.log("===================");
   console.log(`RoleManager: ${await roleManager.getAddress()}`);
   console.log(`ProfileNFTMinter: ${await profileNFTMinter.getAddress()}`);
   console.log(`TribeController: ${await tribeController.getAddress()}`);
+  console.log(`PointSystem: ${await pointSystem.getAddress()}`);
   console.log(`CollectibleController: ${await collectibleController.getAddress()}`);
+  console.log(`PostFeedManager: ${await postFeedManager.getAddress()}`);
   console.log(`PostMinter: ${await postMinter.getAddress()}`);
   console.log(`Voting: ${await voting.getAddress()}`);
   console.log(`CommunityPoints: ${await communityPoints.getAddress()}`);

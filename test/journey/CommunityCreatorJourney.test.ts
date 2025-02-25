@@ -36,14 +36,32 @@ describe("Community Creator Journey", function () {
         );
         await pointSystem.waitForDeployment();
 
+        // Deploy CollectibleController
+        const CollectibleController = await ethers.getContractFactory("CollectibleController");
+        const collectibleController = await CollectibleController.deploy(
+            await roleManager.getAddress(),
+            await tribeController.getAddress(),
+            await pointSystem.getAddress()
+        );
+        await collectibleController.waitForDeployment();
+
+        // Deploy PostFeedManager
+        const PostFeedManager = await ethers.getContractFactory("PostFeedManager");
+        const feedManager = await PostFeedManager.deploy(await tribeController.getAddress());
+        await feedManager.waitForDeployment();
+
         // Deploy PostMinter
         const PostMinter = await ethers.getContractFactory("PostMinter");
         postMinter = await PostMinter.deploy(
             await roleManager.getAddress(),
             await tribeController.getAddress(),
-            await pointSystem.getAddress()
+            await collectibleController.getAddress(),
+            await feedManager.getAddress()
         );
         await postMinter.waitForDeployment();
+
+        // Grant admin role to PostMinter in PostFeedManager
+        await feedManager.grantRole(await feedManager.DEFAULT_ADMIN_ROLE(), await postMinter.getAddress());
 
         // Setup roles
         await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("ADMIN_ROLE")), admin.address);

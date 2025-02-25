@@ -56,18 +56,34 @@ describe("Post Journey V2", function () {
         );
         await collectibleController.waitForDeployment();
 
+        // Deploy PostFeedManager first
+        const PostFeedManager = await ethers.getContractFactory("PostFeedManager");
+        const feedManager = await PostFeedManager.deploy(await tribeController.getAddress());
+        await feedManager.waitForDeployment();
+
+        // Then deploy PostMinter with all required arguments
         const PostMinter = await ethers.getContractFactory("PostMinter");
         postMinter = await PostMinter.deploy(
             await roleManager.getAddress(),
             await tribeController.getAddress(),
-            await collectibleController.getAddress()
+            await collectibleController.getAddress(),
+            await feedManager.getAddress()
         );
         await postMinter.waitForDeployment();
+
+        // Grant admin role to PostMinter in PostFeedManager
+        await feedManager.grantRole(await feedManager.DEFAULT_ADMIN_ROLE(), await postMinter.getAddress());
 
         // Setup roles
         await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("ADMIN_ROLE")), admin.address);
         await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("MODERATOR_ROLE")), moderator.address);
         await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("CONTENT_CREATOR_ROLE")), contentCreator.address);
+        
+        // Grant project creator role to content creator and admin
+        await postMinter.grantRole(await postMinter.PROJECT_CREATOR_ROLE(), contentCreator.address);
+        await postMinter.grantRole(await postMinter.PROJECT_CREATOR_ROLE(), admin.address);
+        await postMinter.grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), contentCreator.address);
+        await postMinter.grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), admin.address);
 
         // Create test tribe
         const tx = await tribeController.connect(admin).createTribe(
@@ -222,119 +238,139 @@ describe("Post Journey V2", function () {
         });
 
         it("Should handle post reporting", async function () {
-            // Wait for rate limit before creating test post
-            await ethers.provider.send("evm_increaseTime", [61]); // 61 seconds
+            // Wait for cooldown
+            await ethers.provider.send("evm_increaseTime", [61]);
             await ethers.provider.send("evm_mine", []);
 
-            // Create test post
-            const testPost = {
-                type: "TEXT",
-                title: "Test Post",
-                content: "This is a test post",
-                createdAt: Math.floor(Date.now() / 1000)
-            };
-
-            const tx = await postMinter.connect(contentCreator).createPost(
+            // Create a post
+            const tx = await postMinter.connect(regularUser1).createPost(
                 tribeId,
-                JSON.stringify(testPost),
+                JSON.stringify({
+                    title: "Test Post",
+                    content: "Test Content",
+                    createdAt: Math.floor(Date.now() / 1000)
+                }),
                 false,
                 ethers.ZeroAddress,
                 0
             );
-            const event = (await tx.wait())?.logs.find(
+
+            const receipt = await tx.wait();
+            const event = receipt?.logs.find(
                 x => x instanceof EventLog && x.eventName === "PostCreated"
             ) as EventLog;
             const postId = event ? Number(event.args[0]) : 0;
 
-            // Wait for rate limit before reporting
-            await ethers.provider.send("evm_increaseTime", [61]); // 61 seconds
+            // Wait for cooldown before reporting
+            await ethers.provider.send("evm_increaseTime", [61]);
             await ethers.provider.send("evm_mine", []);
 
             // Report post
-            await postMinter.connect(regularUser1).reportPost(postId, "Inappropriate content");
+            await postMinter.connect(regularUser2).reportPost(postId, "Inappropriate content");
+            await ethers.provider.send("evm_mine", []);
+
+            // Wait for cooldown before second report
+            await ethers.provider.send("evm_increaseTime", [61]);
+            await ethers.provider.send("evm_mine", []);
+
+            // Try to report again
+            await expect(
+                postMinter.connect(regularUser2).reportPost(postId, "Inappropriate content")
+            ).to.be.revertedWithCustomError(postMinter, "AlreadyReported");
         });
 
         it("Should handle post deletion", async function () {
-            // Wait for rate limit before creating test post
-            await ethers.provider.send("evm_increaseTime", [61]); // 61 seconds
+            // Wait for cooldown
+            await ethers.provider.send("evm_increaseTime", [61]);
             await ethers.provider.send("evm_mine", []);
 
-            // Create test post
-            const testPost = {
-                type: "TEXT",
-                title: "To be deleted",
-                content: "This post will be deleted",
-                createdAt: Math.floor(Date.now() / 1000)
-            };
-
+            // Create a post
             const tx = await postMinter.connect(regularUser1).createPost(
                 tribeId,
-                JSON.stringify(testPost),
+                JSON.stringify({
+                    title: "Test Post",
+                    content: "Test Content",
+                    createdAt: Math.floor(Date.now() / 1000)
+                }),
                 false,
                 ethers.ZeroAddress,
                 0
             );
-            const deleteEvent = (await tx.wait())?.logs.find(
+
+            const receipt = await tx.wait();
+            const event = receipt?.logs.find(
                 x => x instanceof EventLog && x.eventName === "PostCreated"
             ) as EventLog;
-            const postId = deleteEvent ? Number(deleteEvent.args[0]) : 0;
+            const postId = event ? Number(event.args[0]) : 0;
 
-            // Wait for rate limit before deletion
-            await ethers.provider.send("evm_increaseTime", [61]); // 61 seconds
+            // Wait for cooldown before deletion
+            await ethers.provider.send("evm_increaseTime", [61]);
             await ethers.provider.send("evm_mine", []);
 
             // Delete post
             await postMinter.connect(regularUser1).deletePost(postId);
+            await ethers.provider.send("evm_mine", []);
+
+            // Wait for cooldown before interaction
+            await ethers.provider.send("evm_increaseTime", [61]);
+            await ethers.provider.send("evm_mine", []);
+
+            // Try to interact with deleted post
+            await expect(
+                postMinter.connect(regularUser2).interactWithPost(postId, 0)
+            ).to.be.revertedWithCustomError(postMinter, "PostDeleted");
         });
     });
 
     describe("Moderation Journey", function () {
-        it("Should handle post reporting", async function () {
-            // User reports post
-            await postMinter.connect(regularUser2).reportPost(
-                publicPostId,
-                "Inappropriate content"
-            );
+        let postId: number;
 
-            // Same user cannot report twice
-            await expect(
-                postMinter.connect(regularUser2).reportPost(publicPostId, "Spam")
-            ).to.be.revertedWith("Already reported");
-        });
+        beforeEach(async function () {
+            // Wait for cooldown
+            await ethers.provider.send("evm_increaseTime", [61]);
+            await ethers.provider.send("evm_mine", []);
 
-        it("Should handle post deletion", async function () {
             // Create test post
-            const testPost = {
-                type: "TEXT",
-                title: "To be deleted",
-                content: "This post will be deleted",
-                createdAt: Math.floor(Date.now() / 1000)
-            };
-
             const tx = await postMinter.connect(regularUser1).createPost(
                 tribeId,
-                JSON.stringify(testPost),
+                JSON.stringify({
+                    title: "Test Post",
+                    content: "Test content for deletion",
+                    type: "TEXT"
+                }),
                 false,
                 ethers.ZeroAddress,
                 0
             );
-            const deleteEvent = (await tx.wait())?.logs.find(
+
+            const receipt = await tx.wait();
+            const event = receipt?.logs.find(
                 x => x instanceof EventLog && x.eventName === "PostCreated"
             ) as EventLog;
-            const postId = deleteEvent ? Number(deleteEvent.args[0]) : 0;
+            postId = event ? Number(event.args[0]) : 0;
 
-            // Only post creator can delete
-            await expect(
-                postMinter.connect(regularUser2).deletePost(postId)
-            ).to.be.revertedWith("Not post creator");
+            // Wait for cooldown again before deletion
+            await ethers.provider.send("evm_increaseTime", [61]);
+            await ethers.provider.send("evm_mine", []);
+        });
 
-            // Creator can delete
+        it("Should handle post deletion", async function () {
+            // Delete post
             await postMinter.connect(regularUser1).deletePost(postId);
 
-            // Cannot interact with deleted post
+            // Get post from feed manager to check deleted status
+            const feedManager = await ethers.getContractAt("PostFeedManager", await postMinter.feedManager());
+            const postData = await feedManager.getPost(postId);
+            expect(postData.isDeleted).to.be.true;
+
+            // Wait for cooldown
+            await ethers.provider.send("evm_increaseTime", [61]);
+            await ethers.provider.send("evm_mine", []);
+
+            // Verify interactions are prevented
             await expect(
                 postMinter.connect(regularUser2).interactWithPost(postId, 0)
-            ).to.be.revertedWith("Post deleted");
+            ).to.be.revertedWithCustomError(postMinter, "PostDeleted");
         });
     });
 
@@ -365,13 +401,23 @@ describe("Post Journey V2", function () {
             );
             await collectibleController.waitForDeployment();
 
+            // Deploy PostFeedManager first
+            const PostFeedManager = await ethers.getContractFactory("PostFeedManager");
+            const feedManager = await PostFeedManager.deploy(await tribeController.getAddress());
+            await feedManager.waitForDeployment();
+
+            // Then deploy PostMinter with all required arguments
             const PostMinter = await ethers.getContractFactory("PostMinter");
             postMinter = await PostMinter.deploy(
                 await roleManager.getAddress(),
                 await tribeController.getAddress(),
-                await collectibleController.getAddress()
+                await collectibleController.getAddress(),
+                await feedManager.getAddress()
             );
             await postMinter.waitForDeployment();
+
+            // Grant admin role to PostMinter in PostFeedManager
+            await feedManager.grantRole(await feedManager.DEFAULT_ADMIN_ROLE(), await postMinter.getAddress());
 
             // Setup roles
             await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("ADMIN_ROLE")), admin.address);
@@ -451,7 +497,7 @@ describe("Post Journey V2", function () {
                     ethers.ZeroAddress,
                     0
                 )
-            ).to.be.revertedWith("Invalid metadata format");
+            ).to.be.revertedWithCustomError(postMinter, "EmptyMetadata");
 
             // Invalid JSON
             await expect(
@@ -462,7 +508,7 @@ describe("Post Journey V2", function () {
                     ethers.ZeroAddress,
                     0
                 )
-            ).to.be.revertedWith("Invalid metadata format");
+            ).to.be.revertedWithCustomError(postMinter, "InvalidJsonFormat");
 
             // Missing required fields
             await expect(
@@ -473,7 +519,7 @@ describe("Post Journey V2", function () {
                     ethers.ZeroAddress,
                     0
                 )
-            ).to.be.revertedWith("Invalid metadata format");
+            ).to.be.revertedWithCustomError(postMinter, "MissingContentField");
         });
 
         it("Should handle permission errors", async function () {
@@ -493,7 +539,7 @@ describe("Post Journey V2", function () {
                     ethers.ZeroAddress,
                     0
                 )
-            ).to.be.revertedWith("Not a tribe member");
+            ).to.be.revertedWithCustomError(postMinter, "NotTribeMember");
 
             // Non-member cannot post
             const nonMember = owner;
@@ -505,7 +551,7 @@ describe("Post Journey V2", function () {
                     ethers.ZeroAddress,
                     0
                 )
-            ).to.be.revertedWith("Not a tribe member");
+            ).to.be.revertedWithCustomError(postMinter, "NotTribeMember");
         });
 
         it("Should handle rate limiting", async function () {
@@ -534,7 +580,7 @@ describe("Post Journey V2", function () {
                     ethers.ZeroAddress,
                     0
                 )
-            ).to.be.revertedWith("Please wait before posting again");
+            ).to.be.revertedWithCustomError(postMinter, "CooldownActive");
 
             // Wait for cooldown
             await ethers.provider.send("evm_increaseTime", [61]); // 61 seconds

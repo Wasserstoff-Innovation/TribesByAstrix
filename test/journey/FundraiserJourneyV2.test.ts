@@ -72,13 +72,23 @@ describe("Fundraiser Journey V2", function () {
         );
         await collectibleController.waitForDeployment();
 
+        // Deploy PostFeedManager first
+        const PostFeedManager = await ethers.getContractFactory("PostFeedManager");
+        const feedManager = await PostFeedManager.deploy(tribeController.target);
+        await feedManager.waitForDeployment();
+
+        // Then deploy PostMinter with all required arguments
         const PostMinter = await ethers.getContractFactory("PostMinter");
         postMinter = await PostMinter.deploy(
             roleManager.target,
             tribeController.target,
-            collectibleController.target
+            collectibleController.target,
+            feedManager.target
         );
         await postMinter.waitForDeployment();
+
+        // Grant admin role to PostMinter in PostFeedManager
+        await feedManager.grantRole(await feedManager.DEFAULT_ADMIN_ROLE(), await postMinter.getAddress());
 
         // Setup roles
         await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("ADMIN_ROLE")), admin.address);
@@ -382,20 +392,61 @@ describe("Fundraiser Journey V2", function () {
                     fundraiserPostId,
                     0 // LIKE type
                 )
-            ).to.be.revertedWith("Cannot view post");
+            ).to.be.revertedWithCustomError(postMinter, "InsufficientAccess()");
         });
 
         it("Should prevent interactions with deleted fundraiser", async function () {
+            // Wait for cooldown
+            await ethers.provider.send("evm_increaseTime", [61]);
+            await ethers.provider.send("evm_mine", []);
+
+            // Create a new fundraiser post
+            const fundraiser = {
+                title: "Test Fundraiser",
+                content: "Fundraiser for testing deletion",
+                type: "FUNDRAISER",
+                fundraiserDetails: {
+                    target: ethers.parseEther("1000"),
+                    currency: "ETH",
+                    startDate: Math.floor(Date.now()/1000) + 60,
+                    duration: 30 * 24 * 60 * 60,
+                    slabs: [{ name: "Basic", amount: ethers.parseEther("100") }]
+                },
+                createdAt: Math.floor(Date.now()/1000)
+            };
+
+            const tx = await postMinter.connect(fundraiserCreator).createPost(
+                tribeId,
+                JSON.stringify(replaceBigInts(fundraiser)),
+                false,
+                ethers.ZeroAddress,
+                0
+            );
+            const receipt = await tx.wait();
+            const event = receipt?.logs.find(
+                x => x instanceof EventLog && x.eventName === "PostCreated"
+            ) as EventLog;
+            const postId = event ? Number(event.args[0]) : 0;
+
+            // Wait for cooldown before deletion
+            await ethers.provider.send("evm_increaseTime", [61]);
+            await ethers.provider.send("evm_mine", []);
+
             // Delete the fundraiser post
-            await postMinter.connect(fundraiserCreator).deletePost(fundraiserPostId);
+            await postMinter.connect(fundraiserCreator).deletePost(postId);
+            await ethers.provider.send("evm_mine", []);
+
+            // Wait for cooldown before interaction
+            await ethers.provider.send("evm_increaseTime", [61]);
+            await ethers.provider.send("evm_mine", []);
 
             // Attempt to interact
             await expect(
                 postMinter.connect(contributor1).interactWithPost(
-                    fundraiserPostId,
+                    postId,
                     0 // LIKE type
                 )
-            ).to.be.revertedWith("Post deleted");
+            ).to.be.revertedWithCustomError(postMinter, "PostDeleted");
         });
     });
 

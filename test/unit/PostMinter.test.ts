@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { PostMinter, TribeController, CollectibleController, RoleManager, PointSystem } from "../../typechain-types";
+import { PostMinter, TribeController, CollectibleController, RoleManager, PointSystem, PostFeedManager } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog } from "ethers";
 
@@ -10,6 +10,7 @@ describe("PostMinter Scenarios", function () {
     let roleManager: RoleManager;
     let collectibleController: CollectibleController;
     let pointSystem: PointSystem;
+    let feedManager: PostFeedManager;
     let owner: SignerWithAddress;
     let creator: SignerWithAddress;
     let user1: SignerWithAddress;
@@ -61,14 +62,23 @@ describe("PostMinter Scenarios", function () {
         );
         await collectibleController.waitForDeployment();
 
+        // Deploy PostFeedManager
+        const PostFeedManager = await ethers.getContractFactory("PostFeedManager");
+        feedManager = await PostFeedManager.deploy(await tribeController.getAddress());
+        await feedManager.waitForDeployment();
+
         // Deploy PostMinter
         const PostMinter = await ethers.getContractFactory("PostMinter");
         postMinter = await PostMinter.deploy(
             await roleManager.getAddress(),
             await tribeController.getAddress(),
-            await collectibleController.getAddress()
+            await collectibleController.getAddress(),
+            await feedManager.getAddress()
         );
         await postMinter.waitForDeployment();
+
+        // Grant admin role to PostMinter in PostFeedManager
+        await feedManager.grantRole(await feedManager.DEFAULT_ADMIN_ROLE(), await postMinter.getAddress());
 
         // Create a test tribe
         const tribeTx = await tribeController.connect(creator).createTribe(
@@ -242,7 +252,7 @@ describe("PostMinter Scenarios", function () {
                     ethers.ZeroAddress,
                     0
                 )
-            ).to.be.revertedWith("Not a tribe member");
+            ).to.be.revertedWithCustomError(postMinter, "NotTribeMember");
             console.log("Non-member post creation prevented successfully");
         });
 
@@ -270,7 +280,7 @@ describe("PostMinter Scenarios", function () {
                     ethers.ZeroAddress,
                     0
                 )
-            ).to.be.revertedWith("Please wait before posting again");
+            ).to.be.revertedWithCustomError(postMinter, "CooldownActive");
             console.log("Cooldown enforcement verified");
         });
 
@@ -285,7 +295,7 @@ describe("PostMinter Scenarios", function () {
                     await collectibleController.getAddress(),
                     999 // non-existent collectible
                 )
-            ).to.be.revertedWith("Invalid collectible");
+            ).to.be.revertedWithCustomError(postMinter, "InvalidCollectible");
             console.log("Invalid collectible validation successful");
         });
 
@@ -314,7 +324,7 @@ describe("PostMinter Scenarios", function () {
             console.log("\nStep 2: Attempting unauthorized key access");
             await expect(
                 postMinter.getPostDecryptionKey(postId, user3.address)
-            ).to.be.revertedWith("Not authorized to view post");
+            ).to.be.revertedWithCustomError(postMinter, "InsufficientAccess");
             console.log("Unauthorized key access prevented");
         });
     });

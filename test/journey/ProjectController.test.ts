@@ -52,13 +52,23 @@ describe("Project Controller", function () {
         tribeController = await TribeController.deploy(await roleManager.getAddress());
         await tribeController.waitForDeployment();
 
+        // Deploy PostFeedManager first
+        const PostFeedManager = await ethers.getContractFactory("PostFeedManager");
+        const feedManager = await PostFeedManager.deploy(await tribeController.getAddress());
+        await feedManager.waitForDeployment();
+
+        // Deploy PostMinter with all required arguments
         const PostMinter = await ethers.getContractFactory("PostMinter");
         postMinter = await PostMinter.deploy(
             await roleManager.getAddress(),
             await tribeController.getAddress(),
-            ethers.ZeroAddress // No collectible controller needed for these tests
+            ethers.ZeroAddress, // No collectible controller needed for these tests
+            await feedManager.getAddress()
         );
         await postMinter.waitForDeployment();
+
+        // Grant admin role to PostMinter in PostFeedManager
+        await feedManager.grantRole(await feedManager.DEFAULT_ADMIN_ROLE(), await postMinter.getAddress());
 
         const ProjectController = await ethers.getContractFactory("ProjectController");
         projectController = await ProjectController.deploy(
@@ -72,6 +82,20 @@ describe("Project Controller", function () {
         await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("REVIEWER_ROLE")), reviewer.address);
         await projectController.grantRole(ethers.keccak256(ethers.toUtf8Bytes("REVIEWER_ROLE")), reviewer.address);
 
+        // Grant PROJECT_CREATOR_ROLE through RoleManager
+        const PROJECT_CREATOR_ROLE = ethers.keccak256(ethers.toUtf8Bytes("PROJECT_CREATOR_ROLE"));
+        await roleManager.grantRole(PROJECT_CREATOR_ROLE, projectCreator.address);
+        await roleManager.grantRole(PROJECT_CREATOR_ROLE, teamMember.address);
+        await roleManager.grantRole(PROJECT_CREATOR_ROLE, admin.address);
+
+        // Grant admin role to admin in PostMinter
+        await postMinter.grantRole(await postMinter.DEFAULT_ADMIN_ROLE(), admin.address);
+
+        // Grant rate limit manager role using admin
+        await postMinter.connect(admin).grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), projectCreator.address);
+        await postMinter.connect(admin).grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), teamMember.address);
+        await postMinter.connect(admin).grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), admin.address);
+        
         // Create test tribe
         const tx = await tribeController.connect(admin).createTribe(
             "Test Tribe",
@@ -109,6 +133,13 @@ describe("Project Controller", function () {
                             budget: ethers.parseEther("5"),
                             deadline: Math.floor(Date.now()/1000) + 15 * 24 * 60 * 60,
                             dependencies: []
+                        }
+                    ],
+                    team: [
+                        {
+                            address: projectCreator.address,
+                            role: "CREATOR",
+                            permissions: ["UPDATE", "SUBMIT"]
                         }
                     ]
                 }
@@ -187,7 +218,21 @@ describe("Project Controller", function () {
                     totalBudget: ethers.parseEther("10"),
                     startDate: Math.floor(Date.now()/1000) + 3600,
                     duration: 30 * 24 * 60 * 60,
-                    milestones: []
+                    milestones: [
+                        {
+                            title: "Milestone 1",
+                            budget: ethers.parseEther("5"),
+                            deadline: Math.floor(Date.now()/1000) + 15 * 24 * 60 * 60,
+                            dependencies: []
+                        }
+                    ],
+                    team: [
+                        {
+                            address: projectCreator.address,
+                            role: "CREATOR",
+                            permissions: ["UPDATE", "SUBMIT"]
+                        }
+                    ]
                 }
             };
 
@@ -257,6 +302,13 @@ describe("Project Controller", function () {
                             budget: ethers.parseEther("5"),
                             deadline: Math.floor(Date.now()/1000) + 15 * 24 * 60 * 60,
                             dependencies: []
+                        }
+                    ],
+                    team: [
+                        {
+                            address: projectCreator.address,
+                            role: "CREATOR",
+                            permissions: ["UPDATE", "SUBMIT"]
                         }
                     ]
                 }
@@ -405,6 +457,13 @@ describe("Project Controller", function () {
                             dependencies: [0], // Depends on Milestone 1
                             status: "PENDING"
                         }
+                    ],
+                    team: [
+                        {
+                            address: projectCreator.address,
+                            role: "CREATOR",
+                            permissions: ["UPDATE", "SUBMIT"]
+                        }
                     ]
                 }
             };
@@ -478,6 +537,13 @@ describe("Project Controller", function () {
                             budget: ethers.parseEther("5"),
                             deadline: Math.floor(Date.now()/1000) + 15 * 24 * 60 * 60,
                             dependencies: []
+                        }
+                    ],
+                    team: [
+                        {
+                            address: projectCreator.address,
+                            role: "CREATOR",
+                            permissions: ["UPDATE", "SUBMIT"]
                         }
                     ]
                 }
