@@ -48,6 +48,25 @@ interface ITribeController {
         bool approved;
     }
 
+    // New struct for comprehensive tribe details
+    struct TribeDetails {
+        uint256 id;
+        string name;
+        string metadata;
+        address admin;
+        JoinType joinType;
+        uint256 entryFee;
+        uint256 memberCount;
+        bool isActive;
+        bool canMerge;
+    }
+
+    // New struct for paginated tribe listing
+    struct PaginatedTribes {
+        uint256[] tribeIds;
+        uint256 total;
+    }
+
     // Events
     event TribeCreated(uint256 indexed tribeId, address indexed creator, string tribeName, JoinType joinType);
     event TribeConfigUpdated(uint256 indexed tribeId, JoinType joinType, uint256 entryFee);
@@ -112,4 +131,9 @@ interface ITribeController {
 
     // Get all tribes a user is a member of
     function getUserTribes(address user) external view returns (uint256[] memory tribeIds);
+
+    // New functions for tribe listing and details
+    function getTotalTribesCount() external view returns (uint256);
+    function getAllTribes(uint256 offset, uint256 limit) external view returns (PaginatedTribes memory);
+    function getTribeDetails(uint256 tribeId) external view returns (TribeDetails memory);
 } 

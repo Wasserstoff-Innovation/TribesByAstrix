@@ -473,4 +473,69 @@ contract TribeController is ITribeController, Initializable {
         
         return (true, invite.maxUses - invite.usedCount);
     }
+
+    // New functions for tribe listing and details
+    
+    /**
+     * @dev Returns the total number of tribes that have been created.
+     * @return The total number of tribes.
+     */
+    function getTotalTribesCount() external view returns (uint256) {
+        return nextTribeId;
+    }
+    
+    /**
+     * @dev Gets a paginated list of all tribe IDs.
+     * @param offset The starting index for pagination.
+     * @param limit The maximum number of tribes to return.
+     * @return A struct containing tribe IDs and total count.
+     */
+    function getAllTribes(uint256 offset, uint256 limit) external view returns (PaginatedTribes memory) {
+        uint256 total = nextTribeId;
+        
+        // Check if offset is valid
+        if (offset >= total) {
+            return PaginatedTribes({
+                tribeIds: new uint256[](0),
+                total: total
+            });
+        }
+        
+        // Calculate actual number of tribes to return
+        uint256 count = (offset + limit > total) ? (total - offset) : limit;
+        uint256[] memory tribeIds = new uint256[](count);
+        
+        // Populate the array with tribe IDs
+        for (uint256 i = 0; i < count; i++) {
+            tribeIds[i] = offset + i;
+        }
+        
+        return PaginatedTribes({
+            tribeIds: tribeIds,
+            total: total
+        });
+    }
+    
+    /**
+     * @dev Gets comprehensive details about a specific tribe.
+     * @param tribeId The ID of the tribe to get details for.
+     * @return A struct containing detailed information about the tribe.
+     */
+    function getTribeDetails(uint256 tribeId) external view returns (TribeDetails memory) {
+        require(tribeId < nextTribeId, "Invalid tribe ID");
+        
+        TribeStorage storage tribe = tribes[tribeId];
+        
+        return TribeDetails({
+            id: tribeId,
+            name: tribe.name,
+            metadata: tribe.metadata,
+            admin: tribe.admin,
+            joinType: tribe.joinType,
+            entryFee: tribe.entryFee,
+            memberCount: memberCounts[tribeId],
+            isActive: tribe.isActive,
+            canMerge: tribe.canMerge
+        });
+    }
 } 
