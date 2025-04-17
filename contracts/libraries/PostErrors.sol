@@ -25,7 +25,7 @@ library PostErrors {
     error CannotInteractWithOwnPost();
 
     // Access control errors
-    error NotTribeMember();
+    error NotTribeMember(uint status);
     error NotTribeAdmin();
     error InvalidCollectible();
     error InvalidCollectibleContract();

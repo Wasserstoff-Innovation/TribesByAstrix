@@ -103,8 +103,9 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
     }
 
     modifier onlyTribeMember(uint256 tribeId) {
-        if (tribeController.getMemberStatus(tribeId, msg.sender) != ITribeController.MemberStatus.ACTIVE) {
-            revert PostErrors.NotTribeMember();
+        ITribeController.MemberStatus status = tribeController.getMemberStatus(tribeId, msg.sender);
+        if (status == ITribeController.MemberStatus.NONE) {
+            revert PostErrors.NotTribeMember(uint(status));
         }
         _;
     }
@@ -646,5 +647,10 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         uint256 limit
     ) external view override returns (uint256[] memory postIds, uint256 total) {
         return feedManager.getFeedForUser(user, offset, limit);
+    }
+
+    // Ultra simple function that just returns a constant
+    function testCreate() external pure returns (uint256) {
+        return 42;
     }
 } 

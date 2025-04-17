@@ -3,18 +3,22 @@
   "version": "1.0.0",
   "description": "A decentralized platform for community management and engagement",
   "scripts": {
-    "test": "bash public/run-tests.sh",
+    "test": "hardhat test",
     "test:unit": "hardhat test test/unit/*.test.ts",
     "test:integration": "hardhat test test/integration/*.test.ts",
     "test:journey": "hardhat test test/journey/*.test.ts",
-    "report": "node public/generate-report.js",
-    "report:serve": "node public/generate-report.js --serve",
+    "test:file": "hardhat test",
+    "test:coverage": "hardhat coverage",
+    "test:report": "node scripts/test-runner.js",
+    "report:server": "node public/server.js",
+    
     "compile": "hardhat compile",
-    "deploy-fuse": "hardhat run scripts/deploy.ts --network flashTestnet",
-    "deploy-monad": "hardhat run scripts/deploy.ts --network monadDevnet",
+    "deploy:fuse": "hardhat run scripts/deploy.ts --network flashTestnet",
+    "deploy:monad": "hardhat run scripts/deploy.ts --network monadDevnet",
+    
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
-    "coverage": "hardhat coverage"
+    "clean": "rimraf artifacts cache typechain-types reports coverage"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.1",
@@ -42,6 +46,7 @@
     "dotenv": "^16.4.1",
     "hardhat": "^2.19.5",
     "hardhat-gas-reporter": "^1.0.8",
+    "rimraf": "^5.0.5",
     "solidity-coverage": "^0.8.0",
     "ts-node": ">=8.0.0",
     "typechain": "^8.3.0",

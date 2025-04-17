@@ -1,0 +1,393 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_roleManager",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_astrixToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_tokenDispenser",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tribeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "member",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "points",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "actionType",
+        "type": "bytes32"
+      }
+    ],
+    "name": "awardPoints",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tribeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address[]",
+        "name": "members",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "points",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "actionType",
+        "type": "bytes32"
+      }
+    ],
+    "name": "batchAwardPoints",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tribeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "symbol",
+        "type": "string"
+      }
+    ],
+    "name": "createTribeToken",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tribeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "member",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "points",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "deductPoints",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tribeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "astrixAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "exchangeAstrixForTribeTokens",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "exchangeRates",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tribeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "actionType",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getActionPoints",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tribeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "member",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "actionType",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getActionCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tribeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "member",
+        "type": "address"
+      }
+    ],
+    "name": "getMemberPoints",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tribeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getTopMembers",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tribeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "member",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "actionType",
+        "type": "bytes32"
+      }
+    ],
+    "name": "recordAction",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tribeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "actionType",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "points",
+        "type": "uint256"
+      }
+    ],
+    "name": "setActionPoints",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tribeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "rate",
+        "type": "uint256"
+      }
+    ],
+    "name": "setExchangeRate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tribeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "organization",
+        "type": "address"
+      }
+    ],
+    "name": "setTribeOrganization",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "tribeOrganizations",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "tribeTokens",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+] 

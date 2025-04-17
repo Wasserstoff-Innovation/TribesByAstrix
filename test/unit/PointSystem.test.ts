@@ -353,11 +353,11 @@ describe("PointSystem", function () {
 
             // Get tribe token address
             const tribeToken = await pointSystem.tribeTokens(tribeId);
-            const tribeTokenContract = await ethers.getContractAt("TribePoints", tribeToken);
+            const tribeTokenContract = await ethers.getContractAt("contracts/PointSystem.sol:TribePoints", tribeToken);
 
             // Approve point system to spend points
             console.log("\nStep 2: Approving point deduction");
-            await tribeTokenContract.connect(user1).approve(
+            await (tribeTokenContract as any).connect(user1).approve(
                 await pointSystem.getAddress(),
                 ethers.MaxUint256 // Approve maximum amount
             );

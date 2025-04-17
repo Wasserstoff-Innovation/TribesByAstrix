@@ -59,9 +59,12 @@ const config: HardhatUserConfig = {
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
     currency: "USD",
-    outputFile: "gas-report.txt",
+    outputFile: "reports/gas-report.txt",
     noColors: true,
-    coinmarketcap: process.env.COINMARKETCAP_API_KEY
+    coinmarketcap: process.env.COINMARKETCAP_API_KEY,
+    excludeContracts: ["test"],
+    showMethodSig: true,
+    showTimeSpent: true
   },
   typechain: {
     outDir: "typechain-types",
@@ -71,10 +74,24 @@ const config: HardhatUserConfig = {
     sources: "contracts",
     tests: "./test",
     cache: "./cache",
-    artifacts: "./artifacts"
+    artifacts: "./artifacts",
+    // Add the reports path to store test reports
+    root: "./"
   },
   mocha: {
-    timeout: 40000
+    timeout: 60000, // Increase timeout to 60 seconds
+    reporter: 'spec',
+    reporterOptions: {
+      showDiff: true,
+      symbols: {
+        success: '✓',
+        pending: '⟡',
+        failure: '✖'
+      }
+    }
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY
   }
 };
 

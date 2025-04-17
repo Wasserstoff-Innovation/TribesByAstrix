@@ -1,0 +1,46 @@
+{
+  "name": "tribes-by-astrix-sdk",
+  "version": "0.1.0",
+  "description": "SDK for integrating with Tribes by Astrix platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf dist",
+    "lint": "eslint \"src/**/*.ts\"",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run lint && npm run build",
+    "test": "jest"
+  },
+  "keywords": [
+    "tribes",
+    "astrix",
+    "web3",
+    "blockchain",
+    "points",
+    "tokens",
+    "community"
+  ],
+  "author": "Astrix",
+  "license": "MIT",
+  "dependencies": {
+    "ethers": "^6.11.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.19",
+    "@typescript-eslint/eslint-plugin": "^7.0.1",
+    "@typescript-eslint/parser": "^7.0.1",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "rimraf": "^5.0.5",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+} 

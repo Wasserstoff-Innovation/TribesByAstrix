@@ -27,7 +27,15 @@
     <div class="container mx-auto px-4 py-8">
         <header class="mb-8">
             <h1 class="text-3xl font-bold text-gray-800">Test Report</h1>
-            <p id="timestamp" class="text-gray-600"></p>
+            <div class="flex items-center mt-2">
+                <p id="timestamp" class="text-gray-600 mr-4"></p>
+                <div class="ml-auto">
+                    <select id="reportSelector" class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="latest">Latest Report</option>
+                        <!-- Report options will be added here dynamically -->
+                    </select>
+                </div>
+            </div>
         </header>
 
         <!-- Summary Cards -->
@@ -167,10 +175,40 @@
     </div>
 
     <script>
-        async function fetchData() {
+        // Load available reports and populate the dropdown
+        async function loadAvailableReports() {
+            try {
+                const reports = await fetch('/api/reports').then(r => r.json());
+                const selector = document.getElementById('reportSelector');
+                
+                // Clear existing options except 'Latest Report'
+                while (selector.options.length > 1) {
+                    selector.remove(1);
+                }
+                
+                // Add report options sorted by timestamp (newest first)
+                reports.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(report => {
+                    const option = document.createElement('option');
+                    option.value = report.id;
+                    const date = new Date(report.timestamp);
+                    option.textContent = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+                    selector.appendChild(option);
+                });
+                
+                // Set up event listener for report selection
+                selector.addEventListener('change', (e) => {
+                    const reportId = e.target.value;
+                    fetchData(reportId);
+                });
+            } catch (error) {
+                console.error('Error loading available reports:', error);
+            }
+        }
+
+        async function fetchData(reportId = 'latest') {
             try {
                 const [results, history] = await Promise.all([
-                    fetch('/api/results').then(r => r.json()),
+                    fetch(`/api/results?reportId=${reportId}`).then(r => r.json()),
                     fetch('/api/history').then(r => r.json())
                 ]);
 
@@ -411,6 +449,7 @@
         let refreshInterval;
         // Initial load
         fetchData();
+        loadAvailableReports();
     </script>
 </body>
 </html> 

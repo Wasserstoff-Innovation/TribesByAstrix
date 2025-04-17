@@ -31,9 +31,13 @@ tribes-by-astrix/
   │   ├─ helpers/                 # Test helpers
   │   └─ utils/                   # Test utilities
   ├─ scripts/
-  │   └─ deploy.ts                # Deployment script
+  │   ├─ deploy.ts                # Deployment script
+  │   ├─ deployWithAstrix.ts      # Astrix token deployment
+  │   └─ test-runner.js           # Enhanced test runner
+  ├─ reports/                     # Test & coverage reports
   ├─ public/                      # Test reports and UI
   ├─ docs/                        # Documentation
+  ├─ sdk/                         # SDK for integration
   ├─ abis/                        # Contract ABIs
   ├─ typechain-types/             # TypeScript types
   ├─ hardhat.config.ts            # Hardhat configuration
@@ -188,10 +192,10 @@ graph TD
 ### Deployment Commands
 ```bash
 # Deploy to Fuse Testnet
-npm run deploy-fuse
+npm run deploy:fuse
 
 # Deploy to Monad Devnet
-npm run deploy-monad
+npm run deploy:monad
 
 # Deploy to local Hardhat network
 npx hardhat run scripts/deploy.ts --network localhost
@@ -227,9 +231,14 @@ npm run compile
 npm test
 ```
 
-### Testing
+## Testing Infrastructure
+
+The project includes a comprehensive testing suite with unit, integration, and journey tests.
+
+### Testing Scripts
+
 ```bash
-# Run all tests with report generation
+# Run all tests
 npm test
 
 # Run specific test suites
@@ -237,9 +246,30 @@ npm run test:unit
 npm run test:integration
 npm run test:journey
 
-# Generate and view test report
-npm run report
-npm run report:serve
+# Run a specific test file
+npm run test:file -- path/to/file.test.ts
+
+# Generate test reports with visualization
+npm run test:report
+npm run test:report -- --serve
+
+# Generate coverage report
+npm run test:coverage
+```
+
+### Test Structure
+
+- **Unit Tests**: Test individual contract functions
+- **Integration Tests**: Test interactions between contracts
+- **Journey Tests**: Test complete user flows
+
+### Reports
+
+All test results, coverage reports, and gas usage metrics are stored in the `reports/` directory.
+
+```bash
+# Clean project and remove reports
+npm run clean
 ```
 
 ## Test Report and Documentation
