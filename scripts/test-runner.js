@@ -12,7 +12,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 const express = require('express');
 const cors = require('cors');
-const { generateReport } = require('./generate-report');
+const glob = require('glob');
 
 // Get command line arguments
 const args = process.argv.slice(2);
@@ -26,6 +26,7 @@ const RESULTS_FILE = path.join(REPORTS_DIR, 'test-results.json');
 const HISTORY_FILE = path.join(REPORTS_DIR, 'history.json');
 const PUBLIC_DIR = path.join(process.cwd(), 'public');
 const HTML_TEMPLATE = path.join(PUBLIC_DIR, 'index.html');
+const CSV_FILE = path.join(REPORTS_DIR, 'test-results.csv');
 
 // Create reports directory if it doesn't exist
 if (!fs.existsSync(REPORTS_DIR)) {
@@ -53,122 +54,299 @@ switch (testType) {
     break;
 }
 
-// Function to run tests and parse results
-function runTests(pattern) {
-  console.log(`\n🚀 Running ${testType} tests...\n`);
+/**
+ * Generates a test report and saves it with a timestamp
+ * @param {Object} results - Test results
+ * @param {Object} systemInfo - System information
+ * @param {string} rawOutput - Raw output from test run
+ * @returns {string} - The path to the generated report
+ */
+function generateReport(results, systemInfo, rawOutput = '') {
+  const timestamp = new Date().toISOString();
   
-  try {
-    // Run tests using Hardhat
-    const output = execSync(`npx hardhat test ${pattern} --network hardhat`, { 
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe']
-    });
-    
-    // Parse test results
-    const lines = output.split('\n');
-    const testResults = {
-      timestamp: new Date().toISOString(),
-      summary: {
-        total: 0,
-        passed: 0,
-        failed: 0,
-        duration: 0
-      },
-      results: [],
-      rawOutput: output
-    };
+  // Create the report directory if it doesn't exist
+  if (!fs.existsSync(REPORTS_DIR)) {
+    fs.mkdirSync(REPORTS_DIR, { recursive: true });
+  }
+  
+  // Calculate summary stats from the results
+  let totalTests = 0;
+  let passedTests = 0;
+  let failedTests = 0;
+  
+  results.forEach(suite => {
+    if (suite.tests && Array.isArray(suite.tests)) {
+      totalTests += suite.tests.length;
+      passedTests += suite.tests.filter(test => test.status === 'passed').length;
+      failedTests += suite.tests.filter(test => test.status === 'failed').length;
+    }
+  });
+  
+  // Generate the report data
+  const reportData = {
+    timestamp,
+    summary: {
+      total: totalTests,
+      passed: passedTests,
+      failed: failedTests,
+      duration: 0
+    },
+    results,
+    systemInfo,
+    rawOutput
+  };
+  
+  // Save the JSON report
+  fs.writeFileSync(RESULTS_FILE, JSON.stringify(reportData, null, 2));
+  console.log(`Test results saved to ${RESULTS_FILE}`);
+  
+  // Generate CSV report
+  generateCsvReport(results);
+  
+  return RESULTS_FILE;
+}
 
-    let currentSuite = null;
-    let currentTests = [];
-    let currentTest = null;
-    let errorBuffer = [];
-    let isCollectingError = false;
-
-    lines.forEach(line => {
-      // Test suite parsing
-      if (line.includes('describe(') || line.includes('describe.only(') || line.includes('describe.skip(')) {
-        if (currentSuite && currentTests.length > 0) {
-          testResults.results.push({
-            name: currentSuite,
-            description: currentSuite,
-            tests: currentTests
-          });
-        }
-        const match = line.match(/describe(?:\.only|\.skip)?\("([^"]+)"/) || 
-                      line.match(/describe(?:\.only|\.skip)?\('([^']+)'/);
-        currentSuite = match?.[1] || "Unknown Suite";
-        currentTests = [];
-        isCollectingError = false;
-      } 
-      // Test case parsing
-      else if (line.includes('✓') || line.includes('✗') || line.includes('✘')) {
-        const status = line.includes('✓') ? 'passed' : 'failed';
-        let name = line.replace(/[✓✗✘]\s*/, '').trim();
-        const durationMatch = name.match(/\((\d+)ms\)/);
-        const duration = durationMatch ? parseInt(durationMatch[1]) : 0;
-        
-        if (durationMatch) {
-          name = name.replace(/\(\d+ms\)/, '').trim();
-        }
-        
-        // If we were collecting an error, save it to the previous test
-        if (isCollectingError && currentTest) {
-          currentTest.error = errorBuffer.join('\n');
-        }
-
-        currentTest = {
-          name,
-          description: name,
-          status,
-          duration,
-          error: null,
-          output: line.trim()
-        };
-
-        currentTests.push(currentTest);
-        testResults.summary[status]++;
-        testResults.summary.total++;
-        testResults.summary.duration += currentTest.duration;
-
-        errorBuffer = [];
-        isCollectingError = status === 'failed';
-      }
-      // Error message collection
-      else if (isCollectingError && currentTest) {
-        if (line.trim() && !line.includes('✓') && !line.includes('✗')) {
-          errorBuffer.push(line.trim());
-        }
-      }
-      // Additional test information
-      else if (line.trim() && currentTest && !line.includes('describe(')) {
-        currentTest.output += '\n' + line.trim();
-      }
-    });
-
-    // Add the last suite if there is one
-    if (currentSuite && currentTests.length > 0) {
-      testResults.results.push({
-        name: currentSuite,
-        description: currentSuite,
-        tests: currentTests
+/**
+ * Generates a CSV report from test results
+ * @param {Array} results - Array of test suite results
+ */
+function generateCsvReport(results) {
+  let csvContent = 'Suite,Test,Status,Duration\n';
+  
+  results.forEach(suite => {
+    if (suite.tests && Array.isArray(suite.tests)) {
+      suite.tests.forEach(test => {
+        csvContent += `"${suite.name}","${test.name}","${test.status}","${test.duration || 0}"\n`;
       });
     }
+  });
+  
+  fs.writeFileSync(CSV_FILE, csvContent);
+  console.log(`CSV report saved to ${CSV_FILE}`);
+}
 
-    // Get system information
-    const systemInfo = getSystemInfo();
-    
-    // Use our report generator to create a timestamped report
-    const reportPath = generateReport(testResults.results, systemInfo);
-    console.log('\n✅ Test execution completed and results saved');
-    
-    // Update test history
-    updateTestHistory(testResults);
-    
-    return testResults;
+// Function to run tests and parse results
+function runTests() {
+  const testFiles = glob.sync(testPattern);
+  console.log(`Found ${testFiles.length} test files matching pattern: ${testPattern}`);
+
+  const systemInfo = getSystemInfo();
+  const testResults = [];
+  
+  // Run the tests and capture output
+  console.log(`\n🚀 Running ${testType} tests...\n`);
+  let output;
+  try {
+    output = execSync(`npx hardhat test ${testPattern}`, { encoding: 'utf8' });
+    console.log("Tests completed successfully.");
   } catch (error) {
-    console.error('\n❌ Test execution failed:', error.message);
-    process.exit(1);
+    console.error("Some tests failed.");
+    output = error.stdout || '';
   }
+
+  // Parse output to extract test suites and test cases
+  const suites = parseTestOutput(output);
+  
+  // Add the parsed suites to results
+  testResults.push(...suites);
+  
+  // Generate summary stats
+  let totalTests = 0;
+  let passedTests = 0;
+  let failedTests = 0;
+  
+  testResults.forEach(suite => {
+    if (suite.tests && Array.isArray(suite.tests)) {
+      totalTests += suite.tests.length;
+      passedTests += suite.tests.filter(test => test.status === 'passed').length;
+      failedTests += suite.tests.filter(test => test.status === 'failed').length;
+    }
+  });
+  
+  // Display failing tests if any
+  if (failedTests > 0) {
+    console.log('\n❌ Failed Tests:');
+    testResults.forEach(suite => {
+      const failedTestsInSuite = suite.tests.filter(test => test.status === 'failed');
+      if (failedTestsInSuite.length > 0) {
+        console.log(`\nIn suite: ${suite.name}`);
+        failedTestsInSuite.forEach((test, index) => {
+          console.log(`  ${index + 1}. ${test.name}`);
+          if (test.error) {
+            console.log(`     Error: ${test.error}`);
+          }
+        });
+      }
+    });
+  }
+  
+  // Generate report and update history
+  generateReport(testResults, systemInfo, output);
+  updateTestHistory({
+    timestamp: new Date().toISOString(),
+    summary: {
+      total: totalTests,
+      passed: passedTests,
+      failed: failedTests,
+      duration: 0
+    }
+  });
+  
+  return {
+    timestamp: new Date().toISOString(),
+    summary: {
+      total: totalTests,
+      passed: passedTests,
+      failed: failedTests,
+      duration: 0
+    },
+    results: testResults
+  };
+}
+
+/**
+ * Parse the test output to extract test suites and test cases
+ * @param {string} output - Raw output from test run
+ * @returns {Array} - Array of test suite objects
+ */
+function parseTestOutput(output) {
+  const suites = [];
+  const lines = output.split('\n');
+  
+  let currentSuite = null;
+  let currentTest = null;
+  
+  // Regex patterns for test output parsing
+  const suiteStartRegex = /^\s*(describe|context)\s*\(\s*(?:'|")(.+?)(?:'|")/;
+  const testRegex = /^\s*(?:✓|✗|✘)\s+(?:\[\d+\w+\])?\s*(.+?)(?:\s+\(\d+\w+\))?$/;
+  const testStartRegex = /^\s*it\s*\(\s*(?:'|")(.+?)(?:'|")/;
+  const errorStartRegex = /^\s*Error:/;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // Match suite start
+    const suiteMatch = line.match(suiteStartRegex);
+    if (suiteMatch) {
+      if (currentSuite && currentSuite.tests.length > 0) {
+        suites.push(currentSuite);
+      }
+      
+      currentSuite = {
+        name: suiteMatch[2],
+        tests: []
+      };
+      continue;
+    }
+    
+    // Match test result
+    const testMatch = line.match(testRegex);
+    if (testMatch && currentSuite) {
+      const testName = testMatch[1].trim();
+      const isPassed = line.includes('✓');
+      
+      currentTest = {
+        name: testName,
+        status: isPassed ? 'passed' : 'failed',
+        duration: 0,
+        error: ''
+      };
+      
+      currentSuite.tests.push(currentTest);
+      continue;
+    }
+    
+    // Match test start without result (for better name extraction)
+    const testStartMatch = line.match(testStartRegex);
+    if (testStartMatch) {
+      currentTest = {
+        name: testStartMatch[1].trim(),
+        // Don't set status yet, wait for result
+      };
+      continue;
+    }
+    
+    // Capture error messages
+    if (errorStartRegex.test(line) && currentTest && currentTest.status === 'failed') {
+      currentTest.error = line;
+      
+      // Capture stack trace
+      let j = i + 1;
+      while (j < lines.length && lines[j].trim() && !lines[j].trim().startsWith('✓') && !lines[j].trim().startsWith('✗')) {
+        currentTest.error += '\n' + lines[j].trim();
+        j++;
+      }
+      
+      i = j - 1; // Skip processed lines
+    }
+  }
+  
+  // Add the last suite if it exists
+  if (currentSuite && currentSuite.tests.length > 0) {
+    suites.push(currentSuite);
+  }
+  
+  // If no suites were found, create a default one
+  if (suites.length === 0) {
+    const defaultSuite = {
+      name: "All Tests",
+      tests: []
+    };
+    
+    // Extract passed and failed tests from output
+    const passedTests = (output.match(/✓/g) || []).length;
+    const failedTests = (output.match(/✗|✘/g) || []).length;
+    
+    // Search for NFT Controller tests (which we know are failing)
+    const nftControllerTests = [];
+    let inNftSection = false;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      if (line.includes('NFT Controller') || line.includes('CollectibleController')) {
+        inNftSection = true;
+      } else if (inNftSection && line.match(/^\s*(?:✓|✗|✘)\s+(.+)$/)) {
+        const match = line.match(/^\s*(?:✓|✗|✘)\s+(.+)$/);
+        if (match) {
+          const status = line.includes('✓') ? 'passed' : 'failed';
+          nftControllerTests.push({
+            name: match[1].trim(),
+            status: status,
+            duration: 0
+          });
+        }
+      } else if (line.match(/^\s*\d+\s+passing/) && inNftSection) {
+        inNftSection = false;
+      }
+    }
+    
+    // If we found specific NFT tests, add them
+    if (nftControllerTests.length > 0) {
+      defaultSuite.tests = nftControllerTests;
+    } else {
+      // Otherwise fall back to generic counting
+      for (let i = 0; i < passedTests; i++) {
+        defaultSuite.tests.push({
+          name: `Test ${i + 1}`,
+          status: 'passed',
+          duration: 0
+        });
+      }
+      
+      for (let i = 0; i < failedTests; i++) {
+        defaultSuite.tests.push({
+          name: `Test ${passedTests + i + 1}`,
+          status: 'failed',
+          duration: 0
+        });
+      }
+    }
+    
+    suites.push(defaultSuite);
+  }
+  
+  return suites;
 }
 
 // Function to load test history
@@ -260,20 +438,10 @@ function startServer() {
       let filePath;
 
       if (reportId === 'latest' || !reportId) {
-        // Get the most recent report file
-        const files = fs.readdirSync(REPORTS_DIR)
-          .filter(file => file.endsWith('.json') && !file.endsWith('history.json'))
-          .map(file => ({
-            name: file,
-            time: fs.statSync(path.join(REPORTS_DIR, file)).mtime.getTime()
-          }))
-          .sort((a, b) => b.time - a.time);
-
-        if (files.length === 0) {
+        filePath = RESULTS_FILE;
+        if (!fs.existsSync(filePath)) {
           return res.status(404).json({ error: 'No reports found' });
         }
-
-        filePath = path.join(REPORTS_DIR, files[0].name);
       } else {
         // Get the specific report file
         filePath = path.join(REPORTS_DIR, `${reportId}.json`);
@@ -330,7 +498,7 @@ function startServer() {
 // Main execution
 function main() {
   // Step 1: Run tests
-  const testResults = runTests(testPattern);
+  const testResults = runTests();
   
   // Print test summary
   console.log('\n📝 Test Summary:');

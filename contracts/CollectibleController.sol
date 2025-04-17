@@ -136,6 +136,40 @@ contract CollectibleController is ERC1155, AccessControl {
         return collectibles[collectibleId].metadataURI;
     }
 
+    // Override to prevent unauthorized transfers
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) public override {
+        require(
+            from == msg.sender || 
+            isApprovedForAll(from, msg.sender) || 
+            hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
+            "Unauthorized transfer"
+        );
+        super.safeTransferFrom(from, to, id, amount, data);
+    }
+
+    // Override to prevent unauthorized batch transfers
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public override {
+        require(
+            from == msg.sender || 
+            isApprovedForAll(from, msg.sender) || 
+            hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
+            "Unauthorized transfer"
+        );
+        super.safeBatchTransferFrom(from, to, ids, amounts, data);
+    }
+
     // Required override
     function supportsInterface(bytes4 interfaceId)
         public
