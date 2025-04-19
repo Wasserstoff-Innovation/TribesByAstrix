@@ -8,82 +8,105 @@ The tests cover a wide range of user interactions within a decentralized social 
 
 ```mermaid
 graph TD
-    A[Start: Setup & Deployment] --> B(Role Management);
-    B --> C{User Actions};
-    B --> D{Admin/Creator Actions};
-
-    subgraph User Actions
-        direction LR
-        C --> C1(Create Profile);
-        C1 --> C2(Update Profile);
-        C --> C3(Join Tribe);
-        C3 --> C4(Interact with Post);
-        C4 --> C5(Like/Comment);
-        C4 --> C6(Report Post);
-        C --> C7(Purchase Collectible);
-        C7 -- Gating --> C8(View Gated Post);
-        C --> C9(Purchase Event Ticket);
-        C9 --> C10(Transfer Ticket);
-        C --> C11(Simulated Fundraiser Contribution - Like);
-        C --> C12(Simulated Milestone Action - Start/Submit);
-    end
-
-    subgraph Admin/Creator Actions
-        direction LR
-        D --> D1(Create Tribe);
-        D1 --> D2(Update Tribe Config);
-        D1 --> D3(Manage Members - Ban/Approve);
-        D1 --> D4(Create Invite Code);
-        D --> D5(Create Collectible);
-        D5 --> D6(Update/Deactivate Collectible);
-        D5 --> D7(Set Points Requirement);
-        D --> D8(Create Post);
-        D8 --> D9(Create Public Post);
-        D8 --> D10(Create Gated Post);
-        D8 --> D11(Create Encrypted Post);
-        D8 --> D12(Create Specialized Post);
-        D12 --> D12a(Community Update);
-        D12 --> D12b(Event);
-        D12 --> D12c(Project);
-        D12 --> D12d(Poll);
-        D12 --> D12e(Resource);
-        D12 --> D12f(Rich Media);
-        D12 --> D12g(Milestone);
-        D12 --> D12h(Fundraiser);
-        D8 --> D13(Delete Post);
-        D8 --> D14(Create Project Update);
-        D --> D15(Award Points);
-        D --> D16(Create Event);
-        D16 --> D17(Update/Cancel Event);
-        D --> D18(Create Project - ProjectController);
-        D18 --> D19(Manage Project Team);
-        D18 --> D20(Manage Milestones - Approve/Reject);
-    end
-
-    subgraph System Checks
-        direction LR
-        S1(Metadata Validation) -- Checks --> D8;
-        S2(Access Control/Permissions) -- Checks --> C;
-        S2 -- Checks --> D;
-        S3(Rate Limiting/Cooldown) -- Checks --> D8;
-        S3 -- Checks --> C4;
-        S4(Supply Limits - Collectible/Event) -- Checks --> C7;
-        S4 -- Checks --> C9;
-        S5(NFT/Points Gating) -- Checks --> C3;
-        S5 -- Checks --> C7;
-        S6(Concurrency Handling) -- Checks --> C7;
-    end
-
-    C4 --> S3;
-    D8 --> S1;
-    D8 --> S3;
-    C --> S2;
-    D --> S2;
-    C3 --> S5;
-    C7 --> S4;
-    C7 --> S5;
-    C7 --> S6;
-    C9 --> S4;
+    %% Main setup and entry points
+    Setup[Setup & Deployment] --> Roles[Role Management]
+    Roles --> UserActions[User Actions]
+    Roles --> AdminActions[Admin/Creator Actions]
+    
+    %% User Actions Section - More vertical layout
+    UserActions --> Profile[Profile Management]
+    UserActions --> Community[Community Participation]
+    UserActions --> ContentInter[Content Interaction]
+    UserActions --> Purchase[Purchases & Claims]
+    
+    %% Profile Management details
+    Profile --> CreateProfile[Create Profile]
+    Profile --> UpdateProfile[Update Profile]
+    
+    %% Community Participation details
+    Community --> JoinTribe[Join Tribe]
+    Community --> RequestJoin[Request to Join Private Tribe]
+    Community --> JoinWithCode[Join with Invite Code]
+    
+    %% Content Interaction details
+    ContentInter --> LikeComment[Like/Comment]
+    ContentInter --> ReportPost[Report Post]
+    ContentInter --> ViewGated[View Gated Content]
+    ContentInter --> ProjectAction[Project Actions]
+    
+    %% Project Actions sub-details
+    ProjectAction --> StartMilestone[Start Milestone]
+    ProjectAction --> SubmitDeliverable[Submit Deliverable]
+    
+    %% Purchases & Claims details
+    Purchase --> BuyCollectible[Purchase Collectible]
+    Purchase --> BuyTicket[Purchase Event Ticket]
+    Purchase --> TransferTicket[Transfer Ticket]
+    Purchase --> Contribute[Fundraiser Contribution]
+    
+    %% Admin Actions Section - More vertical layout
+    AdminActions --> TribeManage[Tribe Management]
+    AdminActions --> ContentCreation[Content Creation]
+    AdminActions --> AssetManage[Asset Management]
+    AdminActions --> ProjectManage[Project Management]
+    
+    %% Tribe Management details
+    TribeManage --> CreateTribe[Create Tribe]
+    TribeManage --> UpdateTribe[Update Tribe Config]
+    TribeManage --> ManageMembers[Manage Members]
+    TribeManage --> CreateInvite[Create Invite Code]
+    
+    %% Content Creation details
+    ContentCreation --> BasicPost[Basic Posts]
+    ContentCreation --> GatedPost[Gated Posts]
+    ContentCreation --> SpecialPost[Specialized Posts]
+    
+    %% Basic Posts types
+    BasicPost --> PublicPost[Public Post]
+    BasicPost --> EncryptedPost[Encrypted Post]
+    
+    %% Specialized Posts types
+    SpecialPost --> CommunityUpdate[Community Update]
+    SpecialPost --> EventPost[Event Post]
+    SpecialPost --> ProjectPost[Project Post]
+    SpecialPost --> PollPost[Poll Post]
+    SpecialPost --> ResourcePost[Resource Post]
+    SpecialPost --> MediaPost[Rich Media Post]
+    SpecialPost --> MilestonePost[Milestone Post]
+    SpecialPost --> FundraiserPost[Fundraiser Post]
+    
+    %% Asset Management details
+    AssetManage --> CreateCollectible[Create Collectible]
+    AssetManage --> DeactivateCollectible[Deactivate Collectible]
+    AssetManage --> CreateEvent[Create Event]
+    AssetManage --> ManageEvent[Update/Cancel Event]
+    AssetManage --> AwardPoints[Award Points]
+    
+    %% Project Management details
+    ProjectManage --> CreateProject[Create Project]
+    ProjectManage --> AddTeamMember[Add Team Member]
+    ProjectManage --> ReviewMilestone[Review Milestone]
+    
+    %% System Checks - Grouped at bottom
+    SystemChecks[System Checks] --> Validation[Metadata Validation]
+    SystemChecks --> Access[Access Control]
+    SystemChecks --> RateLimit[Rate Limiting]
+    SystemChecks --> SupplyLimit[Supply Limits]
+    SystemChecks --> Gating[NFT/Points Gating]
+    SystemChecks --> Concurrency[Concurrency]
+    
+    %% Connect System Checks to affected actions
+    Validation -.-> ContentCreation
+    Access -.-> UserActions
+    Access -.-> AdminActions
+    RateLimit -.-> ContentCreation
+    RateLimit -.-> ContentInter
+    SupplyLimit -.-> BuyCollectible
+    SupplyLimit -.-> BuyTicket
+    Gating -.-> JoinTribe
+    Gating -.-> BuyCollectible
+    Gating -.-> ViewGated
+    Concurrency -.-> BuyCollectible
 ```
 
 ## Key Flows Tested
