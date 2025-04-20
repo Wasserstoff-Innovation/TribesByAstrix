@@ -4,7 +4,13 @@ pragma solidity ^0.8.20;
 import "./PostErrors.sol";
 
 library PostHelpers {
+    // Cache common field names to avoid repeated string comparisons
+    bytes internal constant TITLE_FIELD = bytes("\"title\"");
+    bytes internal constant CONTENT_FIELD = bytes("\"content\"");
+    bytes internal constant TYPE_FIELD = bytes("\"type\"");
+    
     function validateMetadataFormat(bytes memory metadataBytes) internal pure returns (bool) {
+        // Quick validation to save gas - empty check and bracket check
         if (metadataBytes.length == 0) revert PostErrors.EmptyMetadata();
         if (metadataBytes[0] != "{" || metadataBytes[metadataBytes.length - 1] != "}") revert PostErrors.InvalidJsonFormat();
         return true;
@@ -12,50 +18,67 @@ library PostHelpers {
 
     function containsField(bytes memory json, string memory field) internal pure returns (bool) {
         bytes memory fieldBytes = bytes(field);
-        bytes memory jsonBytes = json;
         
-        if (jsonBytes.length < fieldBytes.length) return false;
+        // Early exit for efficiency
+        if (json.length < fieldBytes.length) return false;
         
-        for (uint i = 0; i < jsonBytes.length - fieldBytes.length; i++) {
-            bool found = true;
-            for (uint j = 0; j < fieldBytes.length; j++) {
-                if (jsonBytes[i + j] != fieldBytes[j]) {
-                    found = false;
-                    break;
+        // Use unchecked for gas optimization in the loop
+        unchecked {
+            for (uint i = 0; i < json.length - fieldBytes.length; i++) {
+                bool found = true;
+                for (uint j = 0; j < fieldBytes.length; j++) {
+                    if (json[i + j] != fieldBytes[j]) {
+                        found = false;
+                        break;
+                    }
                 }
+                if (found) return true;
             }
-            if (found) return true;
         }
         return false;
     }
 
     function hasEmptyValue(bytes memory json, string memory field) internal pure returns (bool) {
         bytes memory fieldBytes = bytes(field);
-        bytes memory jsonBytes = json;
         
-        for (uint i = 0; i < jsonBytes.length - fieldBytes.length; i++) {
-            bool foundField = true;
-            for (uint j = 0; j < fieldBytes.length; j++) {
-                if (jsonBytes[i + j] != fieldBytes[j]) {
-                    foundField = false;
-                    break;
-                }
-            }
-            if (foundField) {
-                uint256 pos = i + fieldBytes.length;
-                while (pos < jsonBytes.length && (
-                    jsonBytes[pos] == ' ' || 
-                    jsonBytes[pos] == ':' || 
-                    jsonBytes[pos] == '"'
-                )) {
-                    pos++;
-                }
-                if (pos < jsonBytes.length && jsonBytes[pos] == '"') {
-                    pos++;
-                    if (pos < jsonBytes.length && jsonBytes[pos] == '"') {
-                        return true;
+        // Early exit for efficiency
+        if (json.length < fieldBytes.length) return false;
+        
+        // Use unchecked for gas optimization in the loop
+        unchecked {
+            for (uint i = 0; i < json.length - fieldBytes.length; i++) {
+                bool foundField = true;
+                for (uint j = 0; j < fieldBytes.length; j++) {
+                    if (json[i + j] != fieldBytes[j]) {
+                        foundField = false;
+                        break;
                     }
                 }
+                
+                if (foundField) {
+                    // Found the field, now check if its value is empty
+                    return _isValueEmpty(json, i + fieldBytes.length);
+                }
+            }
+        }
+        return false;
+    }
+    
+    function _isValueEmpty(bytes memory json, uint256 pos) private pure returns (bool) {
+        // Skip whitespace and field-value separators
+        while (pos < json.length && (
+            json[pos] == ' ' || 
+            json[pos] == ':' || 
+            json[pos] == '"'
+        )) {
+            pos++;
+        }
+        
+        // Check for empty string value
+        if (pos < json.length && json[pos] == '"') {
+            pos++;
+            if (pos < json.length && json[pos] == '"') {
+                return true;
             }
         }
         return false;
@@ -64,9 +87,11 @@ library PostHelpers {
     function validateRequiredFields(bytes memory json, string[] memory fields) internal pure returns (bool) {
         for (uint i = 0; i < fields.length; i++) {
             if (!containsField(json, fields[i])) {
-                if (keccak256(bytes(fields[i])) == keccak256(bytes("\"title\""))) {
+                // Check specific field requirements
+                bytes32 fieldHash = keccak256(bytes(fields[i]));
+                if (fieldHash == keccak256(TITLE_FIELD)) {
                     revert PostErrors.MissingTitleField();
-                } else if (keccak256(bytes(fields[i])) == keccak256(bytes("\"content\""))) {
+                } else if (fieldHash == keccak256(CONTENT_FIELD)) {
                     revert PostErrors.MissingContentField();
                 }
                 revert PostErrors.EmptyField(fields[i]);
@@ -80,64 +105,72 @@ library PostHelpers {
 
     function extractField(bytes memory json, string memory field) internal pure returns (string memory) {
         bytes memory fieldBytes = bytes(field);
-        bytes memory jsonBytes = json;
         
-        for (uint i = 0; i < jsonBytes.length - fieldBytes.length; i++) {
-            bool foundField = true;
-            for (uint j = 0; j < fieldBytes.length; j++) {
-                if (jsonBytes[i + j] != fieldBytes[j]) {
-                    foundField = false;
-                    break;
-                }
-            }
-            if (foundField) {
-                uint256 start = i + fieldBytes.length;
-                // Skip whitespace and ":"
-                while (start < jsonBytes.length && (
-                    jsonBytes[start] == ' ' || 
-                    jsonBytes[start] == ':' || 
-                    jsonBytes[start] == '"'
-                )) {
-                    start++;
+        // Early exit for efficiency
+        if (json.length < fieldBytes.length) return "";
+        
+        unchecked {
+            for (uint i = 0; i < json.length - fieldBytes.length; i++) {
+                bool foundField = true;
+                for (uint j = 0; j < fieldBytes.length; j++) {
+                    if (json[i + j] != fieldBytes[j]) {
+                        foundField = false;
+                        break;
+                    }
                 }
                 
-                if (start >= jsonBytes.length) return "";
-                
-                uint256 end = start;
-                // Find the end of the value
-                while (end < jsonBytes.length && jsonBytes[end] != '"' && jsonBytes[end] != ',' && jsonBytes[end] != '}') {
-                    end++;
+                if (foundField) {
+                    return _extractValue(json, i + fieldBytes.length);
                 }
-                
-                // Extract the value
-                bytes memory value = new bytes(end - start);
-                for (uint j = 0; j < end - start; j++) {
-                    value[j] = jsonBytes[start + j];
-                }
-                return string(value);
             }
         }
         return "";
+    }
+    
+    function _extractValue(bytes memory json, uint256 start) private pure returns (string memory) {
+        // Skip whitespace and field-value separators
+        while (start < json.length && (
+            json[start] == ' ' || 
+            json[start] == ':' || 
+            json[start] == '"'
+        )) {
+            start++;
+        }
+        
+        if (start >= json.length) return "";
+        
+        uint256 end = start;
+        // Find the end of the value
+        while (end < json.length && json[end] != '"' && json[end] != ',' && json[end] != '}') {
+            end++;
+        }
+        
+        // Extract the value
+        bytes memory value = new bytes(end - start);
+        for (uint j = 0; j < end - start; j++) {
+            value[j] = json[start + j];
+        }
+        return string(value);
     }
 
     function compareStrings(string memory a, string memory b) internal pure returns (bool) {
         return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
     }
 
+    // Optimization: replacing string HEX conversion with direct byte operations
     function toAsciiString(address x) internal pure returns (string memory) {
         bytes memory s = new bytes(40);
-        for (uint i = 0; i < 20; i++) {
-            bytes1 b = bytes1(uint8(uint(uint160(x)) / (2**(8*(19 - i)))));
-            bytes1 hi = bytes1(uint8(b) / 16);
-            bytes1 lo = bytes1(uint8(b) - 16 * uint8(hi));
-            s[2*i] = char(hi);
-            s[2*i+1] = char(lo);            
+        bytes memory hexChars = "0123456789abcdef";
+        uint256 addr = uint160(x);
+        
+        unchecked {
+            for (uint i = 39; i >= 0; i--) {
+                s[i] = hexChars[addr & 0xf];
+                addr >>= 4;
+                if (i == 0) break;
+            }
         }
+        
         return string(s);
-    }
-
-    function char(bytes1 b) internal pure returns (bytes1 c) {
-        if (uint8(b) < 10) return bytes1(uint8(b) + 0x30);
-        else return bytes1(uint8(b) + 0x57);
     }
 } 

@@ -47,8 +47,10 @@ contract TribeController is ITribeController, Initializable {
 
     modifier onlyTribeAdmin(uint256 tribeId) {
         require(
-            tribes[tribeId].admin == msg.sender || 
-            roleManager.hasRole(keccak256(bytes("MODERATOR_ROLE")), msg.sender),
+            (tribes[tribeId].admin == msg.sender || 
+            roleManager.hasRole(keccak256(bytes("MODERATOR_ROLE")), msg.sender)) &&
+            // Add check to ensure moderators aren't banned from the tribe they're trying to manage
+            memberStatuses[tribeId][msg.sender] != MemberStatus.BANNED,
             "Not tribe admin"
         );
         _;
@@ -303,6 +305,12 @@ contract TribeController is ITribeController, Initializable {
     }
 
     function _validateNFTRequirements(uint256 tribeId, address user) internal view returns (bool) {
+        // If the user is already an active member, they are grandfathered in
+        // This allows existing members to retain access when a tribe changes its gating requirements
+        if (isMember[tribeId][user] && memberStatuses[tribeId][user] == MemberStatus.ACTIVE) {
+            return true;
+        }
+        
         NFTRequirement[] memory requirements = tribes[tribeId].nftRequirements;
         if (requirements.length == 0) return true;
 

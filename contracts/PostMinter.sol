@@ -10,8 +10,6 @@ import "./interfaces/IRoleManager.sol";
 import "./interfaces/ITribeController.sol";
 import "./interfaces/ICollectibleController.sol";
 import "./interfaces/IPostMinter.sol";
-import "./constants/Errors.sol";
-import "./constants/ErrorMessages.sol";
 import "./libraries/PostHelpers.sol";
 import "./libraries/ProjectHelpers.sol";
 import "./libraries/FeedHelpers.sol";
@@ -29,16 +27,14 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
     using InteractionHelpers for *;
     using PostCreationHelpers for *;
 
-    // Add constant strings to reduce bytecode size
-    string private constant ERROR_INVALID_METADATA = "Invalid metadata";
-    string private constant ERROR_INVALID_PARENT = "Invalid parent post";
-    string private constant ERROR_POST_DELETED = "Post deleted";
-    string private constant ERROR_BATCH_LIMIT = "Too many posts in batch";
-    string private constant ERROR_BATCH_COOLDOWN = "Please wait before batch posting";
-    string private constant ERROR_INVALID_ENCRYPTION = "Invalid encryption key hash";
-    string private constant ERROR_INVALID_SIGNER = "Invalid access signer";
-    string private constant ERROR_INSUFFICIENT_PERMISSIONS = "Insufficient permissions";
+    // Constants
+    uint256 public constant MAX_BATCH_POSTS = 5;
+    uint256 public constant BATCH_POST_COOLDOWN = 5 minutes;
+    uint256 public constant REPORT_THRESHOLD = 5;
+    bytes32 public constant RATE_LIMIT_MANAGER_ROLE = keccak256("RATE_LIMIT_MANAGER_ROLE");
+    bytes32 public constant PROJECT_CREATOR_ROLE = keccak256("PROJECT_CREATOR_ROLE");
 
+    // Core contracts
     IRoleManager public roleManager;
     ITribeController public tribeController;
     ICollectibleController public collectibleController;
@@ -47,33 +43,16 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
     // Post storage
     uint256 public nextPostId;
 
-    // Interaction tracking
+    // Mappings - combined for gas efficiency
     mapping(uint256 => mapping(address => mapping(InteractionType => bool))) private hasInteracted;
     mapping(uint256 => mapping(InteractionType => uint256)) private interactionCounts;
     mapping(uint256 => mapping(address => bool)) private authorizedViewers;
-
-    // Encryption key storage for tribe members
     mapping(uint256 => mapping(address => bytes32)) private postDecryptionKeys;
-    
-    // Rate limiting
     mapping(address => mapping(PostType => uint256)) public lastPostTimeByType;
     mapping(address => uint256) public lastBatchTime;
-    
-    // Content moderation
     mapping(uint256 => uint256) public reportCount;
-    uint256 public constant REPORT_THRESHOLD = 5;
-    
-    // Batch encryption keys
     mapping(uint256 => bytes32) public tribeEncryptionKeys;
-
-    // Rate limiting
     mapping(PostType => uint256) public postTypeCooldowns;
-    uint256 public constant MAX_BATCH_POSTS = 5;
-    uint256 public constant BATCH_POST_COOLDOWN = 5 minutes;
-    bytes32 public constant RATE_LIMIT_MANAGER_ROLE = keccak256("RATE_LIMIT_MANAGER_ROLE");
-
-    // Add constant for project creator role
-    bytes32 public constant PROJECT_CREATOR_ROLE = keccak256("PROJECT_CREATOR_ROLE");
 
     constructor(
         address _roleManager,
@@ -102,39 +81,46 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         postTypeCooldowns[PostType.ENCRYPTED] = 2 minutes;
     }
 
-    modifier onlyTribeMember(uint256 tribeId) {
-        ITribeController.MemberStatus status = tribeController.getMemberStatus(tribeId, msg.sender);
-        if (status == ITribeController.MemberStatus.NONE) {
-            revert PostErrors.NotTribeMember(uint(status));
+    // Modified to use functions instead of modifiers where possible
+    function _checkTribeMember(uint256 tribeId) internal view {
+        if (tribeController.getMemberStatus(tribeId, msg.sender) != ITribeController.MemberStatus.ACTIVE) {
+            revert PostErrors.NotTribeMember(uint(tribeController.getMemberStatus(tribeId, msg.sender)));
         }
-        _;
     }
 
-    modifier onlyPostCreator(uint256 postId) {
+    function _checkPostCreator(uint256 postId) internal view {
         if (feedManager.getPost(postId).creator != msg.sender) {
             revert PostErrors.NotPostCreator();
         }
-        _;
     }
 
-    modifier notTooFrequent(PostType postType) {
+    function _checkCooldown(PostType postType) internal {
         if (!hasRole(RATE_LIMIT_MANAGER_ROLE, msg.sender)) {
             if (block.timestamp < lastPostTimeByType[msg.sender][postType] + postTypeCooldowns[postType]) {
                 revert PostErrors.CooldownActive();
             }
         }
-        _;
+    }
+
+    function _updateLastPostTime(PostType postType) internal {
         lastPostTimeByType[msg.sender][postType] = block.timestamp;
     }
 
-    modifier notTooFrequentBatch() {
-        if (!hasRole(RATE_LIMIT_MANAGER_ROLE, msg.sender)) {
-            if (block.timestamp < lastBatchTime[msg.sender] + BATCH_POST_COOLDOWN) {
-                revert PostErrors.BatchCooldownActive();
-            }
-        }
+    // Kept as modifier for onlyTribeMember because of frequent use
+    modifier onlyTribeMember(uint256 tribeId) {
+        _checkTribeMember(tribeId);
         _;
-        lastBatchTime[msg.sender] = block.timestamp;
+    }
+
+    modifier onlyPostCreator(uint256 postId) {
+        _checkPostCreator(postId);
+        _;
+    }
+
+    modifier notTooFrequent(PostType postType) {
+        _checkCooldown(postType);
+        _;
+        _updateLastPostTime(postType);
     }
 
     function createPost(
@@ -144,36 +130,26 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         address collectibleContract,
         uint256 collectibleId
     ) external override onlyTribeMember(tribeId) whenNotPaused returns (uint256) {
+        // Check for empty metadata
         if (bytes(metadata).length == 0) revert PostErrors.EmptyMetadata();
-
-        // Parse metadata to determine post type
+        
+        // Validate JSON format
         bytes memory metadataBytes = bytes(metadata);
-        PostType postType = PostType.TEXT;
+        if (metadataBytes[0] != '{' || metadataBytes[metadataBytes.length - 1] != '}') 
+            revert PostErrors.InvalidJsonFormat();
 
         // Determine post type from metadata
-        if (PostHelpers.containsField(metadataBytes, "\"type\":\"EVENT\"")) {
-            postType = PostType.EVENT;
-        } else if (PostHelpers.containsField(metadataBytes, "\"type\":\"RICH_MEDIA\"")) {
-            postType = PostType.RICH_MEDIA;
-        } else if (PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT\"") ||
-                   PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"")) {
-            postType = PostType.PROJECT_UPDATE;
-            // Check project creator role for initial project creation through RoleManager
-            if (PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT\"") && 
-                !roleManager.hasRole(PROJECT_CREATOR_ROLE, msg.sender)) {
-                revert PostErrors.InsufficientAccess();
-            }
-        }
+        PostType postType = _determinePostType(metadataBytes);
+        
+        // Validate required fields
+        if (!PostHelpers.containsField(metadataBytes, "\"title\"")) 
+            revert PostErrors.MissingTitleField();
+        if (!PostHelpers.containsField(metadataBytes, "\"content\"")) 
+            revert PostErrors.MissingContentField();
 
         // Check cooldown unless user has rate limit manager role
-        if (!hasRole(RATE_LIMIT_MANAGER_ROLE, msg.sender)) {
-            uint256 lastPostTime = lastPostTimeByType[msg.sender][postType];
-            uint256 cooldown = postTypeCooldowns[postType];
-            if (block.timestamp < lastPostTime + cooldown) {
-                revert PostErrors.CooldownActive();
-            }
-            lastPostTimeByType[msg.sender][postType] = block.timestamp;
-        }
+        _checkCooldown(postType);
+        _updateLastPostTime(postType);
 
         PostCreationHelpers.PostCreationParams memory params = PostCreationHelpers.PostCreationParams({
             tribeId: tribeId,
@@ -186,14 +162,71 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
             postType: postType
         });
 
-        FeedHelpers.PostData memory post = PostCreationHelpers.validateAndCreatePost(
-            params,
-            collectibleController
-        );
+        FeedHelpers.PostData memory post;
+
+        // For gated posts, perform additional validation - otherwise simplify flow
+        if (isGated) {
+            if (collectibleContract == address(0)) revert PostErrors.InvalidCollectibleContract();
+            if (!collectibleController.getCollectible(collectibleId).isActive) revert PostErrors.InvalidCollectible();
+            post = PostCreationHelpers.validateAndCreatePost(
+                params,
+                collectibleController
+            );
+        } else {
+            // Create post without additional NFT checks for already verified members
+            post = FeedHelpers.PostData({
+                id: params.nextPostId,
+                creator: params.creator,
+                tribeId: params.tribeId,
+                metadata: params.metadata,
+                isGated: params.isGated,
+                collectibleContract: params.collectibleContract,
+                collectibleId: params.collectibleId,
+                isEncrypted: false,
+                encryptionKeyHash: bytes32(0),
+                accessSigner: address(0),
+                parentPostId: 0,
+                createdAt: block.timestamp,
+                isDeleted: false
+            });
+        }
 
         feedManager.addPost(post);
         emit PostCreated(post.id, tribeId, msg.sender, metadata);
         return post.id;
+    }
+
+    // Extract post type determination to a separate function
+    function _determinePostType(bytes memory metadataBytes) internal view returns (PostType) {
+        PostType postType = PostType.TEXT;
+
+        if (PostHelpers.containsField(metadataBytes, "\"type\":\"EVENT\"")) {
+            postType = PostType.EVENT;
+            if (!PostHelpers.containsField(metadataBytes, "\"eventDetails\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+        } else if (PostHelpers.containsField(metadataBytes, "\"type\":\"RICH_MEDIA\"")) {
+            postType = PostType.RICH_MEDIA;
+            if (!PostHelpers.containsField(metadataBytes, "\"mediaContent\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+        } else if (PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT\"") ||
+                  PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"")) {
+            postType = PostType.PROJECT_UPDATE;
+            
+            // Project creation permission check
+            if (PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT\"") && 
+                !roleManager.hasRole(PROJECT_CREATOR_ROLE, msg.sender)) {
+                revert PostErrors.InsufficientAccess();
+            }
+            // For project updates, do a simpler check to avoid increasing contract size
+            else if (PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"") &&
+                     !roleManager.hasRole(PROJECT_CREATOR_ROLE, msg.sender)) {
+                revert PostErrors.InsufficientAccess();
+            }
+        }
+        
+        return postType;
     }
 
     function createReply(
@@ -408,14 +441,15 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         bytes memory signature
     ) external view override returns (bool) {
         FeedHelpers.PostData memory post = feedManager.getPost(postId);
-        require(post.accessSigner != address(0), "Post not signature gated");
+        if (post.accessSigner == address(0)) revert PostErrors.InvalidSigner();
 
         bytes32 messageHash = keccak256(
             abi.encodePacked(viewer, post.tribeId)
         );
         bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(messageHash);
+        
         (address recoveredSigner, ECDSA.RecoverError error, ) = ECDSA.tryRecover(ethSignedMessageHash, signature);
-        require(error == ECDSA.RecoverError.NoError, "Invalid signature");
+        if (error != ECDSA.RecoverError.NoError) return false;
 
         return recoveredSigner == post.accessSigner;
     }
@@ -478,47 +512,59 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         _unpause();
     }
 
-    // New function to validate metadata
+    // Move metadata validation into a library later to save space
     function validateMetadata(string memory metadata, PostType postType) public pure returns (bool) {
         bytes memory metadataBytes = bytes(metadata);
-        if (!PostHelpers.validateMetadataFormat(metadataBytes)) {
-            return false;
-        }
-
+        
+        // Validate basic format - this will revert with InvalidJsonFormat if format is invalid
+        if (metadataBytes.length == 0) revert PostErrors.EmptyMetadata();
+        if (metadataBytes[0] != "{" || metadataBytes[metadataBytes.length - 1] != "}") revert PostErrors.InvalidJsonFormat();
+        
         // Check for required fields based on post type
         if (postType == PostType.EVENT) {
             if (!PostHelpers.containsField(metadataBytes, "\"type\":\"EVENT\"")) {
-                return false;
+                revert PostErrors.InvalidPostType();
             }
         } else if (postType == PostType.RICH_MEDIA) {
             if (!PostHelpers.containsField(metadataBytes, "\"type\":\"RICH_MEDIA\"")) {
-                return false;
+                revert PostErrors.InvalidPostType();
             }
         } else if (postType == PostType.PROJECT_UPDATE) {
             if (!PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"")) {
-                return false;
+                revert PostErrors.InvalidPostType();
             }
+        }
+
+        // Check for title field
+        if (!PostHelpers.containsField(metadataBytes, "\"title\"")) {
+            revert PostErrors.MissingTitleField();
+        }
+        
+        // Check for content field
+        if (!PostHelpers.containsField(metadataBytes, "\"content\"")) {
+            revert PostErrors.MissingContentField();
         }
 
         // Check for empty values
         if (PostHelpers.hasEmptyValue(metadataBytes, "\"title\"") || 
             PostHelpers.hasEmptyValue(metadataBytes, "\"content\"")) {
-            return false;
+            revert PostErrors.InvalidMetadata();
         }
 
         return true;
     }
 
-    // New batch posting function
     function createBatchPosts(
         uint256 tribeId,
         BatchPostData[] calldata posts
     ) external override onlyTribeMember(tribeId) whenNotPaused returns (uint256[] memory) {
-        require(posts.length <= MAX_BATCH_POSTS, ERROR_BATCH_LIMIT);
-        require(
-            block.timestamp >= lastBatchTime[msg.sender] + BATCH_POST_COOLDOWN,
-            ERROR_BATCH_COOLDOWN
-        );
+        if (posts.length > MAX_BATCH_POSTS) revert PostErrors.BatchLimitExceeded();
+        
+        if (!hasRole(RATE_LIMIT_MANAGER_ROLE, msg.sender)) {
+            if (block.timestamp < lastBatchTime[msg.sender] + BATCH_POST_COOLDOWN) {
+                revert PostErrors.BatchCooldownActive();
+            }
+        }
 
         uint256[] memory postIds = new uint256[](posts.length);
         
@@ -544,6 +590,7 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
             emit PostCreated(post.id, tribeId, msg.sender, posts[i].metadata);
         }
 
+        lastBatchTime[msg.sender] = block.timestamp;
         emit BatchPostsCreated(tribeId, msg.sender, postIds);
         return postIds;
     }
@@ -571,19 +618,16 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         return (MAX_BATCH_POSTS, BATCH_POST_COOLDOWN);
     }
 
-    // Add new function for updating posts
     function updatePost(uint256 postId, string memory metadata) external {
-        if (feedManager.getPost(postId).creator != msg.sender) revert PostErrors.NotPostCreator();
+        _checkPostCreator(postId);
         if (feedManager.getPost(postId).isDeleted) revert PostErrors.PostDeleted();
         
         feedManager.getPost(postId).metadata = metadata;
         emit PostUpdated(postId, msg.sender, metadata);
     }
 
-    // Add new event
     event PostUpdated(uint256 indexed postId, address indexed updater, string metadata);
 
-    // Add new function to validate project update permissions
     function _validateProjectUpdatePermissions(string memory metadata) internal view returns (bool) {
         bytes memory metadataBytes = bytes(metadata);
         if (!PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"")) {
