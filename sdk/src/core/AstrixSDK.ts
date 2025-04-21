@@ -195,7 +195,7 @@ export class AstrixSDK {
   getContractAddress(contractName: keyof ContractAddresses): string {
     const address = this.contractAddresses[contractName];
     if (!address || address === '0x0000000000000000000000000000000000000000') {
-      throw new Error(`Contract address not configured for ${contractName}`);
+      throw new Error(`Contract address not configured for ${String(contractName)}`);
     }
     return address;
   }

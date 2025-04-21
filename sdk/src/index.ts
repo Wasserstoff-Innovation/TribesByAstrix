@@ -23,9 +23,25 @@ export { DEPLOYED_CONTRACTS } from './config/deployedContracts';
 // Types
 export * from './types/core';  // Required by BaseModule and error handling
 export * from './types/errors'; // Required for error handling
-export * from './types/contracts'; // Required for contract addresses
+
+// Contract types with explicit re-export to avoid ambiguity
+export {
+  ContractAddresses,
+  InteractionCounts,
+  ContractPost,
+  ContractBatchPostData,
+  ContractPostPaginationResult,
+  isPostCreatedEvent,
+  isBatchPostsCreatedEvent,
+  isEncryptedPostCreatedEvent,
+  isSignatureGatedPostCreatedEvent
+} from './types/contracts';
+
+// Content module types
 export * from './types/content';  // Types for Content module (fully implemented)
-export * from './types/profiles'; // Types for Profiles module
+
+// Types for Profiles module
+export * from './types/profiles';
 
 // Modules
 // Per user request, tribes module is removed
@@ -48,5 +64,5 @@ export * from './modules/analytics';
 export * from './utils/formatting';
 
 // Constants and helpers
-export const SDK_VERSION = '1.0.0';
-export const DEFAULT_GAS_LIMIT = 500000; 
+export const SDK_VERSION = '1.0.1';
+export const DEFAULT_GAS_LIMIT = 500000;  

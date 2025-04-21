@@ -17,22 +17,18 @@ import {
   CreateSignatureGatedPostParams,
   ValidatePostMetadataParams
 } from '../types/content';
-import axios, { AxiosInstance } from 'axios';
+import {
+  ContractBatchPostData,
+  isPostCreatedEvent,
+  isBatchPostsCreatedEvent,
+  isEncryptedPostCreatedEvent,
+  isSignatureGatedPostCreatedEvent
+} from '../types/contracts';
+import axios from 'axios';
 
 // Import ABIs
 import PostMinterABI from '../../abis/PostMinter.json';
 import PostFeedManagerABI from '../../abis/PostFeedManager.json';
-
-// Add missing interfaces
-interface PostMetadata {
-  title: string;
-  content: string;
-  media: Array<{
-    url: string;
-    type: string;
-    mimeType?: string;
-  }>;
-}
 
 /**
  * Module for managing content (posts, comments, etc.)
@@ -42,9 +38,8 @@ export class ContentModule extends BaseModule {
    * Get the PostMinter contract
    * @param useSigner Whether to use the signer
    */
-  private getPostMinterContract(useSigner: boolean = false) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return this.getContract<any>(
+  private getPostMinterContract(useSigner: boolean = false): ethers.Contract {
+    return this.getContract(
       this.config.contracts.postMinter || '',
       PostMinterABI,
       useSigner
@@ -55,9 +50,8 @@ export class ContentModule extends BaseModule {
    * Get the PostFeedManager contract
    * @param useSigner Whether to use the signer
    */
-  private getPostFeedManagerContract(useSigner: boolean = false) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return this.getContract<any>(
+  private getPostFeedManagerContract(useSigner: boolean = false): ethers.Contract {
+    return this.getContract(
       this.config.contracts.postFeedManager || '',
       PostFeedManagerABI,
       useSigner
@@ -80,17 +74,20 @@ export class ContentModule extends BaseModule {
         params.collectibleId || 0
       );
       const receipt = await tx.wait();
+      
+      if (!receipt) {
+        throw new Error('Transaction receipt was null');
+      }
 
       // Find the PostCreated event in the receipt
-      const event = receipt.logs.find((log: any) => {
-        return log instanceof ethers.EventLog && log.eventName === "PostCreated";
-      }) as ethers.EventLog | undefined;
+      const event = receipt.logs.find((log: ethers.Log) => isPostCreatedEvent(log));
       
-      if (!event) {
+      if (!event || !isPostCreatedEvent(event)) {
         throw new Error('Post creation event not found');
       }
       
-      const postId = Number(event.args[0]);
+      // Use type assertion because we've verified it's the right type of event
+      const postId = Number((event as ethers.EventLog).args[0]);
 
       this.log(`Created post`, {
         postId,
@@ -121,7 +118,7 @@ export class ContentModule extends BaseModule {
       const postMinter = this.getPostMinterContract(true);
       
       // Map BatchPostData to contract-compatible format
-      const batchData = params.posts.map(post => ({
+      const batchData: ContractBatchPostData[] = params.posts.map(post => ({
         metadata: post.metadata,
         isGated: post.isGated || false,
         collectibleContract: post.collectibleContract || ethers.ZeroAddress,
@@ -135,17 +132,20 @@ export class ContentModule extends BaseModule {
       );
       
       const receipt = await tx.wait();
+      
+      if (!receipt) {
+        throw new Error('Transaction receipt was null');
+      }
 
       // Find the BatchPostsCreated event in the receipt
-      const event = receipt.logs.find((log: any) => {
-        return log instanceof ethers.EventLog && log.eventName === "BatchPostsCreated";
-      }) as ethers.EventLog | undefined;
+      const event = receipt.logs.find((log: ethers.Log) => isBatchPostsCreatedEvent(log));
       
-      if (!event) {
+      if (!event || !isBatchPostsCreatedEvent(event)) {
         throw new Error('Batch post creation event not found');
       }
       
-      const postIds = event.args[2].map((id: bigint) => Number(id));
+      // Use type assertion because we've verified it's the right type of event
+      const postIds = (event as ethers.EventLog).args[2].map((id: bigint) => Number(id));
 
       this.log(`Created batch posts`, {
         tribeId: params.tribeId,
@@ -179,17 +179,20 @@ export class ContentModule extends BaseModule {
       );
       
       const receipt = await tx.wait();
+      
+      if (!receipt) {
+        throw new Error('Transaction receipt was null');
+      }
 
       // Find the EncryptedPostCreated event in the receipt
-      const event = receipt.logs.find((log: any) => {
-        return log instanceof ethers.EventLog && log.eventName === "EncryptedPostCreated";
-      }) as ethers.EventLog | undefined;
+      const event = receipt.logs.find((log: ethers.Log) => isEncryptedPostCreatedEvent(log));
       
-      if (!event) {
+      if (!event || !isEncryptedPostCreatedEvent(event)) {
         throw new Error('Encrypted post creation event not found');
       }
       
-      const postId = Number(event.args[0]);
+      // Use type assertion because we've verified it's the right type of event
+      const postId = Number((event as ethers.EventLog).args[0]);
 
       this.log(`Created encrypted post`, {
         postId,
@@ -225,17 +228,20 @@ export class ContentModule extends BaseModule {
       );
       
       const receipt = await tx.wait();
+      
+      if (!receipt) {
+        throw new Error('Transaction receipt was null');
+      }
 
       // Find the SignatureGatedPostCreated event in the receipt
-      const event = receipt.logs.find((log: any) => {
-        return log instanceof ethers.EventLog && log.eventName === "SignatureGatedPostCreated";
-      }) as ethers.EventLog | undefined;
+      const event = receipt.logs.find((log: ethers.Log) => isSignatureGatedPostCreatedEvent(log));
       
-      if (!event) {
+      if (!event || !isSignatureGatedPostCreatedEvent(event)) {
         throw new Error('Signature gated post creation event not found');
       }
       
-      const postId = Number(event.args[0]);
+      // Use type assertion because we've verified it's the right type of event
+      const postId = Number((event as ethers.EventLog).args[0]);
 
       this.log(`Created signature gated post`, {
         postId,
@@ -582,7 +588,7 @@ export class ContentModule extends BaseModule {
         params.limit || 10
       );
 
-      const postIds = result.postIds.map((id: any) => Number(id));
+      const postIds = result.postIds.map((id: bigint) => Number(id));
       const total = Number(result.total);
 
       // If requested, fetch full post details for each post ID
@@ -630,7 +636,7 @@ export class ContentModule extends BaseModule {
         params.limit || 10
       );
 
-      const postIds = result.postIds.map((id: any) => Number(id));
+      const postIds = result.postIds.map((id: bigint) => Number(id));
       const total = Number(result.total);
 
       // If requested, fetch full post details for each post ID
@@ -742,7 +748,20 @@ export class ContentModule extends BaseModule {
           const postMinter = this.getPostMinterContract();
           const posts = await postMinter.getPostBatch(postIds);
           
-          return posts.map((post: any) => ({
+          return posts.map((post: { 
+            id: bigint;
+            tribeId: bigint;
+            creator: string;
+            metadata: string;
+            isGated: boolean;
+            collectibleContract: string;
+            collectibleId: bigint;
+            isEncrypted: boolean;
+            accessSigner: string;
+            timestamp: bigint;
+            reportCount: bigint;
+            interactionCounts: [bigint, bigint, bigint, bigint, bigint];
+          }) => ({
             id: Number(post.id),
             tribeId: Number(post.tribeId),
             creator: post.creator,
@@ -850,7 +869,7 @@ export class ContentModule extends BaseModule {
       async () => {
         try {
           // Fetch the metadata if it's a URL
-          let parsedMetadata: any;
+          let parsedMetadata: Record<string, unknown>;
           
           if (!post.metadata) {
             parsedMetadata = { title: "", content: "", media: [] };

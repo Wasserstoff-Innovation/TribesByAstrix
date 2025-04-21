@@ -41,7 +41,7 @@ export const CONTRACT_ADDRESSES: Record<number, ContractAddresses> = {
     postMinter: '0x...',
     profileNFTMinter: '0x...'
   },
-  [NetworkId.MONAD_DEVNET]: {
+  [NetworkId.MONAD_TESTNET]: {
     roleManager: '0x0000000000000000000000000000000000000001',
     tribeController: '0x0000000000000000000000000000000000000002',
     astrixToken: '0x0000000000000000000000000000000000000003',

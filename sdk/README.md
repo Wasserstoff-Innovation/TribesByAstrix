@@ -5,20 +5,29 @@ A powerful JavaScript/TypeScript SDK for interacting with the Tribes by Astrix p
 ## Installation
 
 ```bash
-npm install @tribes/sdk
+npm install @wasserstoff-innovation/tribes-sdk
 # or
-yarn add @tribes/sdk
+yarn add @wasserstoff-innovation/tribes-sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { AstrixSDK } from '@tribes/sdk';
+import { AstrixSDK } from '@wasserstoff-innovation/tribes-sdk';
 
 // Initialize the SDK with configuration
 const sdk = new AstrixSDK({
   provider: window.ethereum, // or any ethers-compatible provider
-  chainId: 4165, // Monad Devnet
+  
+  // Choose a network:
+  // Monad networks
+  chainId: 4165, // Monad Testnet
+  // or chainId: 1284, // Monad Mainnet (future)
+  
+  // XDC networks
+  // chainId: 51, // XDC Apothem Testnet
+  // chainId: 50, // XDC Mainnet
+  
   // Optional: Provide contract addresses if not using standard deployment
   contracts: {
     // Contract addresses will be automatically detected based on chainId if not provided
@@ -206,4 +215,17 @@ For detailed API documentation, see the [API Reference](./docs/API.md).
 
 ## Troubleshooting
 
-Having issues? Check our [Troubleshooting Guide](./docs/guides/troubleshooting.md). 
+Having issues? Check our [Troubleshooting Guide](./docs/guides/troubleshooting.md).
+
+## Supported Networks
+
+Tribes by Astrix SDK supports multiple blockchain networks:
+
+| Network | Chain ID | Status |
+|---------|----------|--------|
+| Monad Testnet | 4165 | Active Development |
+| XDC Apothem Testnet | 51 | Active Development |
+| Monad Mainnet | 1284 | Future |
+| XDC Mainnet | 50 | Future |
+
+Each network has its own deployment of the core contracts. The SDK automatically selects the appropriate contract addresses based on the `chainId` provided during initialization. 

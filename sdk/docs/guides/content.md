@@ -7,7 +7,7 @@ The Content module allows you to create, retrieve, and interact with content in 
 The Content module is automatically initialized when you create an AstrixSDK instance:
 
 ```typescript
-import { AstrixSDK } from '@tribes/sdk';
+import { AstrixSDK } from '@wasserstoff-innovation/tribes-sdk';
 
 const sdk = new AstrixSDK({
   provider: window.ethereum,

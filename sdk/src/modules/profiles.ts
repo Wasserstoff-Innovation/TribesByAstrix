@@ -1,4 +1,3 @@
-import { ethers } from 'ethers';
 import { BaseModule } from '../core/BaseModule';
 
 /**

@@ -1189,59 +1189,6 @@ enum NetworkId {
   MAINNET = 1,
   POLYGON = 137,
   MUMBAI = 80001,
-  MONAD_DEVNET = 999,
+  MONAD_TESTNET = 4165,
   LOCAL = 31337
 }
-```
-
-### ContractAddresses
-
-Interface for contract addresses configuration.
-
-```typescript
-interface ContractAddresses {
-  roleManager: string;
-  tribeController: string;
-  astrixPointSystem: string;
-  astrixToken?: string;
-  tokenDispenser?: string;
-  pointSystem?: string;          // Alias for astrixPointSystem (deprecated)
-  collectibleController?: string;
-  postFeedManager?: string;
-  postMinter?: string;
-  profileNFTMinter?: string;
-  communityPoints?: string;
-  eventController?: string;
-  superCommunityController?: string;
-  voting?: string;
-  [key: string]: string;         // Additional contract addresses
-}
-```
-
-### AstrixError
-
-Interface for SDK error objects.
-
-```typescript
-interface AstrixError {
-  type: ErrorType;
-  message: string;
-  details?: any;
-  originalError?: Error;
-}
-```
-
-### ErrorType
-
-Enum of error types.
-
-```typescript
-enum ErrorType {
-  CONTRACT_ERROR = "CONTRACT_ERROR",
-  CONNECTION_ERROR = "CONNECTION_ERROR",
-  VALIDATION_ERROR = "VALIDATION_ERROR",
-  AUTHENTICATION_ERROR = "AUTHENTICATION_ERROR",
-  TIMEOUT_ERROR = "TIMEOUT_ERROR",
-  UNKNOWN_ERROR = "UNKNOWN_ERROR"
-}
-``` 

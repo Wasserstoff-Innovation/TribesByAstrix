@@ -13,7 +13,10 @@ export enum NetworkId {
   MAINNET = 1,
   POLYGON = 137,
   MUMBAI = 80001,
-  MONAD_DEVNET = 125999,
+  MONAD_TESTNET = 4165,
+  MONAD_MAINNET = 1284,
+  XDC_TESTNET = 51,
+  XDC_MAINNET = 50,
   LOCAL = 31337
 }
 
@@ -28,8 +31,14 @@ export function getNetworkName(networkId: NetworkId): string {
       return 'Polygon Mainnet';
     case NetworkId.MUMBAI:
       return 'Polygon Mumbai';
-    case NetworkId.MONAD_DEVNET:
-      return 'Monad Devnet';
+    case NetworkId.MONAD_TESTNET:
+      return 'Monad Testnet';
+    case NetworkId.MONAD_MAINNET:
+      return 'Monad Mainnet';
+    case NetworkId.XDC_TESTNET:
+      return 'XDC Apothem Testnet';
+    case NetworkId.XDC_MAINNET:
+      return 'XDC Mainnet';
     case NetworkId.LOCAL:
       return 'Local Development';
     default:
@@ -50,8 +59,14 @@ export function chainIdToNetworkId(chainId: number): NetworkId | undefined {
       return NetworkId.POLYGON;
     case 80001:
       return NetworkId.MUMBAI;
-    case 125999:
-      return NetworkId.MONAD_DEVNET;
+    case 4165:
+      return NetworkId.MONAD_TESTNET;
+    case 1284:
+      return NetworkId.MONAD_MAINNET;
+    case 51:
+      return NetworkId.XDC_TESTNET;
+    case 50:
+      return NetworkId.XDC_MAINNET;
     case 31337:
       return NetworkId.LOCAL;
     default:
