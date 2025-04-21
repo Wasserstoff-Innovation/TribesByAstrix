@@ -1,6 +1,6 @@
-# Tribes by Astrix System Documentation
+# Tribes by Astrix Documentation
 
-This comprehensive document provides a visual and textual representation of the Tribes by Astrix system architecture and key user flows, showing how the various components interact and how users navigate through the system.
+This document provides a comprehensive overview of the Tribes by Astrix system architecture and key user flows, showing how components interact and users navigate through the system.
 
 ## System Architecture
 
@@ -89,74 +89,20 @@ flowchart TD
         Config[Configuration]
     end
     
-    SDK --> TM
-    SDK --> PTM
-    SDK --> TBM
-    SDK --> PFM
-    SDK --> CM
-    SDK --> OM
-    SDK --> AM
+    SDK --> TM & PTM & TBM & PFM & CM & OM & AM
     
-    TM --> Contracts[Smart Contracts]
-    PTM --> Contracts
-    TBM --> Contracts
-    PFM --> Contracts
-    CM --> Contracts
-    OM --> Contracts
-    AM --> Contracts
+    TM & PTM & TBM & PFM & CM & OM & AM --> Contracts[Smart Contracts]
     
-    SDK --> Cache
-    SDK --> ErrorH
-    SDK --> Utils
-    SDK --> Config
+    SDK --> Cache & ErrorH & Utils & Config
     
-    TM --> Cache
-    TM --> ErrorH
-    TM --> Utils
-    TM --> Config
-    PTM --> Cache
-    PTM --> ErrorH
-    PTM --> Utils
-    PTM --> Config
-    TBM --> Cache
-    TBM --> ErrorH
-    TBM --> Utils
-    TBM --> Config
-    PFM --> Cache
-    PFM --> ErrorH
-    PFM --> Utils
-    PFM --> Config
-    CM --> Cache
-    CM --> ErrorH
-    CM --> Utils
-    CM --> Config
-    OM --> Cache
-    OM --> ErrorH
-    OM --> Utils
-    OM --> Config
-    AM --> Cache
-    AM --> ErrorH
-    AM --> Utils
-    AM --> Config
+    TM & PTM & TBM & PFM & CM & OM & AM --> Cache & ErrorH & Utils & Config
 ```
 
 **Key Components:**
-- **SDK Modules**: Specialized modules that handle different functionality areas
-  - **Token Module**: Handles cryptocurrency and token interactions
-  - **Points Module**: Manages the platform's points and rewards system
-  - **Tribes Module**: Manages community creation and membership
-  - **Profiles Module**: Handles user profiles and identity
-  - **Content Module**: Manages posts, comments, and content
-  - **Organizations Module**: Handles organization management
-  - **Analytics Module**: Provides insights and statistics
+- **SDK Modules**: Specialized modules for different functionality areas (Token, Points, Tribes, Profiles, Content, Organizations, Analytics)
+- **Core Services**: Shared utilities used by all modules (Caching, Error Handling, Utilities, Configuration)
 
-- **Core Services**: Shared utilities used by all modules
-  - **Caching Layer**: Improves performance by storing frequently accessed data
-  - **Error Handling**: Provides standardized error management
-  - **Utilities**: Common functions and helpers
-  - **Configuration**: System-wide settings and parameters
-
-Each module interfaces directly with the blockchain contracts while utilizing shared core services for improved efficiency and consistency.
+Each module interfaces directly with blockchain contracts while utilizing shared core services for efficiency and consistency.
 
 ### User Authentication Flow
 
@@ -181,38 +127,30 @@ sequenceDiagram
     Wallet->>User: Prompt for Approval
     User->>Wallet: Approve Connection
     Wallet-->>SDK: Return Signer
-    SDK->>SDK: Set Signer to Modules
-    SDK-->>App: Connection Successful
-    App-->>User: Show Connected UI
     
-    User->>App: Perform Action
+    Note over App,SDK: User performs action requiring blockchain transaction
+    
     App->>SDK: Call Module Method
     SDK->>Wallet: Sign Transaction
     Wallet->>User: Prompt for Signature
     User->>Wallet: Approve Signature
-    Wallet-->>SDK: Return Signed Transaction
+    Wallet-->>SDK: Return Signed TX
     SDK->>Contracts: Submit Transaction
-    Contracts-->>SDK: Return Transaction Receipt
+    Contracts-->>SDK: Return Receipt
     SDK-->>App: Return Result
-    App-->>User: Show Success/Failure
 ```
 
-**Process Description:**
-1. User accesses the application in their browser
-2. The app initializes the SDK and retrieves contract addresses
-3. When the user clicks "Connect Wallet," the SDK requests a connection
-4. The user approves the connection in their wallet
-5. The wallet returns a signer that the SDK uses for transactions
-6. When performing actions, the app calls SDK methods
-7. For blockchain transactions, the user must sign with their wallet
-8. The signed transaction is submitted to the contracts
-9. Results are returned to the app for display to the user
+**Process Summary:**
+1. User connects wallet to app and SDK receives signer
+2. For blockchain transactions, user signs with wallet
+3. Signed transactions are submitted to contracts
+4. Results return to app for display to user
 
 This flow ensures secure, user-approved interactions with the blockchain while maintaining a seamless user experience.
 
 ### Cache Invalidation Flow
 
-To maintain performance while ensuring data accuracy, the SDK implements a sophisticated caching system with smart invalidation rules.
+To maintain performance while ensuring data accuracy, the SDK implements a caching system with smart invalidation rules.
 
 ```mermaid
 flowchart TD
@@ -233,27 +171,18 @@ flowchart TD
     L --> M[Pattern-Based Invalidation]
     L --> N[Key-Specific Invalidation]
     
-    M --> O[Clear Matching Keys]
-    N --> P[Clear Specific Key]
-    
-    O --> Q[Next User Action Gets Fresh Data]
-    P --> Q
+    M & N --> Q[Next User Action Gets Fresh Data]
 ```
 
-**Process Description:**
-1. For read operations, the SDK first checks its cache
-2. If data is found (cache hit), it returns immediately
-3. If not found (cache miss), it fetches fresh data from the blockchain
-4. The fresh data is stored in the cache for future use
-5. For write operations that change state, the SDK invalidates related cache entries
-6. Cache invalidation uses both pattern-based (clearing categories) and key-specific approaches
-7. This ensures the next user action will get fresh data if relevant state has changed
-
-This caching strategy significantly improves performance while maintaining data consistency and accuracy.
+**Process Summary:**
+1. Read operations check cache first before fetching from blockchain
+2. Write operations that change state invalidate related cache entries
+3. Cache invalidation uses both pattern-based and key-specific approaches
+4. This strategy improves performance while maintaining data consistency
 
 ### Tribe Creation and Management Flow
 
-Tribes are the fundamental community units within the platform, with flexible access models and governance.
+Tribes are the fundamental community units with flexible access models and governance.
 
 ```mermaid
 flowchart TD
@@ -277,36 +206,21 @@ flowchart TD
     K -->|No Invite| L
     
     I --> M[User Joined Tribe]
-    M --> N[Can Create Content]
-    M --> O[Can Participate in Events]
-    M --> P[Can Join Fundraisers]
+    M --> N & O & P[Can Create Content/Events/Fundraisers]
 ```
 
-**Process Description:**
-1. An admin or authorized creator initiates tribe creation
-2. They set metadata (name, description, image, etc.)
-3. They define the access model (public, token-gated, or invite-only)
-4. They assign administrators who will have management rights
-5. The tribe is created on the blockchain
-6. Users attempt to join based on the access model:
-   - Public tribes: Join directly
-   - Token-gated tribes: Must verify token ownership
-   - Invite-only tribes: Must have a valid invitation
-7. Once joined, users can participate in tribe activities:
-   - Creating and interacting with content
-   - Participating in events
-   - Contributing to fundraisers
-
-This flexible model allows communities to define their boundaries and governance while enabling rich interactions within the tribe.
+**Process Summary:**
+1. Admin creates tribe with metadata and access model (public, token-gated, invite-only)
+2. Users join based on access requirements
+3. Joined users can participate in tribe activities (content, events, fundraisers)
 
 ### Event and Fundraiser Integration
 
-Events and fundraisers are key activities within tribes that generate engagement and resources.
+Events and fundraisers are key activities that generate engagement and resources.
 
 ```mermaid
 flowchart TD
-    A[Tribe] --> B[Create Event]
-    A --> C[Create Fundraiser]
+    A[Tribe] --> B & C[Events/Fundraisers]
     
     B --> D[Event Created]
     C --> E[Fundraiser Created]
@@ -317,32 +231,27 @@ flowchart TD
     F --> H[Generate Revenue]
     G --> I[Generate Funds]
     
-    H --> J[Distribute to Tribe Treasury]
-    I --> J
+    H & I --> J[Tribe Treasury]
     
-    J --> K[Fund Tribe Activities]
-    K --> L[Grow Tribe Ecosystem]
+    J --> K[Fund Activities]
+    K --> L[Grow Ecosystem]
     L --> A
 ```
 
-**Process Description:**
-1. Tribes can host both events and fundraisers as community activities
-2. Events sell tickets to generate revenue
-3. Fundraisers accept contributions to generate funds
-4. Both revenue streams flow into the tribe treasury
-5. These resources fund ongoing tribe activities and growth initiatives
-6. The cycle creates a sustainable ecosystem for the tribe's development
-
-This integrated approach allows tribes to become self-sustaining communities with multiple funding mechanisms.
+**Process Summary:**
+1. Tribes host events and fundraisers to generate resources
+2. Revenue flows into tribe treasury
+3. Resources fund tribe activities and growth
+4. Creates a sustainable ecosystem
 
 ## Event User Flows
 
-This section outlines the key user flows in the event management system, showing both the visual representation and explanatory descriptions of each flow.
+This section outlines the key user journeys in the event management system with visual diagrams and descriptions.
 
-### Setup Flow
+### Event Setup
 
 **Description**: 
-The setup flow establishes the fundamental contracts and roles required for the event management ecosystem. It deploys the necessary contracts (RoleManager, TribeController, PointSystem, CollectibleController, and EventController), assigns roles to different users, and creates a test tribe for hosting events.
+Initial setup of contracts and roles required for event management.
 
 ```mermaid
 flowchart TD
@@ -385,7 +294,7 @@ flowchart TD
 ### Physical Event Creation
 
 **Description**:
-This flow tests the basic creation of a physical event by an authorized organizer. It validates that users with the organizer role can successfully create events with parameters for in-person gatherings.
+Creation of a physical event by an authorized organizer.
 
 ```mermaid
 flowchart TD
@@ -438,10 +347,10 @@ flowchart TD
 6. System emits an EventCreated event to notify tribe members
 7. System assigns an event ID for future reference
 
-### Event Metadata Validation
+### Event Validation
 
 **Description**:
-This flow tests the system's handling of various metadata formats and validation rules for event creation.
+System handling of various metadata formats and validation rules.
 
 ```mermaid
 flowchart TD
@@ -470,7 +379,7 @@ flowchart TD
 ### Hybrid Event Setup
 
 **Description**:
-This flow demonstrates the system's ability to handle hybrid events that combine both physical and virtual attendance options.
+Configuration of events with both physical and virtual components.
 
 ```mermaid
 flowchart TD
@@ -503,10 +412,10 @@ flowchart TD
 5. Physical tickets are priced higher due to venue costs and limited capacity
 6. System processes the event creation and assigns an ID
 
-### Standard Ticket Purchase
+### Ticket Purchase
 
 **Description**:
-This flow tests the basic ticket purchasing functionality, allowing tribe members to secure their attendance at events.
+Basic ticket purchasing flow for event attendance.
 
 ```mermaid
 flowchart TD
@@ -533,10 +442,10 @@ flowchart TD
 7. System updates the user's ticket balance
 8. User can verify their ticket ownership
 
-### Payment Processing and Refunds
+### Payment Processing
 
 **Description**:
-This flow ensures the system properly handles overpayments by automatically refunding excess amounts to users.
+Handling of overpayments with automatic refund capability.
 
 ```mermaid
 flowchart TD
@@ -559,10 +468,10 @@ flowchart TD
 5. System automatically refunds the excess 0.1 ETH to the user
 6. User receives both the ticket and the refund
 
-### Ticket Supply Enforcement
+### Supply Management
 
 **Description**:
-This flow verifies the system enforces ticket supply limits to prevent overselling events.
+Enforcement of ticket limits to prevent overselling.
 
 ```mermaid
 flowchart TD
@@ -587,7 +496,7 @@ flowchart TD
 ### Payment Validation
 
 **Description**:
-This flow ensures users must provide sufficient payment to purchase tickets, preventing underpayments.
+Verification of sufficient payment for ticket purchases.
 
 ```mermaid
 flowchart TD
@@ -613,7 +522,7 @@ flowchart TD
 ### Ticket Transfer
 
 **Description**:
-This flow validates that ticket holders can transfer tickets to other users, with appropriate restrictions to prevent ticket scalping.
+Transfer of tickets between users with anti-scalping measures.
 
 ```mermaid
 flowchart TD
@@ -645,10 +554,10 @@ flowchart TD
 7. User 2 attempts to transfer the ticket again
 8. System blocks the second transfer with "Ticket already transferred once" error
 
-### Event Metadata Updates
+### Event Updates
 
 **Description**:
-This flow tests the organizer's ability to update event details after creation, allowing for corrections or changes to the event plan.
+Updating event details after initial creation.
 
 ```mermaid
 flowchart TD
@@ -674,7 +583,7 @@ flowchart TD
 ### Event Cancellation
 
 **Description**:
-This flow enables organizers to cancel events when necessary, updating the event status for all stakeholders.
+Cancellation process and prevention of new ticket sales.
 
 ```mermaid
 flowchart TD
@@ -705,12 +614,12 @@ flowchart TD
 
 ## Fundraiser User Flows
 
-This section outlines the key user flows in the fundraiser system, showing both the visual representation and explanatory descriptions of each flow.
+This section outlines the key user journeys in the fundraiser system with visual diagrams and descriptions.
 
-### Setup Flow
+### Fundraiser Setup
 
 **Description**: 
-The setup flow establishes the fundamental contracts and roles required for the fundraiser ecosystem. It deploys the necessary contracts (RoleManager, TribeController, PointSystem, CollectibleController, PostFeedManager, and PostMinter), assigns roles to different users, and creates a test tribe for hosting fundraisers.
+Initial setup of contracts and roles required for fundraiser management.
 
 ```mermaid
 flowchart TD
@@ -754,10 +663,10 @@ flowchart TD
 4. Various users join the tribe (fundraiser creator, contributors)
 5. Admin bans a problematic member to test access controls
 
-### Standard Fundraiser Creation
+### Standard Fundraiser
 
 **Description**:
-This flow tests the basic creation of a fundraiser by an authorized creator. It validates that users with the creator role can successfully create fundraisers with standard parameters and that the metadata is correctly stored.
+Creation of a basic fundraiser by an authorized creator.
 
 ```mermaid
 flowchart TD
@@ -804,10 +713,10 @@ flowchart TD
 6. System validates and stores the fundraiser data
 7. System emits a PostCreated event to notify tribe members
 
-### Multi-Currency Fundraiser Creation
+### Multi-Currency Fundraiser
 
 **Description**:
-This flow ensures creators can establish fundraisers using different currency options (ETH, USDC, TRIBE_TOKEN), providing flexibility in how contributors can support initiatives.
+Configuration of fundraisers with different currency options.
 
 ```mermaid
 flowchart TD
@@ -836,10 +745,10 @@ flowchart TD
 4. System validates and stores each fundraiser with its specific currency
 5. System emits a PostCreated event for each submission
 
-### Time-Flexible Fundraiser Creation
+### Time-Flexible Fundraiser
 
 **Description**:
-This flow tests the system's ability to handle fundraisers with different time horizons, from short one-week campaigns to long three-month initiatives.
+Fundraisers with varying durations from one week to three months.
 
 ```mermaid
 flowchart TD
@@ -868,10 +777,10 @@ flowchart TD
 4. System validates and stores each fundraiser with its specific duration
 5. System emits a PostCreated event for each submission
 
-### Basic Contribution Tracking
+### Contribution Tracking
 
 **Description**:
-This flow tests the system's ability to track contributions to fundraisers through user interactions, specifically using likes as a proxy for contributions in the test environment.
+System tracking of user interactions with fundraisers.
 
 ```mermaid
 flowchart TD
@@ -889,10 +798,10 @@ flowchart TD
 4. System records the interaction/contribution
 5. System verifies the interaction count is updated correctly
 
-### Access Control for Contributions
+### Access Control
 
 **Description**:
-This flow verifies that banned members cannot interact with or contribute to fundraisers, maintaining the integrity of the contribution system.
+Prevention of banned members from interacting with fundraisers.
 
 ```mermaid
 flowchart TD
@@ -914,7 +823,7 @@ flowchart TD
 ### Deleted Fundraiser Protection
 
 **Description**:
-This flow tests the system's handling of deleted fundraisers, ensuring users cannot interact with or contribute to fundraisers that have been removed.
+Prevention of interactions with removed fundraisers.
 
 ```mermaid
 flowchart TD
@@ -935,10 +844,10 @@ flowchart TD
 5. System rejects the interaction with "PostDeleted" error
 6. No interactions are recorded for the deleted fundraiser
 
-### Frontend Validation Rules
+### Frontend Validation
 
 **Description**:
-While not actual test cases, these validation rules should be implemented in the frontend to ensure a smooth user experience and prevent invalid data submission.
+Recommended validation rules for the frontend interface.
 
 ```mermaid
 flowchart TD
@@ -1007,20 +916,13 @@ These frontend validations complement the contract-level validations to create a
 
 ## Conclusion
 
-This comprehensive documentation combines the system architecture and key user flows for the Tribes by Astrix platform. The diagrams and explanatory text provide a clear understanding of how the system components interact and how users navigate through different processes.
+This documentation provides a comprehensive overview of the Tribes by Astrix platform architecture and user flows. The key aspects of the system include:
 
-### Key Takeaways
+1. **Modular Architecture** with specialized contracts and SDK modules
+2. **Role-Based Access** for system security and integrity
+3. **Flexible Community Model** supporting diverse tribe formations
+4. **Event Management** with physical, virtual, and hybrid options
+5. **Fundraising Capabilities** supporting multiple currencies and durations
+6. **Robust Validation** at both contract and frontend levels
 
-1. **Modular Architecture**: The system uses a modular architecture with specialized contracts and SDK modules to handle different aspects of functionality, promoting maintainability and extensibility.
-
-2. **Role-Based Access Control**: A robust role-based permission system ensures that only authorized users can perform sensitive operations, maintaining system integrity.
-
-3. **Flexible Community Model**: The tribe-based community model supports different access models and governance structures, enabling diverse community formations.
-
-4. **Comprehensive Event System**: Events support both physical and virtual attendance with flexible ticket types and pricing, along with mechanisms for transfers and refunds.
-
-5. **Versatile Fundraising**: Fundraisers can be configured with different currencies, durations, and contribution tiers to suit various community needs.
-
-6. **Strong Validation**: Both contract-level and recommended frontend validations ensure data integrity and a smooth user experience.
-
-The flows documented here serve as both a reference for understanding the system and a guide for testing to ensure all functionality works as expected. They represent the current state of the Tribes by Astrix platform and should be updated as the system evolves. 
+This documentation serves as both a reference for understanding the system and a guide for implementation and testing. 
