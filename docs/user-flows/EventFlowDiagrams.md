@@ -11,7 +11,7 @@ flowchart TD
     C --> D[Create Test Tribe]
     D --> E[Users Join Tribe]
 
-    subgraph Contracts
+    subgraph ContractGroup [Contracts]
         B1[RoleManager]
         B2[TribeController]
         B3[PointSystem]
@@ -19,14 +19,21 @@ flowchart TD
         B5[EventController]
     end
 
-    subgraph Roles
+    subgraph RoleGroup [Roles]
         C1[Admin Role]
         C2[Moderator Role]
         C3[Organizer Role]
     end
 
-    B --> Contracts
-    C --> Roles
+    B --> B1
+    B --> B2
+    B --> B3
+    B --> B4
+    B --> B5
+    
+    C --> C1
+    C --> C2
+    C --> C3
 ```
 
 ## Event Creation Flows
@@ -48,7 +55,7 @@ flowchart TD
     H --> J[Emit EventCreated Event]
     J --> K[Assign Event ID]
 
-    subgraph Event Details
+    subgraph EventDetails [Event Details]
         C1[Start Date]
         C2[End Date]
         C3[Location Type: PHYSICAL]
@@ -56,15 +63,23 @@ flowchart TD
         C5[GPS Coordinates]
     end
 
-    subgraph Ticket Config
+    subgraph TicketConfig [Ticket Config]
         E1[Ticket Types]
         E2[Maximum Supply]
         E3[Price Per Ticket]
         E4[Wallet Limits]
     end
 
-    C --> Event Details
-    E --> Ticket Config
+    C --> C1
+    C --> C2
+    C --> C3
+    C --> C4
+    C --> C5
+    
+    E --> E1
+    E --> E2
+    E --> E3
+    E --> E4
 ```
 
 ### Event Metadata Validation

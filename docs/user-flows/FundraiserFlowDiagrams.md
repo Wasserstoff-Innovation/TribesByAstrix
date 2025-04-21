@@ -12,7 +12,7 @@ flowchart TD
     D --> E[Users Join Tribe]
     E --> F[Ban Problematic Member]
 
-    subgraph Contracts
+    subgraph ContractGroup [Contracts]
         B1[RoleManager]
         B2[TribeController]
         B3[PointSystem]
@@ -21,14 +21,22 @@ flowchart TD
         B6[PostMinter]
     end
 
-    subgraph Roles
+    subgraph RoleGroup [Roles]
         C1[Admin Role]
         C2[Moderator Role]
         C3[Creator Role]
     end
 
-    B --> Contracts
-    C --> Roles
+    B --> B1
+    B --> B2
+    B --> B3
+    B --> B4
+    B --> B5
+    B --> B6
+    
+    C --> C1
+    C --> C2
+    C --> C3
 ```
 
 ## Fundraiser Creation Flows
@@ -50,20 +58,25 @@ flowchart TD
     H --> J[Emit PostCreated Event]
     J --> K[Notify Tribe Members]
 
-    subgraph Contribution Tiers
+    subgraph ContributionTiers [Contribution Tiers]
         D1[Bronze: 50 ETH]
         D2[Silver: 100 ETH]
         D3[Gold: 200 ETH]
     end
 
-    subgraph Metadata
+    subgraph MetadataItems [Metadata]
         E1[Images]
         E2[Documents]
         E3[Website]
     end
 
-    D --> Contribution Tiers
-    E --> Metadata
+    D --> D1
+    D --> D2
+    D --> D3
+    
+    E --> E1
+    E --> E2
+    E --> E3
 ```
 
 ### Multi-Currency Fundraiser Creation
@@ -157,30 +170,39 @@ flowchart TD
     A --> D[Tier Validations]
     A --> E[Currency Validations]
     
-    subgraph Date Rules
+    subgraph DateRules [Date Rules]
         B1[Start Date in Future]
         B2[Duration Between 1 Week - 3 Months]
     end
     
-    subgraph Amount Rules
+    subgraph AmountRules [Amount Rules]
         C1[Target > 0]
         C2[Target Under Max Limit]
     end
     
-    subgraph Tier Rules
+    subgraph TierRules [Tier Rules]
         D1[At Least One Tier]
         D2[Amounts in Ascending Order]
         D3[No Duplicate Names]
         D4[All Amounts > 0]
     end
     
-    subgraph Currency Rules
+    subgraph CurrencyRules [Currency Rules]
         E1[From Supported List]
         E2[Valid Contract if Token]
     end
     
-    B --> Date Rules
-    C --> Amount Rules
-    D --> Tier Rules
-    E --> Currency Rules
+    B --> B1
+    B --> B2
+    
+    C --> C1
+    C --> C2
+    
+    D --> D1
+    D --> D2
+    D --> D3
+    D --> D4
+    
+    E --> E1
+    E --> E2
 ``` 

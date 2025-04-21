@@ -38,7 +38,13 @@ flowchart TD
     
     EC -.-> RM
     
-    Blockchain --> Core Contracts
+    Blockchain --> RM
+    Blockchain --> TC
+    Blockchain --> PS
+    Blockchain --> CC
+    Blockchain --> PFM
+    Blockchain --> PM
+    Blockchain --> EC
 ```
 
 ## SDK Architecture
@@ -47,7 +53,7 @@ flowchart TD
 flowchart TD
     App[Client Application] --> SDK[AstrixSDK]
     
-    subgraph SDK Modules
+    subgraph SDK_Modules [SDK Modules]
         TM[Token Module]
         PTM[Points Module]
         TBM[Tribes Module]
@@ -57,18 +63,62 @@ flowchart TD
         AM[Analytics Module]
     end
     
-    SDK --> SDK Modules
-    SDK Modules --> Contracts[Smart Contracts]
-    
-    subgraph Core Services
+    subgraph Core_Services [Core Services]
         Cache[Caching Layer]
         ErrorH[Error Handling]
         Utils[Utilities]
         Config[Configuration]
     end
     
-    SDK --> Core Services
-    SDK Modules --> Core Services
+    SDK --> TM
+    SDK --> PTM
+    SDK --> TBM
+    SDK --> PFM
+    SDK --> CM
+    SDK --> OM
+    SDK --> AM
+    
+    TM --> Contracts[Smart Contracts]
+    PTM --> Contracts
+    TBM --> Contracts
+    PFM --> Contracts
+    CM --> Contracts
+    OM --> Contracts
+    AM --> Contracts
+    
+    SDK --> Cache
+    SDK --> ErrorH
+    SDK --> Utils
+    SDK --> Config
+    
+    TM --> Cache
+    TM --> ErrorH
+    TM --> Utils
+    TM --> Config
+    PTM --> Cache
+    PTM --> ErrorH
+    PTM --> Utils
+    PTM --> Config
+    TBM --> Cache
+    TBM --> ErrorH
+    TBM --> Utils
+    TBM --> Config
+    PFM --> Cache
+    PFM --> ErrorH
+    PFM --> Utils
+    PFM --> Config
+    CM --> Cache
+    CM --> ErrorH
+    CM --> Utils
+    CM --> Config
+    OM --> Cache
+    OM --> ErrorH
+    OM --> Utils
+    OM --> Config
+    AM --> Cache
+    AM --> ErrorH
+    AM --> Utils
+    AM --> Config
 ```
 
 ## User Authentication Flow
