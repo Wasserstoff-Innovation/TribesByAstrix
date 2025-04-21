@@ -1,193 +1,75 @@
-# Scripts for Tribes by Astrix
+# Deployment Scripts
 
-This directory contains scripts for testing, deployment, and utility tasks for the Tribes by Astrix project.
+This directory contains scripts for deploying and managing the Tribes by Astrix platform.
 
-## Deployment Scripts
+## Overview
 
-### 1. deploy.ts
+The deployment scripts are organized to handle different deployment scenarios and environments:
 
-Standard deployment script for the Tribes platform without Astrix token integration.
+- **Full Deployment**: Deploy all contracts in the correct order with proper initialization
+- **Upgrading**: Upgrade specific contracts while preserving state
+- **Verification**: Verify contract source code on block explorers
+- **Utilities**: Helper scripts for common operations
 
-#### Usage:
+## Key Scripts
 
-```bash
-npx hardhat run scripts/deploy.ts --network <network-name>
-```
+- `deploy-full.ts` - Deploy all contracts with proper initialization
+- `deploy-core.ts` - Deploy only core contracts
+- `upgrade-contract.ts` - Upgrade a specific contract
+- `verify-contracts.ts` - Verify contracts on block explorers
 
-### 2. deployWithAstrix.ts
+## Usage Examples
 
-This script deploys all the necessary contracts for the Tribes platform with Astrix token integration:
-
-- **Basic Tribes Contracts**: RoleManager, ProfileNFTMinter, TribeController, etc.
-- **Astrix Token System**: AstrixToken, TokenDispenser, AstrixPointSystem
-- **Legacy Support**: Maintains backward compatibility with original PointSystem
-
-#### Usage:
+### Full Deployment
 
 ```bash
-npx hardhat run scripts/deployWithAstrix.ts --network <network-name>
+# Deploy to Monad Devnet
+npm run deploy:full:monad
+
+# Deploy to local development network
+npm run deploy:full:local
 ```
 
-The script:
-1. Deploys all contracts
-2. Sets up initial roles
-3. Configures TokenDispenser with proper permissions
-4. Transfers initial tokens to the TokenDispenser for testing
-5. Outputs all contract addresses and verification details
-
-### 3. test-astrix-deployment.ts
-
-This script validates a deployed Astrix token integration to ensure everything is configured correctly.
-
-#### Usage:
-
-First, set environment variables with your deployed contract addresses:
+### Contract Upgrades
 
 ```bash
-export ASTRIX_TOKEN_ADDRESS=0x...
-export TOKEN_DISPENSER_ADDRESS=0x...
-export ASTRIX_POINT_SYSTEM_ADDRESS=0x...
-export TRIBE_CONTROLLER_ADDRESS=0x...
+# Upgrade TribeController on Monad Devnet
+npm run upgrade:monad -- --contract TribeController --proxy 0x1234...
+
+# Verify storage layout compatibility before upgrading
+npm run storage-layout:compare -- --contract TribeController
 ```
 
-Or edit the script to hardcode these values.
-
-Then run:
+### Contract Verification
 
 ```bash
-npx hardhat run scripts/test-astrix-deployment.ts --network <network-name>
+# Verify all contracts on Monad Devnet
+npm run verify:monad
+
+# Verify a specific contract
+npm run verify:monad -- --contract TribeController --address 0x1234...
 ```
 
-The script performs the following validation steps:
-1. Checks Astrix Token details (name, symbol, supply)
-2. Verifies TokenDispenser configuration
-3. Validates AstrixPointSystem contract connections
-4. Tests role configurations
-5. Creates a test tribe if none exists
-6. Sets up the tribe with an organization and token
-7. Tests token deposit functionality
-8. Validates point awarding works properly
+## Configuration
 
-## Test Runner
+Deployment uses the following configuration sources:
 
-The `test-runner.js` script provides a comprehensive solution for running tests and generating reports.
+1. Environment variables (`.env` file)
+2. Hardhat configuration (`hardhat.config.ts`)
+3. Command line arguments
 
-### Usage
+Required environment variables:
 
-```bash
-# Run all tests and generate a report
-npm run test:report
-
-# Run specific test types (unit, integration, journey)
-npm run test:report -- --type=unit
-npm run test:report -- --type=integration
-npm run test:report -- --type=journey
-
-# Run tests and start the report server
-npm run test:report -- --serve
-
-# Run tests with a custom port for the report server
-npm run test:report -- --serve --port=8080
+```
+PRIVATE_KEY=your_private_key
+MONAD_RPC_URL=https://monad-rpc-url
 ```
 
-### Features
+## Adding New Scripts
 
-- Runs tests with Hardhat
-- Generates detailed test results in JSON format
-- Maintains test history for trend analysis
-- Optional interactive HTML report viewing
-- Supports filtering by test type (unit, integration, journey)
+When creating new deployment scripts:
 
-## Test Reports
-
-Test reports are saved in the `reports/` directory:
-
-- `test-results.json` - Latest test results
-- `test-history.json` - Historical test data
-
-## Other NPM Scripts
-
-The project includes several additional scripts in `package.json`:
-
-```bash
-# Run all tests
-npm test
-
-# Run specific test suites
-npm run test:unit
-npm run test:integration
-npm run test:journey
-
-# Run a specific test file
-npm run test:file -- path/to/file.test.ts
-
-# Generate coverage report
-npm run test:coverage
-
-# Compile contracts
-npm run compile
-
-# Deploy to networks
-npm run deploy:fuse
-npm run deploy:monad
-
-# Code quality
-npm run lint
-npm run format
-
-# Clean build artifacts
-npm run clean
-```
-
-## Deployment Workflow
-
-### Fresh Deployment
-
-For a completely new deployment:
-
-1. Deploy with `deployWithAstrix.ts`
-2. Note the output addresses
-3. Run `test-astrix-deployment.ts` to validate the deployment
-
-### Updating Existing Deployment
-
-If you need to update just the Astrix components of an existing deployment:
-
-1. Modify `deployWithAstrix.ts` to use existing contract addresses
-2. Run the script with the `--network` flag
-3. Validate with `test-astrix-deployment.ts`
-
-## Contract Interactions
-
-### Organization Setup
-
-For an organization to use the Astrix point system:
-
-1. Organization acquires Astrix tokens
-2. Organization calls `deposit()` on TokenDispenser to deposit tokens
-3. Tribe admin calls `setTribeOrganization()` on AstrixPointSystem to link tribe and organization
-4. Tribe admin creates tribe token with `createTribeToken()`
-5. Tribe admin sets exchange rate with `setExchangeRate()`
-6. Tribe admin configures point values with `setActionPoints()`
-
-### Awarding Points
-
-When users perform actions in a tribe:
-1. Points are awarded via `awardPoints()` or `recordAction()`
-2. AstrixPointSystem uses the TokenDispenser to spend organization's Astrix tokens
-3. Equivalent tribe tokens are minted to the user
-
-## Security Considerations
-
-- The TokenDispenser contract allows organizations to securely fund point operations
-- Role-based access control is used throughout the system
-- Signature-based spending provides a secure way for organizations to authorize token usage
-
-## Troubleshooting
-
-If the validation script fails:
-
-1. Check that all contract addresses are correct
-2. Verify that the deployer account has sufficient permissions
-3. Ensure the deployer has Astrix tokens for testing
-4. Confirm that the TokenDispenser has the correct roles assigned 
+1. Follow the existing pattern of using the deployments framework
+2. Add proper error handling and logging
+3. Update this README with usage instructions
+4. Test thoroughly on a local network before using on testnet/mainnet 

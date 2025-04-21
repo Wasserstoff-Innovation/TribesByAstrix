@@ -1,6 +1,6 @@
 // test/UserJourney.test.ts
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { TribeController, RoleManager } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog } from "ethers";
@@ -44,12 +44,13 @@ describe("User Journey: Tribe Management", function () {
 
         // Deploy RoleManager
         const RoleManager = await ethers.getContractFactory("RoleManager");
-        roleManager = await RoleManager.deploy();
+        roleManager = await upgrades.deployProxy(RoleManager, [], { kind: 'uups' });
         await roleManager.waitForDeployment();
 
         // Deploy TribeController
         const TribeController = await ethers.getContractFactory("TribeController");
-        tribeController = await TribeController.deploy(await roleManager.getAddress());
+        const roleManagerAddress = await roleManager.getAddress();
+        tribeController = await upgrades.deployProxy(TribeController, [roleManagerAddress], { kind: 'uups' });
         await tribeController.waitForDeployment();
 
         // Setup roles

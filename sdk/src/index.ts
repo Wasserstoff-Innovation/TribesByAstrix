@@ -8,6 +8,18 @@
 export * from './core/BaseModule';
 // export * from './core/Config'; // File missing
 
+// Config exports
+export { 
+  getContractAddresses,
+  getContractAddressesByChainId
+} from './config/contracts';
+export { 
+  NetworkId,
+  getNetworkName,
+  chainIdToNetworkId
+} from './config/networks';
+export { DEPLOYED_CONTRACTS } from './config/deployedContracts';
+
 // Types
 export * from './types/core';  // Required by BaseModule and error handling
 export * from './types/errors'; // Required for error handling
@@ -33,4 +45,8 @@ export * from './modules/analytics';
 // Utilities - need to be refactored to resolve circular dependencies
 // export * from './utils/signatures';
 // export * from './utils/validation';
-// export * from './utils/formatting'; 
+export * from './utils/formatting';
+
+// Constants and helpers
+export const SDK_VERSION = '1.0.0';
+export const DEFAULT_GAS_LIMIT = 500000; 

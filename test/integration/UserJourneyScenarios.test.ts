@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { ProfileNFTMinter, RoleManager } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog } from "ethers";
@@ -16,7 +16,7 @@ describe("User Journey Scenarios", function () {
         
         // Deploy RoleManager
         const RoleManager = await ethers.getContractFactory("RoleManager");
-        roleManager = await RoleManager.deploy();
+        roleManager = await upgrades.deployProxy(RoleManager, [], { kind: 'uups' });
         await roleManager.waitForDeployment();
 
         // Deploy ProfileNFTMinter

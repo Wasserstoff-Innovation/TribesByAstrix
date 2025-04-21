@@ -1,8 +1,9 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { PointSystem, RoleManager, TribeController, CollectibleController } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog } from "ethers";
+import { deployContracts } from "../util/deployContracts";
 
 describe("PointSystem", function () {
     let pointSystem: PointSystem;
@@ -20,34 +21,19 @@ describe("PointSystem", function () {
     const LIKE_ACTION = ethers.keccak256(ethers.toUtf8Bytes("LIKE"));
 
     beforeEach(async function () {
-        [owner, admin, user1, user2] = await ethers.getSigners();
-
-        // Deploy RoleManager
-        const RoleManager = await ethers.getContractFactory("RoleManager");
-        roleManager = await RoleManager.deploy();
-        await roleManager.waitForDeployment();
-
-        // Deploy TribeController
-        const TribeController = await ethers.getContractFactory("TribeController");
-        tribeController = await TribeController.deploy(await roleManager.getAddress());
-        await tribeController.waitForDeployment();
-
-        // Deploy PointSystem
-        const PointSystem = await ethers.getContractFactory("PointSystem");
-        pointSystem = await PointSystem.deploy(
-            await roleManager.getAddress(),
-            await tribeController.getAddress()
-        );
-        await pointSystem.waitForDeployment();
-
-        // Deploy CollectibleController
-        const CollectibleController = await ethers.getContractFactory("CollectibleController");
-        collectibleController = await CollectibleController.deploy(
-            await roleManager.getAddress(),
-            await tribeController.getAddress(),
-            await pointSystem.getAddress()
-        );
-        await collectibleController.waitForDeployment();
+        // Deploy all contracts using the common utility
+        const deployment = await deployContracts();
+        
+        // Extract contracts and signers
+        roleManager = deployment.contracts.roleManager;
+        tribeController = deployment.contracts.tribeController;
+        pointSystem = deployment.contracts.pointSystem;
+        collectibleController = deployment.contracts.collectibleController;
+        
+        owner = deployment.signers.owner;
+        admin = deployment.signers.admin;
+        user1 = deployment.signers.regularUser1;
+        user2 = deployment.signers.regularUser2;
 
         // Create a test tribe
         const tx = await tribeController.connect(admin).createTribe(

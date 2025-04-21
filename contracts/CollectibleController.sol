@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./interfaces/IRoleManager.sol";
 import "./interfaces/ITribeController.sol";
 import "./interfaces/IPointSystem.sol";
 
-contract CollectibleController is ERC1155, AccessControl {
+contract CollectibleController is Initializable, ERC1155Upgradeable, AccessControlUpgradeable, UUPSUpgradeable {
     IRoleManager public roleManager;
     ITribeController public tribeController;
     IPointSystem public pointSystem;
@@ -34,11 +36,20 @@ contract CollectibleController is ERC1155, AccessControl {
     event CollectibleClaimed(uint256 indexed tribeId, uint256 indexed collectibleId, address indexed claimer);
     event CollectibleDeactivated(uint256 indexed collectibleId);
 
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
         address _roleManager,
         address _tribeController,
         address _pointSystem
-    ) ERC1155("") {
+    ) public initializer {
+        __ERC1155_init("");
+        __AccessControl_init();
+        __UUPSUpgradeable_init();
+        
         require(_roleManager != address(0), "Invalid role manager address");
         require(_tribeController != address(0), "Invalid tribe controller address");
         require(_pointSystem != address(0), "Invalid point system address");
@@ -48,6 +59,11 @@ contract CollectibleController is ERC1155, AccessControl {
         pointSystem = IPointSystem(_pointSystem);
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
+
+    /**
+     * @dev Function that should revert when `msg.sender` is not authorized to upgrade the contract
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
 
     modifier onlyTribeAdmin(uint256 tribeId) {
         require(tribeController.getTribeAdmin(tribeId) == msg.sender, "Not tribe admin");
@@ -174,7 +190,7 @@ contract CollectibleController is ERC1155, AccessControl {
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC1155, AccessControl)
+        override(ERC1155Upgradeable, AccessControlUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);

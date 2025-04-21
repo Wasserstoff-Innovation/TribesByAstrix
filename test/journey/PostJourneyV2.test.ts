@@ -1,8 +1,9 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { PostMinter, RoleManager, TribeController, CollectibleController } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog } from "ethers";
+import { deployContracts } from "../util/deployContracts";
 
 describe("Post Journey V2", function () {
     // Contract instances
@@ -31,60 +32,23 @@ describe("Post Journey V2", function () {
         // Get signers
         [owner, admin, contentCreator, moderator, regularUser1, regularUser2, bannedUser] = await ethers.getSigners();
 
-        // Deploy contracts
-        const RoleManager = await ethers.getContractFactory("RoleManager");
-        roleManager = await RoleManager.deploy();
-        await roleManager.waitForDeployment();
-
-        const TribeController = await ethers.getContractFactory("TribeController");
-        tribeController = await TribeController.deploy(await roleManager.getAddress());
-        await tribeController.waitForDeployment();
-
-        // Deploy PointSystem
-        const PointSystem = await ethers.getContractFactory("PointSystem");
-        pointSystem = await PointSystem.deploy(
-            await roleManager.getAddress(),
-            await tribeController.getAddress()
-        );
-        await pointSystem.waitForDeployment();
-
-        const CollectibleController = await ethers.getContractFactory("CollectibleController");
-        collectibleController = await CollectibleController.deploy(
-            await roleManager.getAddress(),
-            await tribeController.getAddress(),
-            await pointSystem.getAddress()
-        );
-        await collectibleController.waitForDeployment();
-
-        // Deploy PostFeedManager first
-        const PostFeedManager = await ethers.getContractFactory("PostFeedManager");
-        const feedManager = await PostFeedManager.deploy(await tribeController.getAddress());
-        await feedManager.waitForDeployment();
-
-        // Then deploy PostMinter with all required arguments
-        const PostMinter = await ethers.getContractFactory("PostMinter");
-        postMinter = await PostMinter.deploy(
-            await roleManager.getAddress(),
-            await tribeController.getAddress(),
-            await collectibleController.getAddress(),
-            await feedManager.getAddress()
-        );
-        await postMinter.waitForDeployment();
-
-        // Grant admin role to PostMinter in PostFeedManager
-        await feedManager.grantRole(await feedManager.DEFAULT_ADMIN_ROLE(), await postMinter.getAddress());
-
-        // Setup roles
-        await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("ADMIN_ROLE")), admin.address);
-        await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("MODERATOR_ROLE")), moderator.address);
+        // Deploy all contracts using the deployContracts utility
+        const deployment = await deployContracts();
+        
+        // Extract contracts
+        roleManager = deployment.contracts.roleManager;
+        tribeController = deployment.contracts.tribeController;
+        pointSystem = deployment.contracts.pointSystem;
+        collectibleController = deployment.contracts.collectibleController;
+        postMinter = deployment.contracts.postMinter;
+        
+        // Setup any additional roles not handled by deployContracts
         await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("CONTENT_CREATOR_ROLE")), contentCreator.address);
         
-        // Grant project creator role to content creator and admin
+        // Grant additional project related roles
         await postMinter.grantRole(await postMinter.PROJECT_CREATOR_ROLE(), contentCreator.address);
-        await postMinter.grantRole(await postMinter.PROJECT_CREATOR_ROLE(), admin.address);
         await postMinter.grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), contentCreator.address);
-        await postMinter.grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), admin.address);
-
+        
         // Create test tribe
         const tx = await tribeController.connect(admin).createTribe(
             "Test Tribe",
@@ -156,7 +120,7 @@ describe("Post Journey V2", function () {
 
             // 2. Gated Post
             const gatedPost = {
-                type: "PREMIUM",
+                type: "TEXT",
                 title: "Premium Content",
                 content: "This is for collectible holders only",
                 tags: ["premium", "exclusive"],
@@ -378,42 +342,51 @@ describe("Post Journey V2", function () {
         beforeEach(async function () {
             // Deploy fresh contracts
             const RoleManager = await ethers.getContractFactory("RoleManager");
-            roleManager = await RoleManager.deploy();
+        roleManager = await upgrades.deployProxy(RoleManager, [], { kind: 'uups' });
             await roleManager.waitForDeployment();
 
             const TribeController = await ethers.getContractFactory("TribeController");
-            tribeController = await TribeController.deploy(await roleManager.getAddress());
+            tribeController = await upgrades.deployProxy(TribeController, [await roleManager.getAddress()]);
             await tribeController.waitForDeployment();
 
             // Deploy PointSystem
             const PointSystem = await ethers.getContractFactory("PointSystem");
-            pointSystem = await PointSystem.deploy(
+            pointSystem = await upgrades.deployProxy(PointSystem, [
                 await roleManager.getAddress(),
                 await tribeController.getAddress()
-            );
+            ], { 
+                kind: 'uups',
+                unsafeAllow: ['constructor'] 
+            });
             await pointSystem.waitForDeployment();
 
             const CollectibleController = await ethers.getContractFactory("CollectibleController");
-            collectibleController = await CollectibleController.deploy(
+            collectibleController = await upgrades.deployProxy(CollectibleController, [
                 await roleManager.getAddress(),
                 await tribeController.getAddress(),
                 await pointSystem.getAddress()
-            );
+            ], { 
+                kind: 'uups',
+                unsafeAllow: ['constructor'] 
+            });
             await collectibleController.waitForDeployment();
 
             // Deploy PostFeedManager first
             const PostFeedManager = await ethers.getContractFactory("PostFeedManager");
-            const feedManager = await PostFeedManager.deploy(await tribeController.getAddress());
+        const feedManager = await PostFeedManager.deploy(await tribeController.getAddress(), { kind: 'uups' });
             await feedManager.waitForDeployment();
 
             // Then deploy PostMinter with all required arguments
             const PostMinter = await ethers.getContractFactory("PostMinter");
-            postMinter = await PostMinter.deploy(
-                await roleManager.getAddress(),
+        postMinter = await upgrades.deployProxy(PostMinter, [
+        await roleManager.getAddress(),
                 await tribeController.getAddress(),
                 await collectibleController.getAddress(),
                 await feedManager.getAddress()
-            );
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
             await postMinter.waitForDeployment();
 
             // Grant admin role to PostMinter in PostFeedManager

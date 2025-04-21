@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { CommunityPoints, RoleManager } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
@@ -15,7 +15,7 @@ describe("CommunityPoints", function () {
 
     // Deploy RoleManager
     const RoleManager = await ethers.getContractFactory("RoleManager");
-    roleManager = await RoleManager.deploy();
+        roleManager = await upgrades.deployProxy(RoleManager, [], { kind: 'uups' });
     await roleManager.waitForDeployment();
 
     // Grant DEFAULT_ADMIN_ROLE to owner

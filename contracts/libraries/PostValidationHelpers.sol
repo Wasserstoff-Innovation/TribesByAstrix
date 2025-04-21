@@ -12,12 +12,48 @@ library PostValidationHelpers {
             if (!PostHelpers.containsField(metadataBytes, "\"type\":\"EVENT\"")) {
                 return false;
             }
+            if (!PostHelpers.containsField(metadataBytes, "\"eventDetails\"") ||
+                PostHelpers.hasEmptyValue(metadataBytes, "\"eventDetails\"")) {
+                return false;
+            }
         } else if (postType == IPostMinter.PostType.RICH_MEDIA) {
             if (!PostHelpers.containsField(metadataBytes, "\"type\":\"RICH_MEDIA\"")) {
                 return false;
             }
+            if (!PostHelpers.containsField(metadataBytes, "\"mediaContent\"") ||
+                PostHelpers.hasEmptyValue(metadataBytes, "\"mediaContent\"")) {
+                return false;
+            }
         } else if (postType == IPostMinter.PostType.PROJECT_UPDATE) {
-            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"")) {
+            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"") && 
+                !PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT\"")) {
+                return false;
+            }
+            if (!PostHelpers.containsField(metadataBytes, "\"projectDetails\"")) {
+                return false;
+            }
+        } else if (postType == IPostMinter.PostType.POLL) {
+            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"POLL\"")) {
+                return false;
+            }
+            if (!PostHelpers.containsField(metadataBytes, "\"options\"") ||
+                PostHelpers.hasEmptyValue(metadataBytes, "\"options\"")) {
+                return false;
+            }
+        } else if (postType == IPostMinter.PostType.COMMUNITY_UPDATE) {
+            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"COMMUNITY_UPDATE\"")) {
+                return false;
+            }
+            if (!PostHelpers.containsField(metadataBytes, "\"communityDetails\"")) {
+                return false;
+            }
+        } else if (postType == IPostMinter.PostType.ENCRYPTED) {
+            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"ENCRYPTED\"")) {
+                return false;
+            }
+        } else if (postType == IPostMinter.PostType.TEXT) {
+            if (PostHelpers.containsField(metadataBytes, "\"type\"") && 
+                !PostHelpers.containsField(metadataBytes, "\"type\":\"TEXT\"")) {
                 return false;
             }
         }

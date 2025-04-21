@@ -34,6 +34,52 @@ export interface AstrixSDKConfig {
    * Optional flag to enable verbose logging
    */
   verbose?: boolean;
+  
+  /**
+   * Optional cache configuration
+   */
+  cache?: CacheConfig;
+}
+
+/**
+ * Cache configuration options
+ */
+export interface CacheConfig {
+  /**
+   * Whether to disable caching globally
+   */
+  disabled?: boolean;
+  
+  /**
+   * Default maximum age for cached items in milliseconds
+   */
+  defaultMaxAge?: number;
+  
+  /**
+   * Whether to use block-based caching by default
+   */
+  defaultBlockBased?: boolean;
+}
+
+/**
+ * Options for individual cache operations
+ */
+export interface CacheOptions {
+  /**
+   * Whether this specific cache operation should be disabled
+   */
+  disabled?: boolean;
+  
+  /**
+   * Maximum age for this cached item in milliseconds
+   */
+  maxAge?: number;
+  
+  /**
+   * Whether to use block-based caching for this item
+   * If true, the item will be invalidated when a new block is mined
+   */
+  blockBased?: boolean;
 }
 
 /**
@@ -77,5 +123,5 @@ export interface EnhancedTransactionReceipt extends ethers.TransactionReceipt {
   /**
    * Status of the transaction
    */
-  status?: number;
+  status: number | null;
 } 

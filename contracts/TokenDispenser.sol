@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./AstrixToken.sol";
 
 /**
@@ -13,10 +14,9 @@ import "./AstrixToken.sol";
  * @notice Contract for managing organization deposits of Astrix tokens
  * @dev Organizations deposit Astrix tokens and authorize the platform to spend them
  */
-contract TokenDispenser is AccessControl {
-    using SafeERC20 for IERC20;
-    using MessageHashUtils for bytes32;
-    using ECDSA for bytes32;
+contract TokenDispenser is Initializable, AccessControlUpgradeable, UUPSUpgradeable {
+    using SafeERC20Upgradeable for IERC20Upgradeable;
+    using ECDSAUpgradeable for bytes32;
 
     // Roles
     bytes32 public constant PLATFORM_ROLE = keccak256("PLATFORM_ROLE");
@@ -54,17 +54,30 @@ contract TokenDispenser is AccessControl {
      */
     event OrganizationAdminUpdated(address indexed organization, address indexed oldAdmin, address indexed newAdmin);
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
-     * @notice Contract constructor
+     * @notice Initializes the contract replacing the constructor
      * @param _astrixToken Address of the Astrix token contract
      * @param _admin Address to receive the admin role
      */
-    constructor(address _astrixToken, address _admin) {
+    function initialize(address _astrixToken, address _admin) public initializer {
+        __AccessControl_init();
+        __UUPSUpgradeable_init();
+        
         astrixToken = AstrixToken(_astrixToken);
         
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
         _grantRole(PLATFORM_ROLE, _admin);
     }
+
+    /**
+     * @dev Function that should revert when `msg.sender` is not authorized to upgrade the contract.
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
 
     /**
      * @notice Allows an organization to deposit Astrix tokens
@@ -80,7 +93,7 @@ contract TokenDispenser is AccessControl {
         }
         
         // Transfer tokens from sender to this contract
-        IERC20(address(astrixToken)).safeTransferFrom(msg.sender, address(this), amount);
+        IERC20Upgradeable(address(astrixToken)).safeTransferFrom(msg.sender, address(this), amount);
         
         // Update deposit balance
         deposits[msg.sender] += amount;
@@ -101,7 +114,7 @@ contract TokenDispenser is AccessControl {
         deposits[organization] -= amount;
         
         // Transfer tokens to organization
-        IERC20(address(astrixToken)).safeTransfer(organization, amount);
+        IERC20Upgradeable(address(astrixToken)).safeTransfer(organization, amount);
         
         emit TokensWithdrawn(organization, amount);
     }
@@ -147,7 +160,7 @@ contract TokenDispenser is AccessControl {
                 reason
             )
         );
-        bytes32 ethSignedMessageHash = messageHash.toEthSignedMessageHash();
+        bytes32 ethSignedMessageHash = ECDSAUpgradeable.toEthSignedMessageHash(messageHash);
         
         // Verify signature
         address signer = ethSignedMessageHash.recover(signature);
@@ -160,7 +173,7 @@ contract TokenDispenser is AccessControl {
         deposits[organization] -= amount;
         
         // Transfer tokens to recipient
-        IERC20(address(astrixToken)).safeTransfer(recipient, amount);
+        IERC20Upgradeable(address(astrixToken)).safeTransfer(recipient, amount);
         
         emit TokensSpent(organization, recipient, amount, reason);
     }
@@ -184,7 +197,7 @@ contract TokenDispenser is AccessControl {
         deposits[organization] -= amount;
         
         // Transfer tokens to recipient
-        IERC20(address(astrixToken)).safeTransfer(recipient, amount);
+        IERC20Upgradeable(address(astrixToken)).safeTransfer(recipient, amount);
         
         emit TokensSpent(organization, recipient, amount, reason);
     }

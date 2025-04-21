@@ -88,6 +88,26 @@ export interface CreateEncryptedPostParams {
 }
 
 /**
+ * Parameters for creating a signature-gated post
+ */
+export interface CreateSignatureGatedPostParams {
+  tribeId: number;
+  metadata: string;
+  encryptionKeyHash: string;
+  accessSigner: string;
+  collectibleContract: string;
+  collectibleId: number;
+}
+
+/**
+ * Parameters for validating post metadata
+ */
+export interface ValidatePostMetadataParams {
+  metadata: string;
+  postType: PostType;
+}
+
+/**
  * Parameters for batch creating posts
  */
 export interface BatchPostData {

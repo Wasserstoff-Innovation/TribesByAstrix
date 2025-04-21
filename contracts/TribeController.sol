@@ -3,16 +3,18 @@ pragma solidity ^0.8.20;
 
 import "./interfaces/ITribeController.sol";
 import "./interfaces/IRoleManager.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 /**
  * TribeController:
  * Manages tribes, including creation, updates, and member management.
  */
-contract TribeController is ITribeController, Initializable {
+contract TribeController is ITribeController, Initializable, UUPSUpgradeable, OwnableUpgradeable {
     uint256 public nextTribeId;
     uint256 public nextMergeRequestId;
 
@@ -39,11 +41,29 @@ contract TribeController is ITribeController, Initializable {
 
     IRoleManager public roleManager;
 
-    constructor(address _roleManager) {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    /**
+     * @dev Initializes the contract instead of constructor
+     * @param _roleManager Address of the RoleManager contract
+     */
+    function initialize(address _roleManager) public initializer {
+        __Ownable_init();
+        __UUPSUpgradeable_init();
+        
         roleManager = IRoleManager(_roleManager);
         nextTribeId = 0;
         nextMergeRequestId = 0;
     }
+
+    /**
+     * @dev Function that should revert when `msg.sender` is not authorized to upgrade the contract.
+     * Called by {upgradeTo} and {upgradeToAndCall}.
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     modifier onlyTribeAdmin(uint256 tribeId) {
         require(
@@ -346,13 +366,13 @@ contract TribeController is ITribeController, Initializable {
         if (req.nftContract == address(0)) return false;
         
         if (req.nftType == NFTType.ERC721) {
-            try IERC721(req.nftContract).balanceOf(user) returns (uint256 balance) {
+            try IERC721Upgradeable(req.nftContract).balanceOf(user) returns (uint256 balance) {
                 if (balance < req.minAmount) return false;
                 if (req.tokenIds.length == 0) return true; // If no specific tokens required, just check balance
                 
                 // Check specific token IDs if specified
                 for (uint i = 0; i < req.tokenIds.length; i++) {
-                    try IERC721(req.nftContract).ownerOf(req.tokenIds[i]) returns (address owner) {
+                    try IERC721Upgradeable(req.nftContract).ownerOf(req.tokenIds[i]) returns (address owner) {
                         if (owner != user) return false;
                     } catch {
                         return false;
@@ -366,7 +386,7 @@ contract TribeController is ITribeController, Initializable {
             if (req.tokenIds.length == 0) return false; // ERC1155 must specify token IDs
             
             for (uint i = 0; i < req.tokenIds.length; i++) {
-                try IERC1155(req.nftContract).balanceOf(user, req.tokenIds[i]) returns (uint256 balance) {
+                try IERC1155Upgradeable(req.nftContract).balanceOf(user, req.tokenIds[i]) returns (uint256 balance) {
                     if (balance < req.minAmount) return false;
                 } catch {
                     return false;

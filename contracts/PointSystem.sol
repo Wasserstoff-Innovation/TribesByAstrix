@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "./interfaces/IRoleManager.sol";
@@ -22,7 +24,7 @@ contract TribePoints is ERC20, ERC20Burnable {
     }
 }
 
-contract PointSystem is AccessControl {
+contract PointSystem is Initializable, AccessControlUpgradeable, UUPSUpgradeable {
     IRoleManager public roleManager;
     ITribeController public tribeController;
 
@@ -53,11 +55,24 @@ contract PointSystem is AccessControl {
     event ActionPointsUpdated(uint256 indexed tribeId, bytes32 actionType, uint256 points);
     event TribeTokenCreated(uint256 indexed tribeId, address tokenAddress, string name, string symbol);
 
-    constructor(address _roleManager, address _tribeController) {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address _roleManager, address _tribeController) public initializer {
+        __AccessControl_init();
+        __UUPSUpgradeable_init();
+        
         roleManager = IRoleManager(_roleManager);
         tribeController = ITribeController(_tribeController);
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
+
+    /**
+     * @dev Function that should revert when `msg.sender` is not authorized to upgrade the contract
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
 
     modifier onlyTribeAdmin(uint256 tribeId) {
         require(tribeController.getTribeAdmin(tribeId) == msg.sender, "Not tribe admin");

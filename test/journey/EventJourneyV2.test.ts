@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { EventLog } from "ethers";
 import {
     RoleManager,
@@ -52,27 +52,36 @@ describe("Event Journey V2", function () {
 
         // Deploy contracts
         const RoleManager = await ethers.getContractFactory("RoleManager");
-        roleManager = await RoleManager.deploy();
+        roleManager = await upgrades.deployProxy(RoleManager, [], { kind: 'uups' });
         await roleManager.waitForDeployment();
 
         const TribeController = await ethers.getContractFactory("TribeController");
-        tribeController = await TribeController.deploy(roleManager.target);
+        tribeController = await upgrades.deployProxy(TribeController, [await roleManager.getAddress()], { kind: 'uups' });
         await tribeController.waitForDeployment();
 
         const PointSystem = await ethers.getContractFactory("PointSystem");
-        pointSystem = await PointSystem.deploy(roleManager.target, tribeController.target);
+        pointSystem = await upgrades.deployProxy(PointSystem, [
+            await roleManager.getAddress(),
+            await tribeController.getAddress()
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
         await pointSystem.waitForDeployment();
 
         const CollectibleController = await ethers.getContractFactory("CollectibleController");
-        collectibleController = await CollectibleController.deploy(
-            roleManager.target,
-            tribeController.target,
-            pointSystem.target
-        );
+        collectibleController = await upgrades.deployProxy(CollectibleController, [
+            await roleManager.getAddress(),
+            await tribeController.getAddress(),
+            await pointSystem.getAddress()
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
         await collectibleController.waitForDeployment();
 
         const EventController = await ethers.getContractFactory("EventController");
-        eventController = await EventController.deploy(roleManager.target);
+        eventController = await EventController.deploy(await roleManager.getAddress());
         await eventController.waitForDeployment();
 
         // Setup roles

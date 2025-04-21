@@ -1,12 +1,13 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { 
     RoleManager, 
     TribeController, 
     CollectibleController,
     PostMinter,
     ProfileNFTMinter,
-    PointSystem
+    PointSystem,
+    PostFeedManager
 } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog } from "ethers";
@@ -27,7 +28,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
     let postMinter: PostMinter;
     let profileNFTMinter: ProfileNFTMinter;
     let pointSystem: PointSystem;
-    let feedManager: any; // Use any type for now since it's not in typechain yet
+    let feedManager: PostFeedManager;
 
     // User accounts to simulate different roles
     let owner: SignerWithAddress;
@@ -55,42 +56,45 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
 
         // Deploy RoleManager
         const RoleManager = await ethers.getContractFactory("RoleManager");
-        roleManager = await RoleManager.deploy();
+        roleManager = await upgrades.deployProxy(RoleManager, [], { kind: 'uups' });
         await roleManager.waitForDeployment();
         console.log(chalk.green("✓ RoleManager deployed"));
 
-        // Deploy ProfileNFTMinter
+        // Deploy ProfileNFTMinter (regular deployment, not upgradeable)
         const ProfileNFTMinter = await ethers.getContractFactory("ProfileNFTMinter");
         profileNFTMinter = await ProfileNFTMinter.deploy(await roleManager.getAddress());
         await profileNFTMinter.waitForDeployment();
         console.log(chalk.green("✓ ProfileNFTMinter deployed"));
 
-        // Deploy TribeController
+        // Deploy TribeController - using proxy for upgradeable contracts
         const TribeController = await ethers.getContractFactory("TribeController");
-        tribeController = await TribeController.deploy(await roleManager.getAddress());
+        const roleManagerAddress = await roleManager.getAddress();
+        tribeController = await upgrades.deployProxy(TribeController, [roleManagerAddress], { kind: 'uups' });
         await tribeController.waitForDeployment();
         console.log(chalk.green("✓ TribeController deployed"));
 
-        // Deploy PointSystem
+        // Deploy PointSystem - using proxy for upgradeable contracts
         const PointSystem = await ethers.getContractFactory("PointSystem");
-        pointSystem = await PointSystem.deploy(
-            await roleManager.getAddress(),
-            await tribeController.getAddress()
-        );
+        const tribeControllerAddress = await tribeController.getAddress();
+        pointSystem = await upgrades.deployProxy(PointSystem, [
+            roleManagerAddress,
+            tribeControllerAddress
+        ], { kind: 'uups' });
         await pointSystem.waitForDeployment();
         console.log(chalk.green("✓ PointSystem deployed"));
 
-        // Deploy CollectibleController
+        // Deploy CollectibleController - using proxy for upgradeable contracts
         const CollectibleController = await ethers.getContractFactory("CollectibleController");
-        collectibleController = await CollectibleController.deploy(
-            await roleManager.getAddress(),
-            await tribeController.getAddress(),
-            await pointSystem.getAddress()
-        );
+        const pointSystemAddress = await pointSystem.getAddress();
+        collectibleController = await upgrades.deployProxy(CollectibleController, [
+            roleManagerAddress,
+            tribeControllerAddress,
+            pointSystemAddress
+        ], { kind: 'uups' });
         await collectibleController.waitForDeployment();
         console.log(chalk.green("✓ CollectibleController deployed"));
 
-        // Deploy PostFeedManager
+        // Deploy PostFeedManager - direct deployment (not upgradeable)
         const PostFeedManager = await ethers.getContractFactory("PostFeedManager");
         feedManager = await PostFeedManager.deploy(await tribeController.getAddress());
         await feedManager.waitForDeployment();
@@ -98,12 +102,15 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
 
         // Deploy PostMinter
         const PostMinter = await ethers.getContractFactory("PostMinter");
-        postMinter = await PostMinter.deploy(
+        postMinter = await upgrades.deployProxy(PostMinter, [
             await roleManager.getAddress(),
             await tribeController.getAddress(),
             await collectibleController.getAddress(),
             await feedManager.getAddress()
-        );
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
         await postMinter.waitForDeployment();
         console.log(chalk.green("✓ PostMinter deployed"));
 
@@ -115,6 +122,13 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
         await roleManager.grantRole(ADMIN_ROLE, admin.address);
         await roleManager.grantRole(MODERATOR_ROLE, creator.address);
         await roleManager.grantRole(PROJECT_CREATOR_ROLE, creator.address);
+        
+        // Grant necessary roles for PostMinter
+        await postMinter.grantRole(await postMinter.PROJECT_CREATOR_ROLE(), creator.address);
+        await postMinter.grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), creator.address);
+        await postMinter.grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), user1.address);
+        await postMinter.grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), user2.address);
+        
         console.log(chalk.green("✓ Roles assigned"));
     });
 

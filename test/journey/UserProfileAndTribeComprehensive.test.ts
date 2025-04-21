@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { 
     RoleManager, 
     TribeController, 
@@ -11,6 +11,7 @@ import {
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog } from "ethers";
 import chalk from "chalk"; // Ensure chalk is imported
+import { deployContracts } from "../util/deployContracts";
 
 /**
  * This test demonstrates comprehensive user profile and tribe management scenarios,
@@ -51,53 +52,19 @@ describe(chalk.blue("User Profile and Tribe Comprehensive Tests"), function () {
 
         console.log("Deploying core contracts...");
         
-        // Deploy RoleManager
-        const RoleManager = await ethers.getContractFactory("RoleManager");
-        roleManager = await RoleManager.deploy();
-        await roleManager.waitForDeployment();
-        console.log(chalk.green("✓ RoleManager deployed"));
-
-        // Deploy TribeController
-        const TribeController = await ethers.getContractFactory("TribeController");
-        tribeController = await TribeController.deploy(await roleManager.getAddress());
-        await tribeController.waitForDeployment();
-        console.log(chalk.green("✓ TribeController deployed"));
-
-        // Deploy PointSystem
-        const PointSystem = await ethers.getContractFactory("PointSystem");
-        pointSystem = await PointSystem.deploy(
-            await roleManager.getAddress(),
-            await tribeController.getAddress()
-        );
-        await pointSystem.waitForDeployment();
-        console.log(chalk.green("✓ PointSystem deployed"));
-
-        // Deploy CollectibleController
-        const CollectibleController = await ethers.getContractFactory("CollectibleController");
-        collectibleController = await CollectibleController.deploy(
-            await roleManager.getAddress(),
-            await tribeController.getAddress(),
-            await pointSystem.getAddress()
-        );
-        await collectibleController.waitForDeployment();
-        console.log(chalk.green("✓ CollectibleController deployed"));
-
-        // Deploy PostMinter
-        const PostMinter = await ethers.getContractFactory("PostMinter");
-        postMinter = await PostMinter.deploy(
-            await roleManager.getAddress(),
-            await tribeController.getAddress(),
-            await collectibleController.getAddress(),
-            ethers.ZeroAddress // feedManager placeholder
-        );
-        await postMinter.waitForDeployment();
-        console.log(chalk.green("✓ PostMinter deployed"));
-
-        // Deploy ProfileNFTMinter
+        // Use the deployContracts utility to deploy all contracts consistently with proxies
+        const deployment = await deployContracts();
+        
+        // Extract contracts
+        roleManager = deployment.contracts.roleManager;
+        tribeController = deployment.contracts.tribeController;
+        pointSystem = deployment.contracts.pointSystem;
+        collectibleController = deployment.contracts.collectibleController;
+        postMinter = deployment.contracts.postMinter;
+        
+        // Deploy ProfileNFTMinter (not included in deployContracts utility)
         const ProfileNFTMinter = await ethers.getContractFactory("ProfileNFTMinter");
-        profileNFTMinter = await ProfileNFTMinter.deploy(
-            await roleManager.getAddress()
-        );
+        profileNFTMinter = await ProfileNFTMinter.deploy(await roleManager.getAddress());
         await profileNFTMinter.waitForDeployment();
         console.log(chalk.green("✓ ProfileNFTMinter deployed"));
 

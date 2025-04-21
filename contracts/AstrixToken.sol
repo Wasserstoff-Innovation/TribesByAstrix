@@ -1,31 +1,41 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 /**
  * @title AstrixToken
  * @notice ERC20 token for the Astrix ecosystem
  * @dev This token is used as the basis for the points system in Tribes by Astrix
  */
-contract AstrixToken is ERC20, ERC20Burnable, AccessControl, ERC20Permit {
+contract AstrixToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable, AccessControlUpgradeable, ERC20PermitUpgradeable, UUPSUpgradeable {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
     uint256 public constant MAX_SUPPLY = 1_000_000_000 * 10**18; // 1 billion tokens
     
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
-     * @notice Contract constructor
+     * @notice Initializes the contract replacing the constructor
      * @param initialSupply Initial supply of tokens to mint to the deployer
      * @param admin Address that will receive the default admin role
      */
-    constructor(uint256 initialSupply, address admin) 
-        ERC20("Astrix Token", "ASTRX") 
-        ERC20Permit("Astrix Token")
-    {
+    function initialize(uint256 initialSupply, address admin) public initializer {
+        __ERC20_init("Astrix Token", "ASTRX");
+        __ERC20Burnable_init();
+        __AccessControl_init();
+        __ERC20Permit_init("Astrix Token");
+        __UUPSUpgradeable_init();
+        
         require(initialSupply <= MAX_SUPPLY, "Initial supply exceeds max supply");
         
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
@@ -34,6 +44,11 @@ contract AstrixToken is ERC20, ERC20Burnable, AccessControl, ERC20Permit {
         
         _mint(admin, initialSupply);
     }
+
+    /**
+     * @dev Function that should revert when `msg.sender` is not authorized to upgrade the contract.
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
 
     /**
      * @notice Mints new tokens
@@ -58,7 +73,7 @@ contract AstrixToken is ERC20, ERC20Burnable, AccessControl, ERC20Permit {
      * @notice Override to enforce role check on burning
      * @param amount Amount of tokens to burn
      */
-    function burn(uint256 amount) public override onlyRole(BURNER_ROLE) {
+    function burn(uint256 amount) public override(ERC20BurnableUpgradeable) onlyRole(BURNER_ROLE) {
         super.burn(amount);
     }
 

@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { AstrixSDKConfig, ErrorType } from '../types/core';
 import { AstrixSDKError } from '../types/errors';
+import { ContractAddresses } from '../types/contracts';
 import { TokenModule } from '../modules/token';
 import { PointsModule } from '../modules/points';
 import { TribesModule } from '../modules/tribes';
@@ -8,6 +9,7 @@ import { ProfilesModule } from '../modules/profiles';
 import { ContentModule } from '../modules/content';
 import { OrganizationsModule } from '../modules/organizations';
 import { AnalyticsModule } from '../modules/analytics';
+import { getContractAddressesByChainId } from '../config/contracts';
 
 /**
  * Core SDK class for interacting with the Tribes by Astrix platform
@@ -29,6 +31,9 @@ export class AstrixSDK {
   private _organizations: OrganizationsModule | null = null;
   private _analytics: AnalyticsModule | null = null;
   
+  // Contract addresses for the Astrix ecosystem
+  private contractAddresses: ContractAddresses = {} as ContractAddresses;
+  
   /**
    * Create a new instance of the SDK
    * @param config Configuration options
@@ -45,6 +50,13 @@ export class AstrixSDK {
     
     // Initialize modules
     this.initializeModules();
+  }
+
+  /**
+   * Async initialization method to be called after construction
+   */
+  public async init(): Promise<void> {
+    await this.initContractAddresses(this.config.contracts);
   }
   
   /**
@@ -67,6 +79,38 @@ export class AstrixSDK {
         undefined,
         error
       );
+    }
+  }
+  
+  /**
+   * Initialize contract addresses based on the connected network and any overrides
+   * @param contractOverrides Optional contract address overrides
+   */
+  private async initContractAddresses(contractAddresses?: ContractAddresses): Promise<void> {
+    if (contractAddresses) {
+      // Use provided contract addresses
+      this.contractAddresses = contractAddresses;
+      if (this.config.verbose) {
+        console.log('Using provided contract addresses');
+      }
+    } else {
+      // Get the network from the provider
+      const network = await this.provider.getNetwork();
+      const chainId = Number(network.chainId);
+      
+      // Get default addresses for this network
+      try {
+        const addresses = getContractAddressesByChainId(chainId);
+        if (!addresses) {
+          throw new Error(`Unsupported network: ${chainId}. Please provide custom contract addresses.`);
+        }
+        this.contractAddresses = addresses;
+        if (this.config.verbose) {
+          console.log(`Initialized with contract addresses for chain ID ${chainId}`);
+        }
+      } catch (error) {
+        throw new Error(`Unsupported network: ${chainId}. Please provide custom contract addresses.`);
+      }
     }
   }
   
@@ -141,6 +185,19 @@ export class AstrixSDK {
    */
   public getConfig(): AstrixSDKConfig {
     return this.config;
+  }
+  
+  /**
+   * Get the contract address for a specific contract
+   * @param contractName Name of the contract
+   * @returns Contract address
+   */
+  getContractAddress(contractName: keyof ContractAddresses): string {
+    const address = this.contractAddresses[contractName];
+    if (!address || address === '0x0000000000000000000000000000000000000000') {
+      throw new Error(`Contract address not configured for ${contractName}`);
+    }
+    return address;
   }
   
   /**

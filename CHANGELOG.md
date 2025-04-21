@@ -1,5 +1,27 @@
 # Changelog
 
+
+# Changelog
+
+## [1.1.0] - 2025-04-22
+
+### Fixed
+- Test suite now passes all tests successfully (239 passing, 1 pending)
+- Fixed post type validation in UserProfileAndTribeJourney.test.ts:
+  - Updated post type values to match the PostType enum in the contract
+  - Changed invalid types like "PREMIUM", "MILESTONE", and "FUNDRAISER" to allowed types ("TEXT", "PROJECT_UPDATE", etc.)
+  - Added required fields for specific post types (e.g., communityDetails for COMMUNITY_UPDATE)
+  - Increased cooldown wait times between post creations to prevent rate limit errors
+- Fixed FundraiserJourneyV2.test.ts:
+  - Changed "PROJECT" type with projectDetails.projectType "FUNDRAISER" to use "PROJECT_UPDATE" type
+  - Ensured proper parameter validation in post creation
+
+### Technical Details
+- The `PostMinter` contract defines an enum of allowed post types that test files must adhere to
+- Increased cooldown waits from 61 seconds to 180 seconds in some cases to avoid CooldownActive errors
+- Updated metadata structure to match contract requirements for each post type
+
+
 ## [0.3.6] - 2024-02-25
 
 ### Fixed Deployment Script

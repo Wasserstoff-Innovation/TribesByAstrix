@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { TribeController, RoleManager, ContentManager, PointSystem, CollectibleController } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog } from "ethers";
@@ -59,14 +59,14 @@ describe("Tribe Metadata and NFT Requirements", function () {
       // Deploy RoleManager
       process.stdout.write("Deploying RoleManager...\n");
       const RoleManager = await ethers.getContractFactory("RoleManager");
-      roleManager = await RoleManager.deploy();
+        roleManager = await upgrades.deployProxy(RoleManager, [], { kind: 'uups' });
       await roleManager.waitForDeployment();
       process.stdout.write(`RoleManager deployed at: ${await roleManager.getAddress()}\n`);
 
       // Deploy TribeController
       process.stdout.write("Deploying TribeController...\n");
       const TribeController = await ethers.getContractFactory("TribeController");
-      tribeController = await TribeController.deploy(await roleManager.getAddress());
+      tribeController = await upgrades.deployProxy(TribeController, [await roleManager.getAddress()], { kind: 'uups' });
       await tribeController.waitForDeployment();
       process.stdout.write(`TribeController deployed at: ${await tribeController.getAddress()}\n`);
 
@@ -83,21 +83,27 @@ describe("Tribe Metadata and NFT Requirements", function () {
       // Deploy PointSystem
       process.stdout.write("Deploying PointSystem...\n");
       const PointSystem = await ethers.getContractFactory("PointSystem");
-      pointSystem = await PointSystem.deploy(
-        await roleManager.getAddress(),
-        await tribeController.getAddress()
-      );
+      pointSystem = await upgrades.deployProxy(PointSystem, [
+            await roleManager.getAddress(),
+            await tribeController.getAddress()
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
       await pointSystem.waitForDeployment();
       process.stdout.write("PointSystem deployed\n");
 
       // Deploy CollectibleController
       process.stdout.write("Deploying CollectibleController...\n");
       const CollectibleController = await ethers.getContractFactory("CollectibleController");
-      collectibleController = await CollectibleController.deploy(
-        await roleManager.getAddress(),
-        await tribeController.getAddress(),
-        await pointSystem.getAddress()
-      );
+      collectibleController = await upgrades.deployProxy(CollectibleController, [
+            await roleManager.getAddress(),
+            await tribeController.getAddress(),
+            await pointSystem.getAddress()
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
       await collectibleController.waitForDeployment();
       process.stdout.write("CollectibleController deployed\n");
 

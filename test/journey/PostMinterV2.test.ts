@@ -1,8 +1,9 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import { PostMinter, RoleManager, TribeController, CollectibleController, PointSystem } from "../../typechain-types";
+import { ethers, upgrades } from "hardhat";
+import { PostMinter, TribeController, CollectibleController, RoleManager, PointSystem, PostFeedManager } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog } from "ethers";
+import { deployContracts, setupRoles } from "../util/deployContracts";
 
 // Helper function to handle BigInt serialization
 function replaceBigInts(obj: any): any {
@@ -30,84 +31,45 @@ function replaceBigInts(obj: any): any {
 }
 
 describe("PostMinterV2", function () {
-    let roleManager: RoleManager;
-    let tribeController: TribeController;
     let postMinter: PostMinter;
+    let tribeController: TribeController;
+    let roleManager: RoleManager;
     let collectibleController: CollectibleController;
     let pointSystem: PointSystem;
+    let feedManager: PostFeedManager;
     let owner: SignerWithAddress;
     let admin: SignerWithAddress;
     let regularUser1: SignerWithAddress;
     let regularUser2: SignerWithAddress;
     let moderator: SignerWithAddress;
+    let contentCreator: SignerWithAddress;
+    let bannedUser: SignerWithAddress;
     let tribeId: number;
 
     before(async function () {
-        [owner, admin, regularUser1, regularUser2, moderator] = await ethers.getSigners();
-
-        // Deploy RoleManager
-        const RoleManager = await ethers.getContractFactory("RoleManager");
-        roleManager = await RoleManager.deploy();
-        await roleManager.waitForDeployment();
-
-        // Deploy TribeController
-        const TribeController = await ethers.getContractFactory("TribeController");
-        tribeController = await TribeController.deploy(roleManager.target);
-        await tribeController.waitForDeployment();
-
-        // Deploy PointSystem
-        const PointSystem = await ethers.getContractFactory("PointSystem");
-        pointSystem = await PointSystem.deploy(roleManager.target, tribeController.target);
-        await pointSystem.waitForDeployment();
-
-        // Deploy CollectibleController
-        const CollectibleController = await ethers.getContractFactory("CollectibleController");
-        collectibleController = await CollectibleController.deploy(
-            roleManager.target,
-            tribeController.target,
-            pointSystem.target
-        );
-        await collectibleController.waitForDeployment();
-
-        // Deploy PostFeedManager first
-        const PostFeedManager = await ethers.getContractFactory("PostFeedManager");
-        const feedManager = await PostFeedManager.deploy(tribeController.target);
-        await feedManager.waitForDeployment();
-
-        // Then deploy PostMinter with all required arguments
-        const PostMinter = await ethers.getContractFactory("PostMinter");
-        postMinter = await PostMinter.deploy(
-            roleManager.target,
-            tribeController.target,
-            collectibleController.target,
-            feedManager.target
-        );
-        await postMinter.waitForDeployment();
-
-        // Grant admin role to PostMinter in PostFeedManager
-        await feedManager.grantRole(await feedManager.DEFAULT_ADMIN_ROLE(), await postMinter.getAddress());
-
+        // Deploy all contracts and get signers
+        const deployment = await deployContracts();
+        
+        // Assign contracts
+        roleManager = deployment.contracts.roleManager;
+        tribeController = deployment.contracts.tribeController;
+        pointSystem = deployment.contracts.pointSystem;
+        collectibleController = deployment.contracts.collectibleController;
+        feedManager = deployment.contracts.feedManager;
+        postMinter = deployment.contracts.postMinter;
+        
+        // Assign signers
+        owner = deployment.signers.owner;
+        admin = deployment.signers.admin;
+        contentCreator = deployment.signers.contentCreator;
+        moderator = deployment.signers.moderator;
+        regularUser1 = deployment.signers.regularUser1;
+        regularUser2 = deployment.signers.regularUser2;
+        bannedUser = deployment.signers.bannedUser;
+        
         // Setup roles
-        // First grant DEFAULT_ADMIN_ROLE to admin
-        await roleManager.grantRole(await roleManager.DEFAULT_ADMIN_ROLE(), admin.address);
-        await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("ADMIN_ROLE")), admin.address);
-        await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("MODERATOR_ROLE")), moderator.address);
-
-        // Grant necessary roles for post creation and management
-        const PROJECT_CREATOR_ROLE = await postMinter.PROJECT_CREATOR_ROLE();
-        const RATE_LIMIT_MANAGER_ROLE = await postMinter.RATE_LIMIT_MANAGER_ROLE();
+        await setupRoles(roleManager, postMinter, admin, contentCreator, moderator, owner, regularUser1, regularUser2);
         
-        // First grant DEFAULT_ADMIN_ROLE to admin in PostMinter before granting other roles
-        await postMinter.grantRole(await postMinter.DEFAULT_ADMIN_ROLE(), admin.address);
-        
-        // Grant roles using admin who has DEFAULT_ADMIN_ROLE
-        await postMinter.connect(admin).grantRole(PROJECT_CREATOR_ROLE, regularUser1.address);
-        await postMinter.connect(admin).grantRole(RATE_LIMIT_MANAGER_ROLE, regularUser1.address);
-        await postMinter.connect(admin).grantRole(PROJECT_CREATOR_ROLE, regularUser2.address);
-        await postMinter.connect(admin).grantRole(RATE_LIMIT_MANAGER_ROLE, regularUser2.address);
-        await postMinter.connect(admin).grantRole(PROJECT_CREATOR_ROLE, admin.address);
-        await postMinter.connect(admin).grantRole(RATE_LIMIT_MANAGER_ROLE, admin.address);
-
         // Create test tribe
         const tx = await tribeController.connect(admin).createTribe(
             "Test Tribe",
@@ -126,6 +88,7 @@ describe("PostMinterV2", function () {
         // Add members to tribe
         await tribeController.connect(regularUser1).joinTribe(tribeId);
         await tribeController.connect(regularUser2).joinTribe(tribeId);
+        await tribeController.connect(contentCreator).joinTribe(tribeId);
     });
 
     describe("Basic Post Creation", function () {
@@ -478,6 +441,11 @@ describe("PostMinterV2", function () {
                     category: "announcement",
                     priority: "high",
                     pinned: true,
+                    communityDetails: {
+                        updateType: "weekly",
+                        impactLevel: "high",
+                        affectedGroups: ["all-members", "contributors"]
+                    },
                     tags: ["update", "weekly", "community"]
                 };
 
@@ -638,13 +606,11 @@ describe("PostMinterV2", function () {
         describe("Resource Posts", function () {
             it("Should create a resource post with attachments", async function () {
                 const metadata = {
-                    type: "RESOURCE",
+                    type: "RICH_MEDIA",
                     title: "Development Guidelines",
                     content: "Updated guidelines for contributors",
-                    resourceDetails: {
-                        category: "documentation",
-                        version: "2.0.0",
-                        attachments: [
+                    mediaContent: {
+                        documents: [
                             {
                                 name: "guidelines.pdf",
                                 url: "ipfs://Qm...",
@@ -657,7 +623,11 @@ describe("PostMinterV2", function () {
                                 mimeType: "application/zip",
                                 size: 2048576
                             }
-                        ],
+                        ]
+                    },
+                    resourceDetails: {
+                        category: "documentation",
+                        version: "2.0.0",
                         lastUpdated: Math.floor(Date.now() / 1000)
                     },
                     tags: ["resource", "documentation", "guidelines"]

@@ -1,8 +1,9 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { CollectibleController, RoleManager, TribeController, PointSystem } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog } from "ethers";
+import { deployContracts } from "../util/deployContracts";
 
 interface CollectibleData {
     name: string;
@@ -28,38 +29,17 @@ describe("Collectible Management Journey", function () {
     let tribeId: number;
 
     beforeEach(async function () {
-        [owner, admin, creator, user1, user2] = await ethers.getSigners();
-
-        // Deploy RoleManager
-        const RoleManager = await ethers.getContractFactory("RoleManager");
-        roleManager = await RoleManager.deploy();
-        await roleManager.waitForDeployment();
-
-        // Deploy TribeController
-        const TribeController = await ethers.getContractFactory("TribeController");
-        tribeController = await TribeController.deploy(await roleManager.getAddress());
-        await tribeController.waitForDeployment();
-
-        // Deploy PointSystem
-        const PointSystem = await ethers.getContractFactory("PointSystem");
-        pointSystem = await PointSystem.deploy(
-            await roleManager.getAddress(),
-            await tribeController.getAddress()
-        );
-        await pointSystem.waitForDeployment();
-
-        // Deploy CollectibleController
-        const CollectibleController = await ethers.getContractFactory("CollectibleController");
-        collectibleController = await CollectibleController.deploy(
-            await roleManager.getAddress(),
-            await tribeController.getAddress(),
-            await pointSystem.getAddress()
-        );
-        await collectibleController.waitForDeployment();
-
-        // Setup roles
-        await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("ADMIN_ROLE")), admin.address);
-        await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("CREATOR_ROLE")), creator.address);
+        // Use the deployContracts utility to deploy all contracts consistently with proxies
+        const deployment = await deployContracts();
+        
+        // Extract contracts
+        roleManager = deployment.contracts.roleManager;
+        tribeController = deployment.contracts.tribeController;
+        pointSystem = deployment.contracts.pointSystem;
+        collectibleController = deployment.contracts.collectibleController;
+        
+        // Extract signers
+        [owner, admin, creator, , user1, user2] = await ethers.getSigners();
 
         // Create test tribe
         const tx = await tribeController.connect(creator).createTribe(

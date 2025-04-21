@@ -1,10 +1,52 @@
-# Comprehensive User Journey Tests
+# Journey Tests
 
-This document outlines the combined user flows simulated and verified across the various journey tests in this directory. All tests are confirmed to be passing.
+This directory contains end-to-end journey tests that validate complete user flows in the Tribes by Astrix platform.
 
-## Overall Flow
+## Overview
 
-The tests cover a wide range of user interactions within a decentralized social platform, simulating the lifecycle from initial setup and user onboarding to advanced content creation, community management, and feature-specific interactions like events, projects, and fundraisers.
+Journey tests are designed to simulate real user interactions with the platform, testing multiple contracts and components together as an integrated system. These tests validate that features work correctly from a user's perspective.
+
+## Test Organization
+
+The tests are organized by feature area:
+
+- `tribe-journeys.test.ts` - Tests for tribe creation, joining, and management
+- `points-journeys.test.ts` - Tests for the points system and rewards
+- `content-journeys.test.ts` - Tests for content creation and interactions
+- `event-journeys.test.ts` - Tests for event creation and ticket management
+- `fundraiser-journeys.test.ts` - Tests for fundraiser creation and contributions
+
+## Running Tests
+
+To run all journey tests:
+
+```bash
+npm run test:journey
+```
+
+To run a specific journey test file:
+
+```bash
+npx hardhat test test/journey/tribe-journeys.test.ts
+```
+
+## Test Environment
+
+The journey tests use:
+
+1. A local Hardhat network
+2. Fresh contract deployments for each test suite
+3. Multiple user accounts to simulate different roles
+
+## Writing New Journey Tests
+
+When adding new journey tests:
+
+1. Create test accounts for different user roles
+2. Deploy necessary contracts
+3. Execute a complete user flow (e.g., create tribe → join tribe → create content)
+4. Validate the state after each step
+5. Document the flow being tested in the test description
 
 ```mermaid
 graph TD

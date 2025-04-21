@@ -1,13 +1,14 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import { CollectibleController, RoleManager, TribeController } from "../../typechain-types";
+import { ethers, upgrades } from "hardhat";
+import { CollectibleController, PointSystem, RoleManager, TribeController } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog, Log } from "ethers";
 
 describe("Concurrency & Scalability Tests", function () {
-  let collectibleController: CollectibleController;
   let roleManager: RoleManager;
   let tribeController: TribeController;
+  let pointSystem: PointSystem;
+  let collectibleController: CollectibleController;
   let owner: SignerWithAddress;
   let users: SignerWithAddress[];
   let tribeId: number;
@@ -17,29 +18,35 @@ describe("Concurrency & Scalability Tests", function () {
     
     // Deploy RoleManager
     const RoleManager = await ethers.getContractFactory("RoleManager");
-    roleManager = await RoleManager.deploy();
+        roleManager = await upgrades.deployProxy(RoleManager, [], { kind: 'uups' });
     await roleManager.waitForDeployment();
 
     // Deploy TribeController
     const TribeController = await ethers.getContractFactory("TribeController");
-    tribeController = await TribeController.deploy(roleManager.target);
+        tribeController = await upgrades.deployProxy(TribeController, [roleManager.target], { kind: 'uups' });
     await tribeController.waitForDeployment();
 
     // Deploy PointSystem
     const PointSystem = await ethers.getContractFactory("PointSystem");
-    const pointSystem = await PointSystem.deploy(
-        roleManager.target,
-        tribeController.target
-    );
+    pointSystem = await upgrades.deployProxy(PointSystem, [
+            await roleManager.getAddress(),
+            await tribeController.getAddress()
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
     await pointSystem.waitForDeployment();
 
     // Deploy CollectibleController with required arguments
     const CollectibleController = await ethers.getContractFactory("CollectibleController");
-    collectibleController = await CollectibleController.deploy(
-        await roleManager.getAddress(),
-        await tribeController.getAddress(),
-        await pointSystem.getAddress()
-    );
+    collectibleController = await upgrades.deployProxy(CollectibleController, [
+            await roleManager.getAddress(),
+            await tribeController.getAddress(),
+            await pointSystem.getAddress()
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
     await collectibleController.waitForDeployment();
 
     // Create a test tribe with owner as admin

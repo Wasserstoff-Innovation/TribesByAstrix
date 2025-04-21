@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { CollectibleController, RoleManager, TribeController, PointSystem } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog, Log } from "ethers";
@@ -19,29 +19,35 @@ describe("CollectibleController", function () {
     
     // Deploy RoleManager
     const RoleManager = await ethers.getContractFactory("RoleManager");
-    roleManager = await RoleManager.deploy();
+        roleManager = await upgrades.deployProxy(RoleManager, [], { kind: 'uups' });
     await roleManager.waitForDeployment();
 
     // Deploy TribeController
     const TribeController = await ethers.getContractFactory("TribeController");
-    tribeController = await TribeController.deploy(await roleManager.getAddress());
+    tribeController = await upgrades.deployProxy(TribeController, [await roleManager.getAddress()], { kind: 'uups' });
     await tribeController.waitForDeployment();
 
     // Deploy PointSystem
     const PointSystem = await ethers.getContractFactory("PointSystem");
-    pointSystem = await PointSystem.deploy(
-      await roleManager.getAddress(),
-      await tribeController.getAddress()
-    );
+    pointSystem = await upgrades.deployProxy(PointSystem, [
+        await roleManager.getAddress(),
+        await tribeController.getAddress()
+    ], { 
+        kind: 'uups',
+        unsafeAllow: ['constructor'] 
+    });
     await pointSystem.waitForDeployment();
 
-    // Deploy CollectibleController with required arguments
+    // Deploy CollectibleController with proxy
     const CollectibleController = await ethers.getContractFactory("CollectibleController");
-    collectibleController = await CollectibleController.deploy(
-      await roleManager.getAddress(),
-      await tribeController.getAddress(),
-      await pointSystem.getAddress()
-    );
+    collectibleController = await upgrades.deployProxy(CollectibleController, [
+        await roleManager.getAddress(),
+        await tribeController.getAddress(),
+        await pointSystem.getAddress()
+    ], { 
+        kind: 'uups',
+        unsafeAllow: ['constructor'] 
+    });
     await collectibleController.waitForDeployment();
 
     // Create a test tribe with user1 as admin

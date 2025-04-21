@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { CollectibleController, RoleManager, TribeController, PointSystem } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog } from "ethers";
@@ -24,29 +24,36 @@ describe(chalk.blue("NFT Controller Unit Tests"), function () {
 
         // Deploy contracts
         const RoleManager = await ethers.getContractFactory("RoleManager");
-        roleManager = await RoleManager.deploy();
+        roleManager = await upgrades.deployProxy(RoleManager, [], { kind: 'uups' });
         await roleManager.waitForDeployment();
         console.log(chalk.green("✓ RoleManager deployed"));
 
         const TribeController = await ethers.getContractFactory("TribeController");
-        tribeController = await TribeController.deploy(await roleManager.getAddress());
+        tribeController = await upgrades.deployProxy(TribeController, [await roleManager.getAddress()], { kind: 'uups' });
         await tribeController.waitForDeployment();
         console.log(chalk.green("✓ TribeController deployed"));
 
+        // Deploy PointSystem
         const PointSystem = await ethers.getContractFactory("PointSystem");
-        pointSystem = await PointSystem.deploy(
+        pointSystem = await upgrades.deployProxy(PointSystem, [
             await roleManager.getAddress(),
             await tribeController.getAddress()
-        );
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
         await pointSystem.waitForDeployment();
         console.log(chalk.green("✓ PointSystem deployed"));
 
         const CollectibleController = await ethers.getContractFactory("CollectibleController");
-        collectibleController = await CollectibleController.deploy(
+        collectibleController = await upgrades.deployProxy(CollectibleController, [
             await roleManager.getAddress(),
             await tribeController.getAddress(),
             await pointSystem.getAddress()
-        );
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
         await collectibleController.waitForDeployment();
         console.log(chalk.green("✓ CollectibleController deployed"));
 

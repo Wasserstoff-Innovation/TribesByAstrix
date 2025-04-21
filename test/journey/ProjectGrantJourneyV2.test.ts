@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { PostMinter, RoleManager, TribeController, CollectibleController } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog } from "ethers";
@@ -50,26 +50,32 @@ describe("Project Grant Journey V2", function () {
 
         // Deploy contracts
         const RoleManager = await ethers.getContractFactory("RoleManager");
-        roleManager = await RoleManager.deploy();
+        roleManager = await upgrades.deployProxy(RoleManager, [], { kind: 'uups' });
         await roleManager.waitForDeployment();
 
         const TribeController = await ethers.getContractFactory("TribeController");
-        tribeController = await TribeController.deploy(await roleManager.getAddress());
+        tribeController = await upgrades.deployProxy(TribeController, [await roleManager.getAddress()], { kind: "uups" });
         await tribeController.waitForDeployment();
 
         const PointSystem = await ethers.getContractFactory("PointSystem");
-        pointSystem = await PointSystem.deploy(
+        pointSystem = await upgrades.deployProxy(PointSystem, [
             await roleManager.getAddress(),
             await tribeController.getAddress()
-        );
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
         await pointSystem.waitForDeployment();
 
         const CollectibleController = await ethers.getContractFactory("CollectibleController");
-        collectibleController = await CollectibleController.deploy(
+        collectibleController = await upgrades.deployProxy(CollectibleController, [
             await roleManager.getAddress(),
             await tribeController.getAddress(),
             await pointSystem.getAddress()
-        );
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
         await collectibleController.waitForDeployment();
 
         // Deploy PostFeedManager first
@@ -79,12 +85,15 @@ describe("Project Grant Journey V2", function () {
 
         // Then deploy PostMinter with all required arguments
         const PostMinter = await ethers.getContractFactory("PostMinter");
-        postMinter = await PostMinter.deploy(
-            await roleManager.getAddress(),
+        postMinter = await upgrades.deployProxy(PostMinter, [
+        await roleManager.getAddress(),
             await tribeController.getAddress(),
             await collectibleController.getAddress(),
             await feedManager.getAddress()
-        );
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
         await postMinter.waitForDeployment();
 
         // Grant admin role to PostMinter in PostFeedManager

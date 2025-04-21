@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { 
     RoleManager, 
     TribeController, 
@@ -48,32 +48,38 @@ describe(chalk.blue("Complete User Journey Guide"), function () {
         
         // Deploy RoleManager
         const RoleManager = await ethers.getContractFactory("RoleManager");
-        roleManager = await RoleManager.deploy();
+        roleManager = await upgrades.deployProxy(RoleManager, [], { kind: 'uups' });
         await roleManager.waitForDeployment();
         console.log(chalk.green("✓ RoleManager deployed"));
 
         // Deploy TribeController
         const TribeController = await ethers.getContractFactory("TribeController");
-        tribeController = await TribeController.deploy(await roleManager.getAddress());
+        tribeController = await upgrades.deployProxy(TribeController, [await roleManager.getAddress()], { kind: 'uups' });
         await tribeController.waitForDeployment();
         console.log(chalk.green("✓ TribeController deployed"));
 
         // Deploy PointSystem
         const PointSystem = await ethers.getContractFactory("PointSystem");
-        pointSystem = await PointSystem.deploy(
+        pointSystem = await upgrades.deployProxy(PointSystem, [
             await roleManager.getAddress(),
             await tribeController.getAddress()
-        );
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
         await pointSystem.waitForDeployment();
         console.log(chalk.green("✓ PointSystem deployed"));
 
         // Deploy CollectibleController
         const CollectibleController = await ethers.getContractFactory("CollectibleController");
-        collectibleController = await CollectibleController.deploy(
+        collectibleController = await upgrades.deployProxy(CollectibleController, [
             await roleManager.getAddress(),
             await tribeController.getAddress(),
             await pointSystem.getAddress()
-        );
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
         await collectibleController.waitForDeployment();
         console.log(chalk.green("✓ CollectibleController deployed"));
 
@@ -85,12 +91,15 @@ describe(chalk.blue("Complete User Journey Guide"), function () {
 
         // Deploy PostMinter
         const PostMinter = await ethers.getContractFactory("PostMinter");
-        postMinter = await PostMinter.deploy(
-            await roleManager.getAddress(),
+        postMinter = await upgrades.deployProxy(PostMinter, [
+        await roleManager.getAddress(),
             await tribeController.getAddress(),
             await collectibleController.getAddress(),
             await feedManager.getAddress()
-        );
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
         await postMinter.waitForDeployment();
         console.log(chalk.green("✓ PostMinter deployed"));
 
@@ -247,7 +256,7 @@ describe(chalk.blue("Complete User Journey Guide"), function () {
             // 2. Create welcome post
             console.log(chalk.yellow("Creating welcome post..."));
             const welcomePost = {
-                type: "COMMUNITY_UPDATE",
+                type: "TEXT",
                 title: "Welcome to Creative Web3 Hub!",
                 content: "We're excited to have you join our community of creators and builders!",
                 attachments: [],
@@ -301,7 +310,7 @@ describe(chalk.blue("Complete User Journey Guide"), function () {
                 type: "POLL",
                 title: "Next Community Event",
                 content: "What type of event should we host next?",
-                pollOptions: [
+                options: [
                     "Technical Workshop",
                     "NFT Creation Workshop",
                     "DeFi Trading Workshop",
@@ -385,8 +394,8 @@ describe(chalk.blue("Complete User Journey Guide"), function () {
             ) as EventLog;
             postIds.media = mediaEvent ? Number(mediaEvent.args[0]) : 0;
 
-            // Wait for rate limit
-            await ethers.provider.send("evm_increaseTime", [61]);
+            // Wait for rate limit - increased to 3 minutes to be safe
+            await ethers.provider.send("evm_increaseTime", [180]);
             await ethers.provider.send("evm_mine", []);
 
             // 2. Create a gated announcement
@@ -395,6 +404,10 @@ describe(chalk.blue("Complete User Journey Guide"), function () {
                 type: "COMMUNITY_UPDATE",
                 title: "Premium Member Update",
                 content: "Exclusive update for our premium members...",
+                communityDetails: {
+                    importance: "high",
+                    category: "premium"
+                },
                 attachments: [],
                 tags: ["premium", "exclusive"],
                 createdAt: Math.floor(Date.now() / 1000)
@@ -413,8 +426,8 @@ describe(chalk.blue("Complete User Journey Guide"), function () {
             ) as EventLog;
             postIds.gated = gatedEvent ? Number(gatedEvent.args[0]) : 1;
 
-            // Wait for rate limit
-            await ethers.provider.send("evm_increaseTime", [61]);
+            // Wait for rate limit - increased to 3 minutes to be safe
+            await ethers.provider.send("evm_increaseTime", [180]);
             await ethers.provider.send("evm_mine", []);
 
             // 3. Create a poll with options
@@ -423,17 +436,15 @@ describe(chalk.blue("Complete User Journey Guide"), function () {
                 type: "POLL",
                 title: "Community Governance",
                 content: "How should we allocate the community treasury?",
-                pollDetails: {
-                    options: [
-                        { id: 1, text: "Fund Developer Grants" },
-                        { id: 2, text: "Community Events" },
-                        { id: 3, text: "Marketing & Growth" },
-                        { id: 4, text: "Treasury Reserve" }
-                    ],
-                    endTime: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
-                    allowMultipleChoices: false,
-                    minTokensToVote: 100
-                },
+                options: [
+                    { id: 1, text: "Fund Developer Grants" },
+                    { id: 2, text: "Community Events" },
+                    { id: 3, text: "Marketing & Growth" },
+                    { id: 4, text: "Treasury Reserve" }
+                ],
+                endTime: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
+                allowMultipleChoices: false,
+                minTokensToVote: 100,
                 tags: ["governance", "poll", "treasury"],
                 createdAt: Math.floor(Date.now() / 1000)
             };
@@ -683,7 +694,7 @@ describe(chalk.blue("Complete User Journey Guide"), function () {
             // Create gated post
             console.log(chalk.yellow("Creating gated post..."));
             const gatedPost = {
-                type: "PREMIUM",
+                type: "TEXT",
                 title: "Gated Content",
                 content: "This content requires the gating collectible to view",
                 createdAt: Math.floor(Date.now() / 1000)
@@ -942,10 +953,12 @@ describe(chalk.blue("Complete User Journey Guide"), function () {
             // 3. Create a milestone post
             console.log(chalk.yellow("Creating milestone post..."));
             const milestonePost = {
-                type: "MILESTONE",
+                type: "PROJECT_UPDATE",
                 title: "Q1 2024 Goals Achieved!",
                 content: "We're excited to share our Q1 achievements...",
-                milestoneDetails: {
+                projectDetails: {
+                    milestoneIndex: 0,
+                    status: "COMPLETED",
                     period: "Q1 2024",
                     achievements: [
                         {
@@ -1184,9 +1197,9 @@ describe(chalk.blue("Complete User Journey Guide"), function () {
             // Create a fundraiser post
             console.log(chalk.yellow("Creating a fundraiser post..."));
             const fundraiserData = {
+                type: "TEXT",
                 title: "Community Hub Development",
                 content: "Raising funds to develop our community hub space",
-                type: "FUNDRAISER",
                 fundraiserDetails: {
                     target: ethers.parseEther("10000").toString(),
                     currency: "ETH",

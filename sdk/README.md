@@ -1,361 +1,209 @@
 # Tribes by Astrix SDK
 
-A comprehensive SDK for integrating with the Tribes by Astrix platform, allowing organizations to implement a token-based points system, community management, and engagement tools.
-
-## Features
-
-- **Astrix Token Integration**: Easily integrate with Astrix tokens for your organization's points system
-- **Point System Management**: Award, transfer, and manage points for users within your community
-- **Tribe Management**: Create and manage tribes, members, and permissions
-- **User Profiles**: Handle user profiles and authentication
-- **Content Management**: Support for posts, comments, and other content types
-- **Analytics**: Track user engagement and community metrics
+A powerful JavaScript/TypeScript SDK for interacting with the Tribes by Astrix platform.
 
 ## Installation
 
 ```bash
-npm install tribes-by-astrix-sdk
+npm install @tribes/sdk
+# or
+yarn add @tribes/sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { AstrixSDK } from 'tribes-by-astrix-sdk';
+import { AstrixSDK } from '@tribes/sdk';
 
-// Initialize the SDK with your configuration
+// Initialize the SDK with configuration
 const sdk = new AstrixSDK({
-  provider: window.ethereum, // or any ethers provider
+  provider: window.ethereum, // or any ethers-compatible provider
+  chainId: 4165, // Monad Devnet
+  // Optional: Provide contract addresses if not using standard deployment
   contracts: {
-    roleManager: '0x...',
-    tribeController: '0x...',
-    astrixToken: '0x...',
-    tokenDispenser: '0x...',
-    astrixPointSystem: '0x...',
-    // other contract addresses...
+    // Contract addresses will be automatically detected based on chainId if not provided
+  },
+  // Optional: Configure caching behavior
+  cache: {
+    defaultMaxAge: 60000, // 1 minute in milliseconds
+    disabled: false       // Enable/disable cache globally
   }
 });
 
-// Connect user's wallet
+// Connect with wallet
 await sdk.connect();
+console.log('Connected with address:', await sdk.getAddress());
 ```
 
-## Modules
+## Core Modules
+
+The SDK provides several modules for interacting with different aspects of the platform:
 
 ### Token Module
 
-The `token` module provides functionality for interacting with Astrix tokens and the TokenDispenser contract.
+Interact with the Astrix token and related functionality.
 
 ```typescript
+// Get token information
+const tokenInfo = await sdk.token.getTokenInfo();
+console.log('Token name:', tokenInfo.name);
+console.log('Token symbol:', tokenInfo.symbol);
+console.log('Total supply:', tokenInfo.totalSupply);
+
+// Get token balance
+const balance = await sdk.token.getBalance();
+console.log('Your balance:', balance);
+
 // Deposit tokens to the dispenser
-const depositResult = await sdk.token.deposit({
-  amount: ethers.parseEther('100')
+const depositTx = await sdk.token.deposit({ 
+  amount: ethers.parseEther('100') // 100 tokens
 });
-
-// Check organization balance in dispenser
-const balance = await sdk.token.getBalance('0xOrganizationAddress');
-console.log(`Balance: ${balance.formattedBalance} ASTRX`);
-
-// Withdraw tokens from dispenser
-const withdrawResult = await sdk.token.withdraw({
-  amount: ethers.parseEther('50')
-});
-
-// Update organization admin
-const updateResult = await sdk.token.updateOrganizationAdmin({
-  newAdmin: '0xNewAdminAddress'
-});
-
-// Platform operations (requires PLATFORM_ROLE)
-const spendResult = await sdk.token.platformSpend({
-  organization: '0xOrganizationAddress',
-  recipient: '0xRecipientAddress',
-  amount: ethers.parseEther('10'),
-  reason: 'Reward for community contribution'
-});
+console.log('Deposit transaction hash:', depositTx);
 ```
 
 ### Points Module
 
-The `points` module provides functionality for interacting with the AstrixPointSystem contract.
+Manage tribe points, rewards, and point-based actions.
 
 ```typescript
-// Set organization for tribe
-const setOrgResult = await sdk.points.setTribeOrganization({
-  tribeId: 1,
-  organization: '0xOrganizationAddress'
-});
-
-// Create tribe token
-const createTokenResult = await sdk.points.createTribeToken({
+// Create a tribe token
+const createTokenTx = await sdk.points.createTribeToken({
   tribeId: 1,
   name: 'Tribe Token',
-  symbol: 'TT1'
+  symbol: 'TT'
 });
 
-// Set exchange rate (tribe tokens per 1 Astrix)
-const setRateResult = await sdk.points.setExchangeRate({
+// Set exchange rate (10 tribe tokens per 1 Astrix token)
+await sdk.points.setExchangeRate({
   tribeId: 1,
-  rate: 100 // 100 tribe tokens per 1 Astrix
-});
-
-// Set points for action types
-const setPointsResult = await sdk.points.setActionPoints({
-  tribeId: 1,
-  actionType: 'POST', // or ActionType.POST from enum
-  points: 50
+  rate: 10
 });
 
 // Award points to a member
-const awardResult = await sdk.points.awardPoints({
+await sdk.points.awardPoints({
   tribeId: 1,
-  member: '0xMemberAddress',
+  member: '0x1234...',
   points: 50,
-  actionType: 'POST' // or ActionType.POST from enum
+  actionType: 'CUSTOM'
 });
+
+// Get member's point balance
+const balance = await sdk.points.getMemberPoints(1, '0x1234...');
+
+// Get top members by points
+const topMembers = await sdk.points.getTopMembers(1, 5);
 ```
 
 ### Content Module
 
-The `content` module provides functionality for creating and managing content.
+Create, manage, and interact with tribe content and posts.
 
 ```typescript
 // Create a post
-const createPostResult = await sdk.content.createPost({
+const postId = await sdk.content.createPost({
   tribeId: 1,
-  content: "Hello world!",
-  postType: "TEXT"
+  content: 'Hello, tribe members!',
+  postType: 'TEXT'
 });
 
-// Get posts by tribe
-const posts = await sdk.content.getPostsByTribe(1, {
-  limit: 10,
-  offset: 0,
-  includeDetails: true
+// Get posts for a tribe
+const posts = await sdk.content.getTribePosts(1);
+
+// React to a post
+await sdk.content.reactToPost({
+  postId,
+  reaction: 'LIKE'
 });
 
-// Get user feed
-const feed = await sdk.content.getFeedForUser('0xUserAddress', {
-  limit: 20,
-  offset: 0,
-  includeDetails: true,
-  postType: "TEXT" // Optional filter
+// Comment on a post
+await sdk.content.commentOnPost({
+  postId,
+  content: 'Great post!'
 });
 ```
 
-## Complete SDK Status
+### Tribes Module
 
-### ✅ Implemented
-
-- **Core SDK Framework**
-  - Base module structure
-  - Error handling system
-  - Configuration and initialization
-
-- **Token Module**
-  - Deposit/withdrawal functionality
-  - Balance checking
-  - Admin operations
-  - Token approval
-
-- **Points Module**
-  - Tribe token creation
-  - Exchange rate management
-  - Point awarding/deduction
-  - Action tracking
-
-- **Content Module**
-  - Post/Reply creation
-  - Gated post support
-  - Feed retrieval (user, tribe, user/tribe)
-  - Post detail fetching
-
-### 🚧 In Progress
-
-- **Tribes Module** (partial)
-  - Basic tribe creation
-  - Membership management
-
-- **Profiles Module** (stub)
-  - Profile creation
-  - Authentication
-
-- **Analytics Module** (stub)
-  - Basic data retrieval
-
-### 📅 Planned
-
-- Enhanced authentication
-- Media handling
-- Advanced analytics
-- Organization management tools
-- Extended tribe functionality
-- Improved error handling and recovery
-
-## Example Workflows
-
-### Organization Setup
+Create and manage tribes and memberships.
 
 ```typescript
-// 1. Deposit Astrix tokens to the dispenser
-await sdk.token.deposit({
-  amount: ethers.parseEther('1000')
+// Create a tribe
+const tribeId = await sdk.tribes.createTribe({
+  name: "My Awesome Tribe",
+  description: "A community for awesome people",
+  imageUrl: "https://example.com/image.png"
 });
 
-// 2. Set organization for tribe
-await sdk.points.setTribeOrganization({
-  tribeId: 1,
-  organization: sdk.account // Current connected account
-});
+// Join a tribe
+await sdk.tribes.joinTribe(tribeId);
 
-// 3. Create tribe token
-await sdk.points.createTribeToken({
-  tribeId: 1,
-  name: 'Community Token',
-  symbol: 'COM1'
-});
+// Get tribe details
+const tribeDetails = await sdk.tribes.getTribeDetails(tribeId);
 
-// 4. Set exchange rate
-await sdk.points.setExchangeRate({
-  tribeId: 1,
-  rate: 100
-});
-
-// 5. Configure point values for actions
-const actions = ['POST', 'COMMENT', 'LIKE', 'QUIZ', 'POLL'];
-const pointValues = [50, 20, 5, 30, 25];
-
-for (let i = 0; i < actions.length; i++) {
-  await sdk.points.setActionPoints({
-    tribeId: 1,
-    actionType: actions[i],
-    points: pointValues[i]
-  });
-}
+// Get tribe members
+const members = await sdk.tribes.getTribeMembers(tribeId);
 ```
 
-### Reward User for Content Creation
+## Advanced Features
+
+### Caching System
+
+The SDK includes a sophisticated caching system to optimize performance and reduce network calls. Each module inherits this functionality from the `BaseModule` class.
 
 ```typescript
-// When a user creates a post
-async function rewardUserForPost(tribeId, userAddress) {
-  await sdk.points.recordAction({
-    tribeId,
-    member: userAddress,
-    actionType: 'POST'
-  });
-}
+// Example with explicit cache control
+const members = await sdk.tribes.getTribeMembers(tribeId, {
+  cache: {
+    disabled: false,   // Use cache for this request
+    maxAge: 120000,    // Cache valid for 2 minutes
+    blockBased: true   // Invalidate on new blocks
+  }
+});
 
-// When a user comments on a post
-async function rewardUserForComment(tribeId, userAddress) {
-  await sdk.points.recordAction({
-    tribeId,
-    member: userAddress,
-    actionType: 'COMMENT'
-  });
-}
+// Manually invalidate specific cache
+sdk.tribes.invalidateCache(`tribe:${tribeId}:members`);
+
+// Clear all cache
+sdk.clearCache();
 ```
 
-### Leaderboard Display
+#### Cache Options
 
-```typescript
-async function getLeaderboard(tribeId) {
-  const topMembers = await sdk.points.getTopMembers(tribeId, 10);
-  
-  return topMembers.map(member => ({
-    address: member.address,
-    points: member.points,
-    // Fetch additional user details from your database if needed
-  }));
-}
-```
+- `disabled`: Boolean to disable caching for a specific request
+- `maxAge`: Time in milliseconds before cache expires
+- `blockBased`: When true, cache is invalidated on new blocks
 
-## Error Handling
+### Error Handling
 
-The SDK includes comprehensive error handling:
+The SDK provides consistent error handling across all modules.
 
 ```typescript
 try {
-  await sdk.points.awardPoints({
-    tribeId: 1,
-    member: '0xMemberAddress',
-    points: 50,
-    actionType: 'POST'
+  await sdk.tribes.createTribe({
+    name: "My Tribe"
+    // Missing required fields will cause validation error
   });
 } catch (error) {
-  if (error.type === 'CONTRACT_ERROR') {
-    console.error('Contract interaction failed:', error.message);
-    // Check if organization has enough tokens, member is active, etc.
-  } else if (error.type === 'WALLET_ERROR') {
-    console.error('Wallet issue:', error.message);
-    // Handle wallet connection or signature issues
+  if (error.type === 'VALIDATION_ERROR') {
+    console.error('Validation error:', error.message);
+  } else if (error.type === 'CONTRACT_ERROR') {
+    console.error('Smart contract error:', error.message);
   } else {
-    console.error('Unknown error:', error);
+    console.error('Unexpected error:', error);
   }
 }
 ```
 
-## Best Practices
+## Complete Examples
 
-1. **Gas Optimization**:
-   - Use batch operations where possible (`batchAwardPoints`)
-   - Consider using the `recordAction` method which only triggers point awards if configured
+See the [examples directory](./examples) for complete usage examples:
+- [Basic Usage (TypeScript)](./examples/basic-usage.ts)
+- [Basic Usage (JavaScript)](./examples/basic-usage.js)
 
-2. **Organization Management**:
-   - Keep enough Astrix tokens in the dispenser to cover expected point awards
-   - Consider setting up automated monitoring of token balances
+## API Reference
 
-3. **User Experience**:
-   - Cache point balances and update them optimistically
-   - Show pending transactions while waiting for blockchain confirmation
-   - Implement fallback mechanisms for failed transactions
+For detailed API documentation, see the [API Reference](./docs/API.md).
 
-4. **Security**:
-   - Only tribe admins should call configuration methods
-   - Use appropriate role management for platform operations
-   - Validate all user inputs before sending transactions
+## Troubleshooting
 
-## Development
-
-```bash
-# Clone the repository
-git clone https://github.com/astrix/tribes-sdk.git
-
-# Install dependencies
-cd tribes-sdk
-npm install
-
-# Build the SDK
-npm run build
-
-# Run tests
-npm test
-```
-
-## Next Steps in Development
-
-1. **Complete Module Implementations**
-   - Finish remaining modules (Profiles, Organizations, Analytics)
-   - Add advanced features to existing modules
-
-2. **Testing Infrastructure**
-   - Unit tests for all modules
-   - Integration tests with contracts
-   - End-to-end testing with example applications
-
-3. **Documentation**
-   - Complete API documentation
-   - More integration guides
-   - Video tutorials
-
-4. **Build and Publish**
-   - Finalize build process
-   - Publish to npm
-   - Set up CI/CD pipeline
-
-## Support
-
-If you need help or have questions, join our Discord server or open an issue on our GitHub repository.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details. 
+Having issues? Check our [Troubleshooting Guide](./docs/guides/troubleshooting.md). 

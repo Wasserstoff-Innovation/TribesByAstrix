@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./interfaces/IRoleManager.sol";
 import "./interfaces/ITribeController.sol";
 import "./interfaces/ICollectibleController.sol";
@@ -20,8 +21,8 @@ import "./PostFeedManager.sol";
 
 /// @custom:oz-upgrades-unsafe-allow constructor
 /// @custom:solidity-optimizer-runs 1
-contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
-    using ECDSA for bytes32;
+contract PostMinter is IPostMinter, Initializable, AccessControlUpgradeable, ReentrancyGuardUpgradeable, PausableUpgradeable, UUPSUpgradeable {
+    using ECDSAUpgradeable for bytes32;
     using PostHelpers for bytes;
     using FeedHelpers for FeedHelpers.PostData;
     using InteractionHelpers for *;
@@ -54,12 +55,25 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
     mapping(uint256 => bytes32) public tribeEncryptionKeys;
     mapping(PostType => uint256) public postTypeCooldowns;
 
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    /**
+     * @dev Initializes the contract replacing the constructor
+     */
+    function initialize(
         address _roleManager,
         address _tribeController,
         address _collectibleController,
         address _feedManager
-    ) {
+    ) public initializer {
+        __AccessControl_init();
+        __ReentrancyGuard_init();
+        __Pausable_init();
+        __UUPSUpgradeable_init();
+        
         roleManager = IRoleManager(_roleManager);
         tribeController = ITribeController(_tribeController);
         collectibleController = ICollectibleController(_collectibleController);
@@ -70,6 +84,11 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
 
         _initializeCooldowns();
     }
+
+    /**
+     * @dev Function that should revert when `msg.sender` is not authorized to upgrade the contract.
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
 
     function _initializeCooldowns() private {
         postTypeCooldowns[PostType.TEXT] = 1 minutes;
@@ -202,12 +221,14 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
 
         if (PostHelpers.containsField(metadataBytes, "\"type\":\"EVENT\"")) {
             postType = PostType.EVENT;
-            if (!PostHelpers.containsField(metadataBytes, "\"eventDetails\"")) {
+            if (!PostHelpers.containsField(metadataBytes, "\"eventDetails\"") ||
+                PostHelpers.hasEmptyValue(metadataBytes, "\"eventDetails\"")) {
                 revert PostErrors.InvalidPostType();
             }
         } else if (PostHelpers.containsField(metadataBytes, "\"type\":\"RICH_MEDIA\"")) {
             postType = PostType.RICH_MEDIA;
-            if (!PostHelpers.containsField(metadataBytes, "\"mediaContent\"")) {
+            if (!PostHelpers.containsField(metadataBytes, "\"mediaContent\"") ||
+                PostHelpers.hasEmptyValue(metadataBytes, "\"mediaContent\"")) {
                 revert PostErrors.InvalidPostType();
             }
         } else if (PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT\"") ||
@@ -215,14 +236,42 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
             postType = PostType.PROJECT_UPDATE;
             
             // Project creation permission check
-            if (PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT\"") && 
-                !roleManager.hasRole(PROJECT_CREATOR_ROLE, msg.sender)) {
-                revert PostErrors.InsufficientAccess();
+            if (PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT\"")) {
+                if (!roleManager.hasRole(PROJECT_CREATOR_ROLE, msg.sender)) {
+                    revert PostErrors.InsufficientAccess();
+                }
+                if (!PostHelpers.containsField(metadataBytes, "\"projectDetails\"") ||
+                    PostHelpers.hasEmptyValue(metadataBytes, "\"projectDetails\"")) {
+                    revert PostErrors.InvalidPostType();
+                }
             }
             // For project updates, do a simpler check to avoid increasing contract size
-            else if (PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"") &&
-                     !roleManager.hasRole(PROJECT_CREATOR_ROLE, msg.sender)) {
-                revert PostErrors.InsufficientAccess();
+            else if (PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"")) {
+                if (!roleManager.hasRole(PROJECT_CREATOR_ROLE, msg.sender)) {
+                    revert PostErrors.InsufficientAccess();
+                }
+                if (!PostHelpers.containsField(metadataBytes, "\"projectDetails\"")) {
+                    revert PostErrors.InvalidPostType();
+                }
+            }
+        } else if (PostHelpers.containsField(metadataBytes, "\"type\":\"POLL\"")) {
+            postType = PostType.POLL;
+            if (!PostHelpers.containsField(metadataBytes, "\"options\"") ||
+                PostHelpers.hasEmptyValue(metadataBytes, "\"options\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+        } else if (PostHelpers.containsField(metadataBytes, "\"type\":\"COMMUNITY_UPDATE\"")) {
+            postType = PostType.COMMUNITY_UPDATE;
+            if (!PostHelpers.containsField(metadataBytes, "\"communityDetails\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+        } else if (PostHelpers.containsField(metadataBytes, "\"type\":\"ENCRYPTED\"")) {
+            postType = PostType.ENCRYPTED;
+        } else {
+            // Default to TEXT type, but ensure it has the correct type specified
+            if (PostHelpers.containsField(metadataBytes, "\"type\"") &&
+                !PostHelpers.containsField(metadataBytes, "\"type\":\"TEXT\"")) {
+                revert PostErrors.InvalidPostType();
             }
         }
         
@@ -446,10 +495,12 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         bytes32 messageHash = keccak256(
             abi.encodePacked(viewer, post.tribeId)
         );
-        bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(messageHash);
+        bytes32 ethSignedMessageHash = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n", uint256(messageHash), signature)
+        );
         
-        (address recoveredSigner, ECDSA.RecoverError error, ) = ECDSA.tryRecover(ethSignedMessageHash, signature);
-        if (error != ECDSA.RecoverError.NoError) return false;
+        (address recoveredSigner, ECDSAUpgradeable.RecoverError error) = ECDSAUpgradeable.tryRecover(ethSignedMessageHash, signature);
+        if (error != ECDSAUpgradeable.RecoverError.NoError) return false;
 
         return recoveredSigner == post.accessSigner;
     }
@@ -525,12 +576,48 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
             if (!PostHelpers.containsField(metadataBytes, "\"type\":\"EVENT\"")) {
                 revert PostErrors.InvalidPostType();
             }
+            if (!PostHelpers.containsField(metadataBytes, "\"eventDetails\"") ||
+                PostHelpers.hasEmptyValue(metadataBytes, "\"eventDetails\"")) {
+                revert PostErrors.InvalidPostType();
+            }
         } else if (postType == PostType.RICH_MEDIA) {
             if (!PostHelpers.containsField(metadataBytes, "\"type\":\"RICH_MEDIA\"")) {
                 revert PostErrors.InvalidPostType();
             }
+            if (!PostHelpers.containsField(metadataBytes, "\"mediaContent\"") ||
+                PostHelpers.hasEmptyValue(metadataBytes, "\"mediaContent\"")) {
+                revert PostErrors.InvalidPostType();
+            }
         } else if (postType == PostType.PROJECT_UPDATE) {
-            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"")) {
+            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"") && 
+                !PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+            if (!PostHelpers.containsField(metadataBytes, "\"projectDetails\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+        } else if (postType == PostType.POLL) {
+            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"POLL\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+            if (!PostHelpers.containsField(metadataBytes, "\"options\"") ||
+                PostHelpers.hasEmptyValue(metadataBytes, "\"options\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+        } else if (postType == PostType.COMMUNITY_UPDATE) {
+            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"COMMUNITY_UPDATE\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+            if (!PostHelpers.containsField(metadataBytes, "\"communityDetails\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+        } else if (postType == PostType.ENCRYPTED) {
+            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"ENCRYPTED\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+        } else if (postType == PostType.TEXT) {
+            if (PostHelpers.containsField(metadataBytes, "\"type\"") && 
+                !PostHelpers.containsField(metadataBytes, "\"type\":\"TEXT\"")) {
                 revert PostErrors.InvalidPostType();
             }
         }

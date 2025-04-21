@@ -52,7 +52,7 @@ library PostCreationHelpers {
             revert PostErrors.MissingContentField();
     }
 
-    function _validatePostTypeSpecificFields(bytes memory metadataBytes, IPostMinter.PostType postType) private view {
+    function _validatePostTypeSpecificFields(bytes memory metadataBytes, IPostMinter.PostType postType) private pure {
         // Validate post type specific fields
         if (postType == IPostMinter.PostType.EVENT) {
             _validateEventPostFields(metadataBytes);
@@ -60,6 +60,14 @@ library PostCreationHelpers {
             _validateRichMediaPostFields(metadataBytes);
         } else if (postType == IPostMinter.PostType.PROJECT_UPDATE) {
             _validateProjectPostFields(metadataBytes);
+        } else if (postType == IPostMinter.PostType.POLL) {
+            _validatePollPostFields(metadataBytes);
+        } else if (postType == IPostMinter.PostType.COMMUNITY_UPDATE) {
+            _validateCommunityUpdateFields(metadataBytes);
+        } else if (postType == IPostMinter.PostType.ENCRYPTED) {
+            _validateEncryptedPostFields(metadataBytes);
+        } else if (postType == IPostMinter.PostType.TEXT) {
+            _validateTextPostFields(metadataBytes);
         }
     }
 
@@ -77,7 +85,7 @@ library PostCreationHelpers {
         }
     }
 
-    function _validateProjectPostFields(bytes memory metadataBytes) private view {
+    function _validateProjectPostFields(bytes memory metadataBytes) private pure {
         // For initial project creation
         if (PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT\"")) {
             if (!PostHelpers.containsField(metadataBytes, "\"projectDetails\"") ||
@@ -93,7 +101,7 @@ library PostCreationHelpers {
         }
     }
 
-    function _validateProjectUpdate(bytes memory metadataBytes) private view {
+    function _validateProjectUpdate(bytes memory metadataBytes) private pure {
         if (!PostHelpers.containsField(metadataBytes, "\"projectDetails\"")) {
             revert PostErrors.InvalidPostType();
         }
@@ -157,7 +165,7 @@ library PostCreationHelpers {
         });
     }
 
-    function _validateProjectUpdatePermissions(bytes memory metadataBytes) private view returns (bool) {
+    function _validateProjectUpdatePermissions(bytes memory metadataBytes) private pure returns (bool) {
         // For initial project creation, no additional validation needed
         if (PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT\"")) {
             return true;
@@ -225,5 +233,108 @@ library PostCreationHelpers {
         if (bytes(metadata).length == 0) revert PostErrors.EmptyMetadata();
         if (encryptionKeyHash == bytes32(0)) revert PostErrors.InvalidEncryptionKey();
         if (accessSigner == address(0)) revert PostErrors.InvalidSigner();
+    }
+
+    function _validatePollPostFields(bytes memory metadataBytes) private pure {
+        if (!PostHelpers.containsField(metadataBytes, "\"options\"") ||
+            PostHelpers.hasEmptyValue(metadataBytes, "\"options\"")) {
+            revert PostErrors.InvalidPostType();
+        }
+    }
+
+    function _validateCommunityUpdateFields(bytes memory metadataBytes) private pure {
+        if (!PostHelpers.containsField(metadataBytes, "\"communityDetails\"") ||
+            PostHelpers.hasEmptyValue(metadataBytes, "\"communityDetails\"")) {
+            revert PostErrors.InvalidPostType();
+        }
+    }
+
+    function _validateEncryptedPostFields(bytes memory metadataBytes) private pure {
+        // Encrypted posts don't require additional fields beyond the basic ones
+        // but we should ensure they have the right type
+        if (!PostHelpers.containsField(metadataBytes, "\"type\":\"ENCRYPTED\"")) {
+            revert PostErrors.InvalidPostType();
+        }
+    }
+
+    function _validateTextPostFields(bytes memory metadataBytes) private pure {
+        // TEXT posts don't need special fields, but if type is specified it should be TEXT
+        if (PostHelpers.containsField(metadataBytes, "\"type\"") && 
+            !PostHelpers.containsField(metadataBytes, "\"type\":\"TEXT\"")) {
+            revert PostErrors.InvalidPostType();
+        }
+    }
+
+    /**
+     * @dev Provides a unified validation for all post types
+     * Used to reduce code size in the main PostMinter contract
+     */
+    function validatePostMetadata(
+        string memory metadata, 
+        IPostMinter.PostType postType
+    ) internal pure returns (bool) {
+        bytes memory metadataBytes = bytes(metadata);
+        
+        // Validate basic format
+        PostHelpers.validateMetadataFormat(metadataBytes);
+        
+        // Validate required fields for all post types
+        if (!PostHelpers.containsField(metadataBytes, "\"title\"")) 
+            revert PostErrors.MissingTitleField();
+        if (!PostHelpers.containsField(metadataBytes, "\"content\"")) 
+            revert PostErrors.MissingContentField();
+        
+        // Validate post type specific fields
+        if (postType == IPostMinter.PostType.EVENT) {
+            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"EVENT\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+            if (!PostHelpers.containsField(metadataBytes, "\"eventDetails\"") ||
+                PostHelpers.hasEmptyValue(metadataBytes, "\"eventDetails\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+        } else if (postType == IPostMinter.PostType.RICH_MEDIA) {
+            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"RICH_MEDIA\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+            if (!PostHelpers.containsField(metadataBytes, "\"mediaContent\"") ||
+                PostHelpers.hasEmptyValue(metadataBytes, "\"mediaContent\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+        } else if (postType == IPostMinter.PostType.PROJECT_UPDATE) {
+            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"") && 
+                !PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+            if (!PostHelpers.containsField(metadataBytes, "\"projectDetails\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+        } else if (postType == IPostMinter.PostType.POLL) {
+            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"POLL\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+            if (!PostHelpers.containsField(metadataBytes, "\"options\"") ||
+                PostHelpers.hasEmptyValue(metadataBytes, "\"options\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+        } else if (postType == IPostMinter.PostType.COMMUNITY_UPDATE) {
+            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"COMMUNITY_UPDATE\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+            if (!PostHelpers.containsField(metadataBytes, "\"communityDetails\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+        } else if (postType == IPostMinter.PostType.ENCRYPTED) {
+            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"ENCRYPTED\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+        } else if (postType == IPostMinter.PostType.TEXT) {
+            if (PostHelpers.containsField(metadataBytes, "\"type\"") && 
+                !PostHelpers.containsField(metadataBytes, "\"type\":\"TEXT\"")) {
+                revert PostErrors.InvalidPostType();
+            }
+        }
+        
+        return true;
     }
 } 

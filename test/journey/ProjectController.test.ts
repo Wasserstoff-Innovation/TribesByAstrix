@@ -1,8 +1,9 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { ProjectController, PostMinter, TribeController, RoleManager } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog } from "ethers";
+import { deployContracts } from "../util/deployContracts";
 
 describe("Project Controller", function () {
     let projectController: ProjectController;
@@ -41,35 +42,18 @@ describe("Project Controller", function () {
     }
 
     beforeEach(async function () {
+        // Deploy all contracts using the deployContracts utility
+        const deployment = await deployContracts();
+        
+        // Extract contracts
+        roleManager = deployment.contracts.roleManager;
+        tribeController = deployment.contracts.tribeController;
+        postMinter = deployment.contracts.postMinter;
+        
+        // Extract signers
         [owner, admin, projectCreator, teamMember, reviewer, nonMember] = await ethers.getSigners();
 
-        // Deploy contracts
-        const RoleManager = await ethers.getContractFactory("RoleManager");
-        roleManager = await RoleManager.deploy();
-        await roleManager.waitForDeployment();
-
-        const TribeController = await ethers.getContractFactory("TribeController");
-        tribeController = await TribeController.deploy(await roleManager.getAddress());
-        await tribeController.waitForDeployment();
-
-        // Deploy PostFeedManager first
-        const PostFeedManager = await ethers.getContractFactory("PostFeedManager");
-        const feedManager = await PostFeedManager.deploy(await tribeController.getAddress());
-        await feedManager.waitForDeployment();
-
-        // Deploy PostMinter with all required arguments
-        const PostMinter = await ethers.getContractFactory("PostMinter");
-        postMinter = await PostMinter.deploy(
-            await roleManager.getAddress(),
-            await tribeController.getAddress(),
-            ethers.ZeroAddress, // No collectible controller needed for these tests
-            await feedManager.getAddress()
-        );
-        await postMinter.waitForDeployment();
-
-        // Grant admin role to PostMinter in PostFeedManager
-        await feedManager.grantRole(await feedManager.DEFAULT_ADMIN_ROLE(), await postMinter.getAddress());
-
+        // Deploy ProjectController as a regular contract (not upgradeable)
         const ProjectController = await ethers.getContractFactory("ProjectController");
         projectController = await ProjectController.deploy(
             await postMinter.getAddress(),
@@ -77,24 +61,18 @@ describe("Project Controller", function () {
         );
         await projectController.waitForDeployment();
 
-        // Setup roles
-        await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("ADMIN_ROLE")), admin.address);
-        await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("REVIEWER_ROLE")), reviewer.address);
+        // Grant reviewer role to the reviewer
         await projectController.grantRole(ethers.keccak256(ethers.toUtf8Bytes("REVIEWER_ROLE")), reviewer.address);
+        await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("REVIEWER_ROLE")), reviewer.address);
 
         // Grant PROJECT_CREATOR_ROLE through RoleManager
         const PROJECT_CREATOR_ROLE = ethers.keccak256(ethers.toUtf8Bytes("PROJECT_CREATOR_ROLE"));
         await roleManager.grantRole(PROJECT_CREATOR_ROLE, projectCreator.address);
         await roleManager.grantRole(PROJECT_CREATOR_ROLE, teamMember.address);
-        await roleManager.grantRole(PROJECT_CREATOR_ROLE, admin.address);
-
-        // Grant admin role to admin in PostMinter
-        await postMinter.grantRole(await postMinter.DEFAULT_ADMIN_ROLE(), admin.address);
-
-        // Grant rate limit manager role using admin
-        await postMinter.connect(admin).grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), projectCreator.address);
-        await postMinter.connect(admin).grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), teamMember.address);
-        await postMinter.connect(admin).grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), admin.address);
+        
+        // Grant rate limit manager role to participants
+        await postMinter.grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), projectCreator.address);
+        await postMinter.grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), teamMember.address);
         
         // Create test tribe
         const tx = await tribeController.connect(admin).createTribe(
