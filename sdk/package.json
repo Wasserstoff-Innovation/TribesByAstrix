@@ -1,7 +1,7 @@
 {
-  "name": "@wasserstoff-innovation/tribes-sdk",
-  "version": "1.0.1",
-  "description": "SDK for integrating with Tribes by Astrix platform",
+  "name": "@wasserstoff/tribes-sdk",
+  "version": "1.0.2",
+  "description": "SDK for integrating with Tribes by Astrix platform on any EVM compatible chain",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
@@ -35,7 +35,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Wasserstoff-Innovation/TribesByAstrix"
+    "url": "git+https://github.com/Wasserstoff-Innovation/TribesByAstrix.git"
   },
   "homepage": "https://astrix.live/tribes",
   "dependencies": {
@@ -58,5 +58,12 @@
   },
   "engines": {
     "node": ">=14.0.0"
+  },
+  "directories": {
+    "doc": "docs",
+    "example": "examples"
+  },
+  "bugs": {
+    "url": "https://github.com/Wasserstoff-Innovation/TribesByAstrix/issues"
   }
 }

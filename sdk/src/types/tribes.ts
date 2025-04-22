@@ -18,6 +18,91 @@ export enum MemberStatus {
 }
 
 /**
+ * Tribe information
+ */
+export interface TribeInfo {
+  /**
+   * Tribe ID
+   */
+  id: number;
+  
+  /**
+   * Tribe name
+   */
+  name: string;
+  
+  /**
+   * Admin address
+   */
+  admin: string;
+  
+  /**
+   * Metadata JSON string
+   */
+  metadata: string;
+  
+  /**
+   * Join type
+   */
+  joinType: JoinType;
+  
+  /**
+   * Entry fee in wei
+   */
+  entryFee: bigint;
+  
+  /**
+   * Member count
+   */
+  memberCount: number;
+  
+  /**
+   * Creation time
+   */
+  createdAt: number;
+  
+  /**
+   * Organization address
+   */
+  organization?: string;
+  
+  /**
+   * Token address
+   */
+  tokenAddress?: string;
+}
+
+/**
+ * Tribe member information
+ */
+export interface TribeMemberInfo {
+  /**
+   * Member address
+   */
+  address: string;
+  
+  /**
+   * Membership status
+   */
+  status: MemberStatus;
+  
+  /**
+   * Joining time
+   */
+  joinedAt: number;
+  
+  /**
+   * Points balance
+   */
+  points?: number;
+  
+  /**
+   * Roles assigned to the member
+   */
+  roles?: string[];
+}
+
+/**
  * NFT requirement
  */
 export interface NFTRequirement {

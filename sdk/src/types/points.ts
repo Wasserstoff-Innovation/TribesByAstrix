@@ -11,6 +11,61 @@ export enum ActionType {
 }
 
 /**
+ * Action points configuration
+ */
+export interface ActionPoints {
+  /**
+   * Action type
+   */
+  actionType: ActionType | string;
+
+  /**
+   * Points value
+   */
+  points: number;
+
+  /**
+   * Tribe ID
+   */
+  tribeId: number;
+}
+
+/**
+ * Token information
+ */
+export interface TokenInfo {
+  /**
+   * Token address
+   */
+  address: string;
+
+  /**
+   * Token name
+   */
+  name: string;
+
+  /**
+   * Token symbol
+   */
+  symbol: string;
+
+  /**
+   * Total supply
+   */
+  totalSupply?: bigint;
+
+  /**
+   * Decimals
+   */
+  decimals?: number;
+
+  /**
+   * Exchange rate (if applicable)
+   */
+  exchangeRate?: number;
+}
+
+/**
  * Parameters for setting a tribe organization
  */
 export interface SetTribeOrganizationParams {

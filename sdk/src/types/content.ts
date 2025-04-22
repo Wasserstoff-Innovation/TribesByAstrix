@@ -31,6 +31,95 @@ export enum PostType {
 }
 
 /**
+ * Post content structure
+ */
+export interface PostContent {
+  /**
+   * Content type
+   */
+  type: PostType;
+  
+  /**
+   * Post title (optional)
+   */
+  title?: string;
+  
+  /**
+   * Main content text
+   */
+  content: string;
+  
+  /**
+   * Media URLs (images, videos)
+   */
+  media?: string[];
+  
+  /**
+   * Tags for the post
+   */
+  tags?: string[];
+  
+  /**
+   * Custom fields
+   */
+  [key: string]: any;
+}
+
+/**
+ * Post information structure
+ */
+export interface PostInfo {
+  /**
+   * Post ID
+   */
+  id: number;
+  
+  /**
+   * Creator address
+   */
+  creator: string;
+  
+  /**
+   * Tribe ID
+   */
+  tribeId: number;
+  
+  /**
+   * Post content
+   */
+  content: PostContent;
+  
+  /**
+   * Original metadata string
+   */
+  metadata: string;
+  
+  /**
+   * Whether the post is gated
+   */
+  isGated: boolean;
+  
+  /**
+   * Whether the post is encrypted
+   */
+  isEncrypted: boolean;
+  
+  /**
+   * Creation timestamp
+   */
+  createdAt: number;
+  
+  /**
+   * Interaction counts
+   */
+  interactions?: {
+    likes: number;
+    comments: number;
+    shares: number;
+  };
+}
+
+/**
  * Post details
  */
 export interface PostDetails {
