@@ -22,7 +22,8 @@ import {
   isPostCreatedEvent,
   isBatchPostsCreatedEvent,
   isEncryptedPostCreatedEvent,
-  isSignatureGatedPostCreatedEvent
+  isSignatureGatedPostCreatedEvent,
+  isPostInteractionEvent
 } from '../types/contracts';
 import axios from 'axios';
 
@@ -334,11 +335,32 @@ export class ContentModule extends BaseModule {
       const tx = await postMinter.interactWithPost(postId, interactionTypeValue);
       const receipt = await tx.wait();
       
+      if (!receipt) {
+        throw new Error('Transaction receipt was null');
+      }
+
+      // Find the PostInteraction event in the receipt
+      const event = receipt.logs.find((log: ethers.Log) => isPostInteractionEvent(log));
+      
+      if (!event || !isPostInteractionEvent(event)) {
+        throw new Error('Post interaction event not found');
+      }
+      
+      // Extract event data if needed
+      const eventPostId = Number((event as ethers.EventLog).args[0]);
+      const eventUser = (event as ethers.EventLog).args[1];
+      const eventInteractionType = Number((event as ethers.EventLog).args[2]);
+      
       this.log(`Interacted with post`, {
-        postId,
+        postId: eventPostId,
+        user: eventUser,
         interactionType,
+        interactionTypeValue: eventInteractionType,
         txHash: receipt.hash
       });
+      
+      // Invalidate post cache to refresh interaction counts
+      this.invalidatePostCache(postId);
       
       return receipt;
     } catch (error) {
@@ -932,5 +954,133 @@ export class ContentModule extends BaseModule {
   public invalidateUserFeedCache(userAddress: string): void {
     const keyPattern = `feed:user:${userAddress}:`;
     this.invalidateCacheByPattern(keyPattern);
+  }
+
+  /**
+   * Set up a listener for post interaction events
+   * @param callback Callback function to handle interaction events
+   * @param postId Optional specific post ID to filter by
+   * @returns Function to call to remove the listener
+   */
+  public setupPostInteractionListener(
+    callback: (postId: number, user: string, interactionType: InteractionType) => void,
+    postId?: number
+  ): () => void {
+    try {
+      const postMinter = this.getPostMinterContract();
+      
+      // Set up the filter
+      const filter = postId 
+        ? postMinter.filters.PostInteraction(BigInt(postId)) 
+        : postMinter.filters.PostInteraction();
+      
+      // Define the event handler
+      const handleEvent = (
+        eventPostId: bigint,
+        eventUser: string,
+        eventInteractionType: bigint,
+        _event: ethers.Log
+      ) => {
+        // Convert numeric interaction type back to enum
+        const interactionTypeValue = Number(eventInteractionType);
+        const interactionType = this.getInteractionTypeFromValue(interactionTypeValue);
+        
+        // Call the callback with the parsed data
+        callback(Number(eventPostId), eventUser, interactionType);
+        
+        // Invalidate post cache to refresh interaction counts
+        this.invalidatePostCache(Number(eventPostId));
+      };
+      
+      // Set up the listener
+      postMinter.on(filter, handleEvent);
+      
+      this.log(`Set up post interaction listener`, {
+        filter: postId ? `Post ID: ${postId}` : 'All posts'
+      });
+      
+      // Return cleanup function
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      return () => {
+        postMinter.off(filter, handleEvent);
+        this.log(`Removed post interaction listener`, {
+          filter: postId ? `Post ID: ${postId}` : 'All posts'
+        });
+      };
+    } catch (error) {
+      this.log(`Error setting up post interaction listener: ${error instanceof Error ? error.message : String(error)}`);
+      // Return a no-op cleanup function
+      return () => {};
+    }
+  }
+  
+  /**
+   * Convert numeric interaction type to enum
+   * @param value Numeric interaction type from contract
+   * @returns InteractionType enum value
+   */
+  private getInteractionTypeFromValue(value: number): InteractionType {
+    const interactionTypes = [
+      InteractionType.LIKE,
+      InteractionType.COMMENT,
+      InteractionType.SHARE,
+      InteractionType.BOOKMARK,
+      InteractionType.REPORT,
+      InteractionType.REPLY,
+      InteractionType.MENTION,
+      InteractionType.REPOST,
+      InteractionType.TIP
+    ];
+    
+    return value >= 0 && value < interactionTypes.length 
+      ? interactionTypes[value] 
+      : InteractionType.LIKE; // Default to LIKE if value is out of range
+  }
+
+  /**
+   * Create a test post - ONLY FOR TESTING PURPOSES
+   * This bypasses tribe membership checks by using tribeId=0
+   * @param metadata Post metadata JSON string
+   * @returns Post ID of the created post
+   */
+  public async createTestPost(metadata: string): Promise<number> {
+    try {
+      const postMinter = this.getPostMinterContract(true);
+      const tx = await postMinter.createPost(
+        0, // Use tribeId 0 to bypass tribe membership checks
+        metadata,
+        false, // not gated
+        ethers.ZeroAddress, // no collectible
+        0 // no collectible id
+      );
+      const receipt = await tx.wait();
+      
+      if (!receipt) {
+        throw new Error('Transaction receipt was null');
+      }
+
+      // Find the PostCreated event in the receipt
+      const event = receipt.logs.find((log: ethers.Log) => isPostCreatedEvent(log));
+      
+      if (!event || !isPostCreatedEvent(event)) {
+        throw new Error('Post creation event not found');
+      }
+      
+      // Use type assertion because we've verified it's the right type of event
+      const postId = Number((event as ethers.EventLog).args[0]);
+
+      this.log(`Created test post`, {
+        postId,
+        txHash: receipt.hash
+      });
+      
+      return postId;
+    } catch (error) {
+      return this.handleError(
+        error,
+        'Failed to create test post',
+        ErrorType.CONTRACT_ERROR
+      );
+    }
   }
 } 

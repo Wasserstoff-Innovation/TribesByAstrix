@@ -124,4 +124,9 @@ export interface EnhancedTransactionReceipt extends ethers.TransactionReceipt {
    * Status of the transaction
    */
   status: number | null;
+}
+
+export interface SDKModule {
+  getVersion(): string;
+  getStatus(): Promise<string>;
 } 

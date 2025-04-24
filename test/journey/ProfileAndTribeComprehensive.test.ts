@@ -29,6 +29,12 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
     let profileNFTMinter: ProfileNFTMinter;
     let pointSystem: PointSystem;
     let feedManager: PostFeedManager;
+    
+    // Manager contracts
+    let creationManager: any;
+    let encryptionManager: any;
+    let interactionManager: any;
+    let queryManager: any;
 
     // User accounts to simulate different roles
     let owner: SignerWithAddress;
@@ -49,6 +55,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
     const ADMIN_ROLE = ethers.keccak256(ethers.toUtf8Bytes("ADMIN_ROLE"));
     const MODERATOR_ROLE = ethers.keccak256(ethers.toUtf8Bytes("MODERATOR_ROLE"));
     const PROJECT_CREATOR_ROLE = ethers.keccak256(ethers.toUtf8Bytes("PROJECT_CREATOR_ROLE"));
+    const RATE_LIMIT_MANAGER_ROLE = ethers.keccak256(ethers.toUtf8Bytes("RATE_LIMIT_MANAGER_ROLE"));
 
     beforeEach(async function () {
         // Get signers for different user roles
@@ -100,9 +107,16 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
         await feedManager.waitForDeployment();
         console.log(chalk.green("✓ PostFeedManager deployed"));
 
-        // Deploy PostMinter
-        const PostMinter = await ethers.getContractFactory("PostMinter");
-        postMinter = await upgrades.deployProxy(PostMinter, [
+        // Deploy PostMinter with all required managers
+        console.log(chalk.yellow("Deploying PostMinter and managers..."));
+        
+        // Deploy the manager contracts first
+        const PostFeedManagerFactory = await ethers.getContractFactory("PostFeedManager");
+        feedManager = await PostFeedManagerFactory.deploy(await tribeController.getAddress());
+        await feedManager.waitForDeployment();
+        
+        const PostCreationManager = await ethers.getContractFactory("PostCreationManager");
+        creationManager = await upgrades.deployProxy(PostCreationManager, [
             await roleManager.getAddress(),
             await tribeController.getAddress(),
             await collectibleController.getAddress(),
@@ -111,19 +125,107 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
             kind: 'uups',
             unsafeAllow: ['constructor'] 
         });
+        await creationManager.waitForDeployment();
+        
+        const PostEncryptionManager = await ethers.getContractFactory("PostEncryptionManager");
+        encryptionManager = await upgrades.deployProxy(PostEncryptionManager, [
+            await roleManager.getAddress(),
+            await tribeController.getAddress(),
+            await collectibleController.getAddress(),
+            await feedManager.getAddress()
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
+        await encryptionManager.waitForDeployment();
+        
+        const PostInteractionManager = await ethers.getContractFactory("PostInteractionManager");
+        interactionManager = await upgrades.deployProxy(PostInteractionManager, [
+            await roleManager.getAddress(),
+            await tribeController.getAddress(),
+            await collectibleController.getAddress(),
+            await feedManager.getAddress()
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
+        await interactionManager.waitForDeployment();
+        
+        const PostQueryManager = await ethers.getContractFactory("PostQueryManager");
+        queryManager = await upgrades.deployProxy(PostQueryManager, [
+            await roleManager.getAddress(),
+            await tribeController.getAddress(),
+            await collectibleController.getAddress(),
+            await feedManager.getAddress()
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
+        await queryManager.waitForDeployment();
+        
+        // Now deploy PostMinter with all 8 parameters
+        const PostMinter = await ethers.getContractFactory("PostMinter");
+        postMinter = await upgrades.deployProxy(PostMinter, [
+            await roleManager.getAddress(),
+            await tribeController.getAddress(),
+            await collectibleController.getAddress(),
+            await feedManager.getAddress(),
+            await creationManager.getAddress(),
+            await encryptionManager.getAddress(),
+            await interactionManager.getAddress(),
+            await queryManager.getAddress()
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
         await postMinter.waitForDeployment();
         console.log(chalk.green("✓ PostMinter deployed"));
-
-        // Grant admin role to PostMinter in PostFeedManager
+        
+        // Grant postMinter roles on feedManager
         await feedManager.grantRole(await feedManager.DEFAULT_ADMIN_ROLE(), await postMinter.getAddress());
+        // Also grant the role to creationManager as it calls addPost
+        await feedManager.grantRole(await feedManager.DEFAULT_ADMIN_ROLE(), await creationManager.getAddress());
         console.log(chalk.green("✓ Permissions configured"));
 
-        // Setup roles
+        // Setup roles on RoleManager
         await roleManager.grantRole(ADMIN_ROLE, admin.address);
         await roleManager.grantRole(MODERATOR_ROLE, creator.address);
         await roleManager.grantRole(PROJECT_CREATOR_ROLE, creator.address);
         
-        // Grant necessary roles for PostMinter
+        // Grant roles directly on all manager contracts
+        // CreationManager roles
+        await creationManager.grantRole(DEFAULT_ADMIN_ROLE, admin.address);
+        await creationManager.grantRole(DEFAULT_ADMIN_ROLE, creator.address);
+        await creationManager.grantRole(PROJECT_CREATOR_ROLE, creator.address);
+        await creationManager.grantRole(PROJECT_CREATOR_ROLE, user1.address);
+        await creationManager.grantRole(PROJECT_CREATOR_ROLE, user2.address);
+        await creationManager.grantRole(RATE_LIMIT_MANAGER_ROLE, creator.address);
+        await creationManager.grantRole(RATE_LIMIT_MANAGER_ROLE, user1.address);
+        await creationManager.grantRole(RATE_LIMIT_MANAGER_ROLE, user2.address);
+        // await creationManager.grantRole(RATE_LIMIT_MANAGER_ROLE, user3.address); // REMOVED: user3 needs to test cooldown
+        
+        // EncryptionManager roles
+        await encryptionManager.grantRole(DEFAULT_ADMIN_ROLE, admin.address);
+        await encryptionManager.grantRole(DEFAULT_ADMIN_ROLE, creator.address);
+        await encryptionManager.grantRole(RATE_LIMIT_MANAGER_ROLE, creator.address);
+        await encryptionManager.grantRole(RATE_LIMIT_MANAGER_ROLE, user1.address);
+        await encryptionManager.grantRole(RATE_LIMIT_MANAGER_ROLE, user2.address);
+        
+        // InteractionManager roles
+        await interactionManager.grantRole(DEFAULT_ADMIN_ROLE, admin.address);
+        await interactionManager.grantRole(DEFAULT_ADMIN_ROLE, creator.address);
+        await interactionManager.grantRole(RATE_LIMIT_MANAGER_ROLE, creator.address);
+        await interactionManager.grantRole(RATE_LIMIT_MANAGER_ROLE, user1.address);
+        await interactionManager.grantRole(RATE_LIMIT_MANAGER_ROLE, user2.address);
+        
+        // QueryManager roles
+        await queryManager.grantRole(DEFAULT_ADMIN_ROLE, admin.address);
+        await queryManager.grantRole(DEFAULT_ADMIN_ROLE, creator.address);
+        await queryManager.grantRole(RATE_LIMIT_MANAGER_ROLE, creator.address);
+        await queryManager.grantRole(RATE_LIMIT_MANAGER_ROLE, user1.address);
+        await queryManager.grantRole(RATE_LIMIT_MANAGER_ROLE, user2.address);
+        
+        // These roles remain for backward compatibility
         await postMinter.grantRole(await postMinter.PROJECT_CREATOR_ROLE(), creator.address);
         await postMinter.grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), creator.address);
         await postMinter.grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), user1.address);
@@ -155,7 +257,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
 
             const receipt = await tx.wait();
             const event = receipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "ProfileCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "ProfileCreated"
             ) as EventLog;
             
             user1ProfileId = event ? Number(event.args[0]) : 0;
@@ -260,7 +362,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
 
             const receipt = await tx.wait();
             const event = receipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "ProfileCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "ProfileCreated"
             ) as EventLog;
             
             const profileId = event ? Number(event.args[0]) : 0;
@@ -307,7 +409,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
 
             const receipt = await tx.wait();
             const event = receipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "ProfileCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "ProfileCreated"
             ) as EventLog;
             
             const profileId = event ? Number(event.args[0]) : 0;
@@ -355,7 +457,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
 
             const publicReceipt = await publicTx.wait();
             const publicEvent = publicReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "TribeCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "TribeCreated"
             ) as EventLog;
             
             const publicTribeId = publicEvent ? Number(publicEvent.args[0]) : 0;
@@ -384,7 +486,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
 
             const privateReceipt = await privateTx.wait();
             const privateEvent = privateReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "TribeCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "TribeCreated"
             ) as EventLog;
             
             const privateTribeId = privateEvent ? Number(privateEvent.args[0]) : 0;
@@ -413,7 +515,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
 
             const inviteReceipt = await inviteTx.wait();
             const inviteEvent = inviteReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "TribeCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "TribeCreated"
             ) as EventLog;
             
             const inviteTribeId = inviteEvent ? Number(inviteEvent.args[0]) : 0;
@@ -449,7 +551,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
 
             const createReceipt = await createTx.wait();
             const createEvent = createReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "TribeCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "TribeCreated"
             ) as EventLog;
             
             const updateTribeId = createEvent ? Number(createEvent.args[0]) : 0;
@@ -503,7 +605,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
             
             const publicTribeReceipt = await publicTribeTx.wait();
             const publicTribeEvent = publicTribeReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "TribeCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "TribeCreated"
             ) as EventLog;
             
             const publicTribeId = publicTribeEvent ? Number(publicTribeEvent.args[0]) : 0;
@@ -521,7 +623,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
             
             const privateTribeReceipt = await privateTribeTx.wait();
             const privateTribeEvent = privateTribeReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "TribeCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "TribeCreated"
             ) as EventLog;
             
             const privateTribeId = privateTribeEvent ? Number(privateTribeEvent.args[0]) : 0;
@@ -539,7 +641,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
             
             const inviteCodeTribeReceipt = await inviteCodeTribeTx.wait();
             const inviteCodeTribeEvent = inviteCodeTribeReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "TribeCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "TribeCreated"
             ) as EventLog;
             
             const inviteCodeTribeId = inviteCodeTribeEvent ? Number(inviteCodeTribeEvent.args[0]) : 0;
@@ -605,7 +707,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
             
             const testTribeReceipt = await testTribeTx.wait();
             const testTribeEvent = testTribeReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "TribeCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "TribeCreated"
             ) as EventLog;
             
             const testTribeId = testTribeEvent ? Number(testTribeEvent.args[0]) : 0;
@@ -675,7 +777,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
             
             const profileReceipt = await profileTx.wait();
             const profileEvent = profileReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "ProfileCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "ProfileCreated"
             ) as EventLog;
             
             user2ProfileId = profileEvent ? Number(profileEvent.args[0]) : 0;
@@ -702,7 +804,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
             
             const tribeReceipt = await tribeTx.wait();
             const tribeEvent = tribeReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "TribeCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "TribeCreated"
             ) as EventLog;
             
             const aliceTribeId = tribeEvent ? Number(tribeEvent.args[0]) : 0;
@@ -717,7 +819,8 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
                 tags: ["welcome", "introduction"]
             };
             
-            const postTx = await postMinter.connect(user2).createPost(
+            // Use creationManager directly instead of postMinter
+            const postTx = await creationManager.connect(user2).createPost(
                 aliceTribeId,
                 JSON.stringify(welcomePost),
                 false,
@@ -727,7 +830,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
             
             const postReceipt = await postTx.wait();
             const postEvent = postReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "PostCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "PostCreated"
             ) as EventLog;
             
             const welcomePostId = postEvent ? Number(postEvent.args[0]) : 0;
@@ -761,7 +864,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
             
             const collectibleReceipt = await collectibleTx.wait();
             const collectibleEvent = collectibleReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "CollectibleCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "CollectibleCreated"
             ) as EventLog;
             
             const badgeId = collectibleEvent ? Number(collectibleEvent.args[0]) : 0;
@@ -774,10 +877,11 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
             await ethers.provider.send("evm_increaseTime", [61]);
             await ethers.provider.send("evm_mine", []);
             
-            await postMinter.connect(user1).interactWithPost(welcomePostId, 0); // LIKE
+            // Use interactionManager directly instead of postMinter
+            await interactionManager.connect(user1).interactWithPost(welcomePostId, 0); // LIKE
             
             // Get like count
-            const likes = await postMinter.getInteractionCount(welcomePostId, 0);
+            const likes = await interactionManager.getInteractionCount(welcomePostId, 0);
             expect(likes).to.equal(1);
             console.log(chalk.green("✓ Post interaction recorded"));
             
@@ -802,7 +906,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
             
             const profileReceipt = await profileTx.wait();
             const profileEvent = profileReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "ProfileCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "ProfileCreated"
             ) as EventLog;
             
             const errorProfileId = profileEvent ? Number(profileEvent.args[0]) : 0;
@@ -823,7 +927,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
             
             const tribeReceipt = await tribeTx.wait();
             const tribeEvent = tribeReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "TribeCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "TribeCreated"
             ) as EventLog;
             
             const errorTribeId = tribeEvent ? Number(tribeEvent.args[0]) : 0;
@@ -885,7 +989,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
             
             // Attempt to create post in tribe user isn't a member of
             await expect(
-                postMinter.connect(user2).createPost(
+                creationManager.connect(user2).createPost(
                     errorTribeId,
                     JSON.stringify({
                         title: "Test",
@@ -895,11 +999,11 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
                     ethers.ZeroAddress,
                     0
                 )
-            ).to.be.revertedWithCustomError(postMinter, "NotTribeMember");
+            ).to.be.revertedWithCustomError(creationManager, "NotTribeMember");
             console.log(chalk.green("✓ Non-member post creation properly rejected"));
             
             // User3 creates a post 
-            const postTx = await postMinter.connect(user3).createPost(
+            const postTx = await creationManager.connect(user3).createPost(
                 errorTribeId,
                 JSON.stringify({
                     title: "Test Post",
@@ -912,14 +1016,14 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
             
             const postReceipt = await postTx.wait();
             const postEvent = postReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "PostCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "PostCreated"
             ) as EventLog;
             
             const errorPostId = postEvent ? Number(postEvent.args[0]) : 0;
             
             // Attempt to create post again immediately (cooldown)
             await expect(
-                postMinter.connect(user3).createPost(
+                creationManager.connect(user3).createPost(
                     errorTribeId,
                     JSON.stringify({
                         title: "Second Post",
@@ -929,7 +1033,7 @@ describe(chalk.blue("User Profile & Tribe Comprehensive Flows"), function () {
                     ethers.ZeroAddress,
                     0
                 )
-            ).to.be.revertedWithCustomError(postMinter, "CooldownActive");
+            ).to.be.revertedWithCustomError(creationManager, "CooldownActive");
             console.log(chalk.green("✓ Post cooldown properly enforced"));
             
             console.log(chalk.green("\n✓ Error handling throughout user journey successfully demonstrated"));

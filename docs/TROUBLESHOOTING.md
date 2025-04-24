@@ -1,284 +1,295 @@
-# Tribes by Astrix Troubleshooting Guide
+# Troubleshooting Guide
 
-This guide provides solutions for common issues you might encounter when working with the Tribes by Astrix platform.
+This guide addresses common issues you might encounter when working with the Tribes by Astrix platform and SDK.
 
-## Table of Contents
+## SDK Connection Issues
 
-1. [SDK Integration Issues](#sdk-integration-issues)
-2. [Contract Deployment Issues](#contract-deployment-issues)
-3. [Transaction Errors](#transaction-errors)
-4. [Post Creation Problems](#post-creation-problems)
-5. [Tribe Management Issues](#tribe-management-issues)
-6. [Authentication Problems](#authentication-problems)
-7. [Network-Specific Issues](#network-specific-issues)
-8. [Common Error Codes](#common-error-codes)
+### Cannot Connect to Network
 
-## SDK Integration Issues
+**Symptoms:**
+- `Network connection error` messages
+- Timeout errors
+- SDK initialization failures
 
-### SDK initialization fails
+**Solutions:**
+1. Check your RPC URL is correct and accessible:
+   ```typescript
+   // Test the RPC endpoint
+   const provider = new JsonRpcProvider('https://rpc.sepolia.linea.build');
+   const blockNumber = await provider.getBlockNumber();
+   console.log('Current block number:', blockNumber);
+   ```
 
-**Problem**: The SDK fails to initialize with errors about missing configuration.
+2. Ensure you're using the correct chain ID:
+   ```typescript
+   // Linea Sepolia testnet
+   chainId: 59141,
+   
+   // Linea Mainnet
+   chainId: 59144
+   ```
 
-**Solution**:
-- Ensure you're providing all required parameters in the SDK config:
-  ```js
-  const sdk = new AstrixSDK({
-    provider: yourProvider,
-    chainId: 1, // or appropriate network ID
-    apiKey: 'your-api-key', // if applicable
-    verbose: true // for debugging
-  });
-  ```
-- Check that your provider instance is correctly instantiated.
-- Verify that you're using a supported network.
+3. Try a different RPC provider if issues persist.
 
-### Cannot find contract addresses
+### Wallet Connection Errors
 
-**Problem**: Errors indicating contract addresses are missing.
+**Symptoms:**
+- `No provider detected` errors
+- `User rejected request` errors
+- MetaMask not appearing when connecting
 
-**Solution**:
-- Make sure you're using a supported network.
-- Check the SDK's `contracts.ts` file to verify addresses are defined for your network.
-- If using a custom deployment, use the `update-contract-addresses.js` script to update SDK's contract addresses.
+**Solutions:**
+1. Ensure the browser has a wallet extension installed and is unlocked.
 
-### TypeScript errors when using SDK
+2. Check if the user has rejected the connection request.
 
-**Problem**: TypeScript compilation errors when importing or using the SDK.
+3. Verify that you're requesting wallet connection properly:
+   ```typescript
+   // Correct wallet connection flow
+   await window.ethereum.request({ method: 'eth_requestAccounts' });
+   const provider = new BrowserProvider(window.ethereum);
+   const signer = await provider.getSigner();
+   await sdk.connect(signer);
+   ```
 
-**Solution**:
-- Update to the latest SDK version.
-- Make sure your TypeScript version is compatible (check package.json).
-- Check for proper type imports in your code.
-
-## Contract Deployment Issues
-
-### Deployment fails on Monad Devnet
-
-**Problem**: Contract deployment fails on Monad Devnet with gas or nonce errors.
-
-**Solution**:
-- Ensure you have sufficient ETH in your deployer account.
-- Check if the nonce is correct; if not, reset your account nonce or use a specific nonce.
-- Verify Hardhat configuration for Monad Devnet in `hardhat.config.ts`.
-- Try running with `--verbose` flag for more debugging information.
-
-### Proxy deployment issues
-
-**Problem**: Upgradeable contract deployments fail with initialization or storage layout errors.
-
-**Solution**:
-- Ensure your contract is properly structured for upgrades:
-  - No constructors (use initialize methods instead)
-  - No immutable variables in upgradeable contracts
-  - Storage layout is compatible with previous versions
-- Check that initialization parameters are correctly formatted.
-- For storage layout errors, review the OpenZeppelin documentation about safe upgrades.
-
-### Contract verification fails
-
-**Problem**: Contract verification on block explorer fails.
-
-**Solution**:
-- Make sure to use the correct compiler version and optimization settings.
-- For upgradeable contracts, verify the implementation contract, not the proxy.
-- Use the hardhat-etherscan plugin with the correct API key:
-  ```
-  npx hardhat verify --network monadDevnet <IMPLEMENTATION_ADDRESS> --constructor-args arguments.js
-  ```
+4. If using in Node.js, ensure you're using a private key:
+   ```typescript
+   const privateKey = process.env.PRIVATE_KEY;
+   const wallet = new Wallet(privateKey, provider);
+   await sdk.connect(wallet);
+   ```
 
 ## Transaction Errors
 
-### "InvalidPostType" error
+### Transaction Reverted
 
-**Problem**: Transactions revert with "InvalidPostType" error.
+**Symptoms:**
+- `Transaction has been reverted by the EVM` errors
+- Function calls fail with revert messages
 
-**Solution**:
-- Ensure the post type you're using is valid (check `PostValidationHelpers.sol`).
-- Verify that all required metadata fields for that post type are present.
-- Check the format of your metadata JSON structure.
-- Make sure the post type is supported on the current network.
+**Solutions:**
+1. Check if your wallet has sufficient funds for gas.
 
-### Gas estimation failures
+2. Verify you have the correct permissions/roles for the action:
+   ```typescript
+   // Check if user has the required role
+   const hasRole = await sdk.hasRole('COMMUNITY_ADMIN', tribeId, userAddress);
+   if (!hasRole) {
+     console.error('User does not have admin role required for this action');
+   }
+   ```
 
-**Problem**: "Gas estimation failed" or "Out of gas" errors.
+3. Examine the specific error message for contract-specific reasons:
+   ```typescript
+   try {
+     await sdk.tribes.createTribe(/* ... */);
+   } catch (error) {
+     console.error('Transaction reverted:', error.message);
+     // Look for specific reasons in the error message
+   }
+   ```
 
-**Solution**:
-- Increase the gas limit for your transaction.
-- Check if your transaction is causing infinite loops or other high-computation issues.
-- For complex operations, consider splitting them into multiple transactions.
-- Ensure your contract state hasn't changed in a way that affects gas requirements.
+### Gas Estimation Failed
 
-### Transaction reverted without reason
+**Symptoms:**
+- `Gas estimation failed` errors
+- `Execution reverted` errors during gas estimation
 
-**Problem**: Transaction reverts without a clear error message.
+**Solutions:**
+1. Manually specify gas limits in transaction options:
+   ```typescript
+   await sdk.tribes.createTribe(
+     {
+       name: "My Tribe",
+       // other parameters...
+     },
+     {
+       gasLimit: 500000 // Manually set gas limit
+     }
+   );
+   ```
 
-**Solution**:
-- Enable verbose mode in the SDK to get more detailed error output.
-- Check contract events for any emitted error information.
-- Try calling the function as a static call first to get the revert reason.
-- Examine the transaction trace using a block explorer or debug tools.
+2. Check if your transaction parameters are valid before sending.
 
-## Post Creation Problems
+3. Ensure the contract functions are callable in the current state.
 
-### Missing required fields
+## SDK Method Errors
 
-**Problem**: Post creation fails with errors about missing fields.
+### Invalid Parameters
 
-**Solution**:
-- Check `PostValidationHelpers.sol` for required fields for each post type.
-- Ensure all required fields are included in your metadata.
-- Verify field formatting and types match requirements.
-- Sample metadata structure:
-  ```js
-  {
-    title: "Post Title",
-    description: "Post description",
-    content: "Post content",
-    // Other fields based on post type
+**Symptoms:**
+- `Invalid parameter` errors
+- Type errors or validation errors
+
+**Solutions:**
+1. Check parameter types match what the SDK expects:
+   ```typescript
+   // Correct parameter format for createTribe
+   await sdk.tribes.createTribe({
+     name: "My Tribe", // String
+     metadata: JSON.stringify({
+       description: "A community for blockchain enthusiasts",
+       logoUrl: "https://example.com/logo.png",
+       coverImageUrl: "https://example.com/cover.png"
+     }) // Must be a stringified JSON
+   });
+   ```
+
+2. Verify array parameters have the expected structure:
+   ```typescript
+   // Batch award points requires an array of objects
+   await sdk.points.batchAwardPoints(tribeId, [
+     { address: "0x123...", amount: 100, reason: "Contest winner" },
+     { address: "0x456...", amount: 50, reason: "Runner-up" }
+   ]);
+   ```
+
+### Contract Not Found
+
+**Symptoms:**
+- `Contract not found` errors
+- `Invalid contract address` errors
+
+**Solutions:**
+1. Ensure you're using the correct deployment addresses:
+   ```typescript
+   // Load deployment from file
+   const deploymentPath = path.join(__dirname, "deployments", `${network.name}-latest.json`);
+   const deploymentData = JSON.parse(fs.readFileSync(deploymentPath, 'utf8'));
+   
+   // Initialize SDK with correct addresses
+   const sdk = new AstrixSDK({
+     provider,
+     chainId: deploymentData.chainId,
+     contracts: {
+       roleManager: deploymentData.contracts.RoleManager.proxy,
+       tribeController: deploymentData.contracts.TribeController.proxy,
+       // other addresses...
+     }
+   });
+   ```
+
+2. Verify the contracts are deployed on the network you're connecting to.
+
+3. Check if you're using the correct network in your SDK initialization.
+
+## Tribe Token Issues
+
+### Token Creation Failures
+
+**Symptoms:**
+- `Failed to create tribe token` errors
+- Token creation transactions reverting
+
+**Solutions:**
+1. Verify you have the required role to create tokens:
+   ```typescript
+   const callerAddress = await sdk.getSignerAddress();
+   const isAdmin = await sdk.hasRole('COMMUNITY_ADMIN', tribeId, callerAddress);
+   
+   if (!isAdmin) {
+     console.error('Only admins can create tribe tokens');
+   }
+   ```
+
+2. Check if a token already exists for the tribe:
+   ```typescript
+   const tokenAddress = await sdk.points.getTribeTokenAddress(tribeId);
+   console.log(`Existing token address: ${tokenAddress}`);
+   
+   if (tokenAddress !== ethers.ZeroAddress) {
+     console.error('Tribe already has a token');
+   }
+   ```
+
+3. Ensure you're providing valid token parameters:
+   ```typescript
+   await sdk.points.createTribeToken({
+     tribeId, // Must be a valid tribe ID
+     name: "Community Token", // Non-empty string
+     symbol: "COMM" // Non-empty string, typically 3-5 characters
+   });
+   ```
+
+## Debugging Techniques
+
+### Enable Verbose Logging
+
+Turn on verbose logging in the SDK for detailed information:
+
+```typescript
+const sdk = new AstrixSDK({
+  provider,
+  chainId: 59141,
+  verbose: true // Enable detailed logging
+});
+```
+
+### Inspect Transaction Data
+
+For failed transactions, inspect the transaction data:
+
+```typescript
+async function debugTransaction(txHash) {
+  const tx = await sdk.provider.getTransaction(txHash);
+  console.log('Transaction data:', tx.data);
+  console.log('From:', tx.from);
+  console.log('To:', tx.to);
+  console.log('Value:', tx.value.toString());
+  
+  try {
+    const receipt = await sdk.provider.getTransactionReceipt(txHash);
+    console.log('Status:', receipt.status === 1 ? 'Success' : 'Failed');
+    console.log('Gas used:', receipt.gasUsed.toString());
+    console.log('Events:', receipt.logs);
+  } catch (error) {
+    console.error('Transaction not mined yet');
   }
-  ```
+  
+  return tx;
+}
+```
 
-### Incorrect metadata format
+### Test with Minimal Examples
 
-**Problem**: Post creation fails with metadata format errors.
+If having issues with complex operations, try minimal test cases:
 
-**Solution**:
-- Ensure your metadata is a valid JSON object.
-- Check that all metadata values have the correct types.
-- Limit metadata size (some networks have size restrictions).
-- Validate your metadata against the schema before submitting.
+```typescript
+// Test basic connectivity
+async function testConnectivity() {
+  try {
+    const network = await sdk.getNetworkInfo();
+    console.log('Connected to:', network.name, network.chainId);
+    return true;
+  } catch (error) {
+    console.error('Connectivity test failed:', error);
+    return false;
+  }
+}
 
-### Post visibility issues
+// Test contract read operations
+async function testReadOperations() {
+  try {
+    const tribes = await sdk.tribes.getTribes();
+    console.log('Found tribes:', tribes.length);
+    return true;
+  } catch (error) {
+    console.error('Read operations test failed:', error);
+    return false;
+  }
+}
+```
 
-**Problem**: Created posts are not visible in feeds.
+## Getting Help
 
-**Solution**:
-- Verify the post was successfully created (check transaction receipt).
-- Ensure you're looking in the correct feed or have correct filters applied.
-- Check post permissions if it's in a private tribe.
-- Wait for indexing to complete if you're using a feed service.
+If you're still having issues after trying these troubleshooting steps:
 
-## Tribe Management Issues
+1. Check the [GitHub Issues](https://github.com/Wasserstoff-Innovation/TribesByAstrix/issues) for similar problems and solutions.
 
-### Cannot create tribe
+2. Open a new issue with:
+   - Detailed description of the problem
+   - Steps to reproduce
+   - Error messages and stack traces
+   - Environment details (SDK version, network, etc.)
 
-**Problem**: Tribe creation fails with permission or parameter errors.
-
-**Solution**:
-- Ensure you have the correct role (check RoleManager).
-- Verify all required parameters are provided and formatted correctly.
-- Check for duplicate tribe names if getting uniqueness errors.
-- Verify you have sufficient funds if there's a creation fee.
-
-### Whitelist operations fail
-
-**Problem**: Issues with adding or removing addresses from tribe whitelist.
-
-**Solution**:
-- Verify you're the tribe admin or have admin permissions.
-- Check address format (must be valid Ethereum address).
-- Ensure you're not exceeding whitelist limits.
-- For batch operations, try processing in smaller batches.
-
-### Join tribe issues
-
-**Problem**: Users cannot join tribes.
-
-**Solution**:
-- Check tribe join type (open, whitelist, invite-only).
-- For whitelist tribes, ensure user is on the whitelist.
-- For invite-only tribes, verify invite code validity.
-- Check if tribe has reached member capacity.
-- Ensure user has sufficient funds for entry fee if applicable.
-
-## Authentication Problems
-
-### Role verification fails
-
-**Problem**: Operations fail with role/permission errors.
-
-**Solution**:
-- Check if the user has the required role in RoleManager.
-- Ensure the wallet is connected and using the correct account.
-- Verify that roles are properly set up for the user's address.
-- For custom roles, ensure the role exists and is correctly configured.
-
-### Signature verification issues
-
-**Problem**: Issues with message signing or signature verification.
-
-**Solution**:
-- Ensure you're using the correct signing method for your provider.
-- Verify that the message format matches what the contract expects.
-- Check if the wallet supports the signing method you're using.
-- Try using `personal_sign` instead of `eth_sign` if available.
-
-## Network-Specific Issues
-
-### Monad Devnet issues
-
-**Problem**: Issues specific to Monad Devnet.
-
-**Solution**:
-- Ensure you have the correct RPC URL: `https://rpc.monad.xyz/devnet`.
-- Get testnet tokens from the faucet if needed.
-- Check if the Devnet is currently active and not under maintenance.
-- Update to the latest SDK version for Monad Devnet compatibility.
-
-### Local development network issues
-
-**Problem**: Problems with local development network.
-
-**Solution**:
-- Ensure Hardhat node is running: `npx hardhat node`.
-- Verify contracts are deployed to the local network.
-- Check MetaMask or wallet is connected to localhost:8545.
-- Reset your MetaMask account if nonce issues occur.
-
-## Common Error Codes
-
-### InvalidPostType
-
-**Cause**: The post type provided is not valid or not supported.
-
-**Resolution**:
-- Check valid post types in `PostValidationHelpers.sol`.
-- Ensure the post type matches exactly (case-sensitive).
-
-### NotAuthorized
-
-**Cause**: The caller doesn't have permission for the operation.
-
-**Resolution**:
-- Check required roles in contract documentation.
-- Use the RoleManager to assign necessary roles.
-- Verify you're using the correct account.
-
-### InvalidMetadata
-
-**Cause**: Metadata format or required fields are incorrect.
-
-**Resolution**:
-- Validate metadata against schema requirements.
-- Check field names and types match what's expected.
-- Ensure all required fields for the specific post type are provided.
-
-### TribeNotFound
-
-**Cause**: Referenced tribe doesn't exist.
-
-**Resolution**:
-- Verify tribe ID exists in TribeController.
-- Check if you're on the correct network.
-
-### MembershipRequired
-
-**Cause**: Operation requires tribe membership.
-
-**Resolution**:
-- Join the tribe before attempting operation.
-- Verify membership status with `getMemberStatus` function.
-
----
-
-If you continue to experience issues not covered in this guide, please report them on our [GitHub Issues](https://github.com/AstrixNetwork/tribes-by-astrix/issues) page or contact our support team. 
+3. Contact the team at [support@astrix.live](mailto:support@astrix.live) for direct assistance. 

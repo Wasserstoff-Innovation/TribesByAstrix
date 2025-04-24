@@ -1,163 +1,195 @@
 # Tribes by Astrix
 
-A decentralized platform for community management and engagement built on Monad blockchain.
+A decentralized community management platform built on Ethereum and EVM-compatible chains.
 
-## Overview
+## Features
 
-Tribes by Astrix is a decentralized platform that enables communities to organize, engage, and manage their members using blockchain technology. With a focus on user experience and scalability, the platform provides tools for community leaders to create tribes, manage memberships, award points, and control content creation.
-
-## Key Features
-
-- **Tribe Management**: Create and manage decentralized communities with customizable metadata
-- **Role-Based Access Control**: Granular permission system for community governance
-- **Points System**: Reward members for participation and contributions
-- **Collectibles**: Issue and manage digital collectibles that can gate access to exclusive content
-- **Post System**: Create and manage content with optional encryption for private tribe communication
-- **Events**: Organize events with ticket sales and attendance tracking
-- **Fundraisers**: Create and manage fundraising campaigns within tribes
-
-## Repository Structure
-
-```
-├── contracts/       # Solidity smart contracts
-├── sdk/             # JavaScript/TypeScript SDK
-├── docs/            # Documentation
-│   └── user-flows/  # User flow documentation and diagrams
-├── scripts/         # Deployment and utility scripts
-└── test/            # Smart contract tests
-```
+- Create and manage tribes (decentralized communities)
+- Custom token creation for each tribe
+- Points system for rewarding community engagement
+- Content posting and moderation systems
+- NFT collectibles for tribe members
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js >= 16
-- npm or yarn
-- Hardhat for contract development
-- A Monad-compatible wallet (like MetaMask)
+- Node.js v16+
+- Yarn or npm
+- An Ethereum wallet (MetaMask, etc.)
 
 ### Installation
 
-1. Clone the repository:
-
-```bash
-git clone https://github.com/yourusername/tribes-by-astrix.git
-cd tribes-by-astrix
-```
-
+1. Clone this repository
+  
 2. Install dependencies:
-
 ```bash
-npm install
+yarn install
 ```
 
-## Using the SDK
+3. Set up environment variables by creating a `.env` file based on `.env.example`.
 
-The Tribes by Astrix SDK provides a simple interface for interacting with the platform:
+## Development
+
+### Local Development
+
+Run a local development environment:
+
+```bash
+yarn start
+```
+
+### Testing
+
+```bash
+# Run all tests
+yarn test
+
+# Run specific tests
+yarn test:contracts
+```
+
+## Deployment
+
+The project uses a unified deployment approach that handles all contracts including the modular PostMinter system:
+
+```bash
+# Deploy all contracts to a network
+npx hardhat run scripts/deploy-unified.ts --network <network-name>
+
+# Deploy core contracts only, skipping PostMinter (for size-constrained environments)
+npx hardhat run scripts/deploy-unified.ts --network <network-name> --skip-postminter
+```
+
+For upgrading contracts:
+
+```bash
+# Upgrade a specific contract
+npx hardhat run scripts/upgrade-contracts.ts --network <network-name> <contract-name>
+
+# Upgrade all contracts
+npx hardhat run scripts/upgrade-contracts.ts --network <network-name> --all
+
+# Upgrade only ModularPostMinter components
+npx hardhat run scripts/upgrade-contracts.ts --network <network-name> --postminter
+```
+
+See the [Deployment Guide](./docs/deployment.md) for complete details.
+
+## SDK
+
+The project includes a JavaScript/TypeScript SDK for easy integration with frontends and other applications.
 
 ```typescript
-import { AstrixSDK } from '@tribes/sdk';
+// Import the SDK
+import { TribesSDK } from '@wasserstoff/tribes-sdk';
 
-// Initialize the SDK
-const sdk = new AstrixSDK({
-  provider: window.ethereum,
-  chainId: 4165, // Monad Devnet
+// Initialize the SDK with a provider and network info
+const sdk = new TribesSDK({
+  provider: window.ethereum, // or any ethers provider
+  network: {
+    chainId: 59141, // Linea Sepolia
+    name: 'lineaSepolia'
+  }
 });
 
-// Connect with wallet
+// Connect a wallet
 await sdk.connect();
 
 // Create a tribe
 const tribeId = await sdk.tribes.createTribe({
   name: "My Awesome Tribe",
   description: "A community for awesome people",
-  imageUrl: "https://example.com/image.png"
+  logoUrl: "https://example.com/logo.png",
+  coverImageUrl: "https://example.com/cover.jpg",
+  metadata: {
+    category: "Technology",
+    tags: ["web3", "community"]
+  }
 });
 
-// Join a tribe
-await sdk.tribes.joinTribe(tribeId);
-
-// Create a post
-await sdk.content.createPost({
-  tribeId,
-  content: "Hello, tribe members!",
-  postType: "TEXT"
-});
-
-// Award points to a member
-await sdk.points.awardPoints({
-  tribeId,
-  member: "0x1234...",
-  points: 50,
-  actionType: "CUSTOM"
+// Create a post in a tribe
+const postId = await sdk.content.createPost({
+  tribeId: tribeId,
+  content: "Hello world! This is my first post.",
+  metadata: {
+    title: "My First Post",
+    tags: ["welcome", "introduction"]
+  }
 });
 ```
 
-For more detailed SDK documentation, see the [SDK README](./sdk/README.md).
+See the [SDK documentation](https://github.com/Wasserstoff-Innovation/TribesByAstrix/blob/main/docs/sdk/index.md) for more details.
 
-## System Architecture
+## Documentation
 
-The platform is built on a set of modular, upgradeable smart contracts:
+All documentation for the Tribes by Astrix platform is centralized in the [docs](./docs/README.md) directory. Here you will find:
 
-```mermaid
-flowchart TD
-    User[User/Client] --> SDK[JavaScript SDK]
-    SDK --> Provider[Web3 Provider]
-    Provider --> Blockchain[Monad Blockchain]
-    
-    subgraph Core Contracts
-        RM[RoleManager]
-        TC[TribeController]
-        PS[PointSystem]
-        CC[CollectibleController]
-        PFM[PostFeedManager]
-        PM[PostMinter]
-        EC[EventController]
-    end
-    
-    RM -.-> TC
-    RM -.-> PS
-    RM -.-> CC
-    RM -.-> PM
-    RM -.-> EC
-    
-    Blockchain --> Core Contracts
+- [Getting Started Guide](./docs/quick-start.md)
+- [Architecture Overview](./docs/architecture.md)
+- [Features Documentation](./docs/features)
+- [SDK Documentation](./docs/sdk)
+- [Deployment Guide](./docs/deployment.md)
+- [Troubleshooting](./docs/troubleshooting.md)
+
+## Project Structure
+
+```
+├── contracts/             # Smart contracts
+│   ├── interfaces/        # Contract interfaces
+│   ├── libraries/         # Shared contract libraries
+│   ├── post/              # Modular PostMinter components
+│   └── constants/         # Contract constants
+├── scripts/               # Deployment and utility scripts
+│   ├── deploy-unified.ts  # Unified deployment script
+│   ├── upgrade-contracts.ts # Enhanced upgrade script
+│   └── cleanup-codebase.ts # Codebase maintenance utility
+├── test/                  # Contract test files
+│   ├── unit/              # Unit tests
+│   └── journey/           # Integration tests
+├── sdk/                   # JavaScript/TypeScript SDK
+│   ├── src/               # SDK source code
+│   ├── abis/              # Contract ABIs
+│   └── examples/          # SDK usage examples
+├── docs/                  # Project documentation
+├── deployments/           # Deployment data
+└── hardhat.config.ts      # Hardhat configuration
 ```
 
-For complete architecture documentation, see [System Architecture](./docs/user-flows/SystemArchitecture.md).
+## Contract Architecture
 
-## User Flows
+The platform uses a modular contract architecture with specialized components:
 
-The platform supports various user journeys that are documented with visual diagrams:
+### Core Contracts
+- **RoleManager**: Central contract for permissions and access control
+- **TribeController**: Handles tribe creation, membership, and management
+- **PointSystem**: Manages platform rewards and incentives
+- **CollectibleController**: Manages NFTs and digital collectibles
 
-- [Fundraiser Flows](./docs/user-flows/FundraiserFlowDiagrams.md) - Create and manage fundraisers
-- [Event Flows](./docs/user-flows/EventFlowDiagrams.md) - Organize events and sell tickets
-- [System Architecture](./docs/user-flows/SystemArchitecture.md) - Visual representations of the platform components
+### Modular PostMinter System
+- **PostMinterProxy**: Main entry point for post-related functionality
+- **PostMinterBase**: Shared state and functionality for all post managers
+- **PostCreationManager**: Handles post creation and management
+- **PostEncryptionManager**: Manages encrypted posts and access control
+- **PostInteractionManager**: Handles post interactions (likes, comments)
+- **PostQueryManager**: Handles post querying and filtering
 
-## Development
+This modular design offers several advantages:
+- Better separation of concerns
+- Smaller contract sizes to avoid deployment limitations
+- Independent upgradability for each component
+- Improved maintainability and testing
 
-### Testing
-
-Run the test suite to ensure everything is working correctly:
-
-```bash
-npm test
-```
-
-### Deployment
-
-For detailed deployment instructions, see [DEPLOYMENT.md](./docs/DEPLOYMENT.md).
+See the [Architecture Overview](./docs/architecture.md) for more details.
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
+Contributions are welcome! Please check out our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgements
+## Support
 
-- [OpenZeppelin](https://openzeppelin.com/) for secure smart contract components
-- [Hardhat](https://hardhat.org/) for the Ethereum development environment
-- [Monad](https://monad.xyz/) for the scalable blockchain infrastructure
+For support, please open an issue in the GitHub repository or contact the team at [support@astrixial.com](mailto:support@astrixial.com).

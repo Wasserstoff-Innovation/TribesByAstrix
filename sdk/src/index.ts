@@ -13,15 +13,15 @@ import { ProfilesModule } from './modules/profiles';
 import { TribesModule } from './modules/tribes';
 import { OrganizationsModule } from './modules/organizations';
 import { AnalyticsModule } from './modules/analytics';
+import { RolesModule } from './modules/roles';
 
 // export * from './core/AstrixSDK'; // Need to fix circular dependency issues
 // export * from './core/Config'; // File missing
 
 // Config exports
 export { 
-  getContractAddresses,
   getContractAddressesByChainId
-} from './config/contracts';
+} from './config/deployedContracts';
 export { 
   NetworkId,
   getNetworkName,
@@ -62,6 +62,7 @@ export * from './types/profiles';
 export * from './modules/points';
 export * from './modules/token';
 export * from './modules/content';  // Content module is fully implemented
+export * from './modules/roles';  // Export the roles module
 
 // Auxiliary modules that may have dependencies needing resolution
 export * from './modules/profiles';
@@ -95,6 +96,7 @@ export {
   TribesModule,
   OrganizationsModule,
   AnalyticsModule,
+  RolesModule,
   
   // Types
   AstrixSDKConfig,

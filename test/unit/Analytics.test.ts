@@ -86,11 +86,66 @@ describe("Analytics", function () {
 
         // Deploy PostMinter
         const PostMinter = await ethers.getContractFactory("PostMinter");
-        postMinter = await upgrades.deployProxy(PostMinter, [
-        await roleManager.getAddress(),
+        
+        // Deploy the manager contracts first
+        const PostCreationManager = await ethers.getContractFactory("PostCreationManager");
+        const creationManager = await upgrades.deployProxy(PostCreationManager, [
+            await roleManager.getAddress(),
             await tribeController.getAddress(),
             await collectibleController.getAddress(),
             await feedManager.getAddress()
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
+        await creationManager.waitForDeployment();
+        
+        const PostEncryptionManager = await ethers.getContractFactory("PostEncryptionManager");
+        const encryptionManager = await upgrades.deployProxy(PostEncryptionManager, [
+            await roleManager.getAddress(),
+            await tribeController.getAddress(),
+            await collectibleController.getAddress(),
+            await feedManager.getAddress()
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
+        await encryptionManager.waitForDeployment();
+        
+        const PostInteractionManager = await ethers.getContractFactory("PostInteractionManager");
+        const interactionManager = await upgrades.deployProxy(PostInteractionManager, [
+            await roleManager.getAddress(),
+            await tribeController.getAddress(),
+            await collectibleController.getAddress(),
+            await feedManager.getAddress()
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
+        await interactionManager.waitForDeployment();
+        
+        const PostQueryManager = await ethers.getContractFactory("PostQueryManager");
+        const queryManager = await upgrades.deployProxy(PostQueryManager, [
+            await roleManager.getAddress(),
+            await tribeController.getAddress(),
+            await collectibleController.getAddress(),
+            await feedManager.getAddress()
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
+        await queryManager.waitForDeployment();
+        
+        // Now deploy PostMinter with all 8 parameters
+        postMinter = await upgrades.deployProxy(PostMinter, [
+            await roleManager.getAddress(),
+            await tribeController.getAddress(),
+            await collectibleController.getAddress(),
+            await feedManager.getAddress(),
+            await creationManager.getAddress(),
+            await encryptionManager.getAddress(),
+            await interactionManager.getAddress(),
+            await queryManager.getAddress()
         ], { 
             kind: 'uups',
             unsafeAllow: ['constructor'] 

@@ -55,11 +55,57 @@ describe("Community Creator Journey", function () {
         const PostFeedManager = await ethers.getContractFactory("PostFeedManager");
         const feedManager = await PostFeedManager.deploy(
             await tribeController.getAddress()
-        , { 
+        );
+        await feedManager.waitForDeployment();
+
+        // Deploy the manager contracts first
+        const PostCreationManager = await ethers.getContractFactory("PostCreationManager");
+        const creationManager = await upgrades.deployProxy(PostCreationManager, [
+            await roleManager.getAddress(),
+            await tribeController.getAddress(),
+            await collectibleController.getAddress(),
+            await feedManager.getAddress()
+        ], { 
             kind: 'uups',
             unsafeAllow: ['constructor'] 
         });
-        await feedManager.waitForDeployment();
+        await creationManager.waitForDeployment();
+        
+        const PostEncryptionManager = await ethers.getContractFactory("PostEncryptionManager");
+        const encryptionManager = await upgrades.deployProxy(PostEncryptionManager, [
+            await roleManager.getAddress(),
+            await tribeController.getAddress(),
+            await collectibleController.getAddress(),
+            await feedManager.getAddress()
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
+        await encryptionManager.waitForDeployment();
+        
+        const PostInteractionManager = await ethers.getContractFactory("PostInteractionManager");
+        const interactionManager = await upgrades.deployProxy(PostInteractionManager, [
+            await roleManager.getAddress(),
+            await tribeController.getAddress(),
+            await collectibleController.getAddress(),
+            await feedManager.getAddress()
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
+        await interactionManager.waitForDeployment();
+        
+        const PostQueryManager = await ethers.getContractFactory("PostQueryManager");
+        const queryManager = await upgrades.deployProxy(PostQueryManager, [
+            await roleManager.getAddress(),
+            await tribeController.getAddress(),
+            await collectibleController.getAddress(),
+            await feedManager.getAddress()
+        ], { 
+            kind: 'uups',
+            unsafeAllow: ['constructor'] 
+        });
+        await queryManager.waitForDeployment();
 
         // Deploy PostMinter
         const PostMinter = await ethers.getContractFactory("PostMinter");
@@ -67,7 +113,11 @@ describe("Community Creator Journey", function () {
             await roleManager.getAddress(),
             await tribeController.getAddress(),
             await collectibleController.getAddress(),
-            await feedManager.getAddress()
+            await feedManager.getAddress(),
+            await creationManager.getAddress(),
+            await encryptionManager.getAddress(),
+            await interactionManager.getAddress(),
+            await queryManager.getAddress()
         ], { 
             kind: 'uups',
             unsafeAllow: ['constructor'] 

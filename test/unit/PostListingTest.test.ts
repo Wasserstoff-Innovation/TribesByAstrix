@@ -75,11 +75,66 @@ describe("Post Listing Functionality", function () {
       
       // Deploy PostMinter with proxy which automatically calls initialize
       const PostMinter = await ethers.getContractFactory("PostMinter");
-      postMinter = await upgrades.deployProxy(PostMinter, [
+      
+      // Deploy the manager contracts first
+      const PostCreationManager = await ethers.getContractFactory("PostCreationManager");
+      const creationManager = await upgrades.deployProxy(PostCreationManager, [
         await roleManager.getAddress(),
         await tribeController.getAddress(),
         await collectibleController.getAddress(),
         await feedManager.getAddress()
+      ], { 
+        kind: 'uups',
+        unsafeAllow: ['constructor'] 
+      });
+      await creationManager.waitForDeployment();
+      
+      const PostEncryptionManager = await ethers.getContractFactory("PostEncryptionManager");
+      const encryptionManager = await upgrades.deployProxy(PostEncryptionManager, [
+        await roleManager.getAddress(),
+        await tribeController.getAddress(),
+        await collectibleController.getAddress(),
+        await feedManager.getAddress()
+      ], { 
+        kind: 'uups',
+        unsafeAllow: ['constructor'] 
+      });
+      await encryptionManager.waitForDeployment();
+      
+      const PostInteractionManager = await ethers.getContractFactory("PostInteractionManager");
+      const interactionManager = await upgrades.deployProxy(PostInteractionManager, [
+        await roleManager.getAddress(),
+        await tribeController.getAddress(),
+        await collectibleController.getAddress(),
+        await feedManager.getAddress()
+      ], { 
+        kind: 'uups',
+        unsafeAllow: ['constructor'] 
+      });
+      await interactionManager.waitForDeployment();
+      
+      const PostQueryManager = await ethers.getContractFactory("PostQueryManager");
+      const queryManager = await upgrades.deployProxy(PostQueryManager, [
+        await roleManager.getAddress(),
+        await tribeController.getAddress(),
+        await collectibleController.getAddress(),
+        await feedManager.getAddress()
+      ], { 
+        kind: 'uups',
+        unsafeAllow: ['constructor'] 
+      });
+      await queryManager.waitForDeployment();
+      
+      // Now deploy PostMinter with all 8 parameters
+      postMinter = await upgrades.deployProxy(PostMinter, [
+        await roleManager.getAddress(),
+        await tribeController.getAddress(),
+        await collectibleController.getAddress(),
+        await feedManager.getAddress(),
+        await creationManager.getAddress(),
+        await encryptionManager.getAddress(),
+        await interactionManager.getAddress(),
+        await queryManager.getAddress()
       ], { 
         kind: 'uups',
         unsafeAllow: ['constructor'] 
@@ -127,12 +182,6 @@ describe("Post Listing Functionality", function () {
   });
 
   describe("Post Listing Tests", function () {
-    it("Should execute a simple test function", async function () {
-      // Test the simple return function
-      const result = await (postMinter as any).testCreate();
-      expect(Number(result)).to.equal(42);
-    });
-    
     it("Should get all posts with pagination", async function () {
       // Verify the tribe exists
       const memberStatus = await tribeController.getMemberStatus(tribeId, creator.address);

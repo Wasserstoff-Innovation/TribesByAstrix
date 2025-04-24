@@ -9,7 +9,8 @@ import { ProfilesModule } from '../modules/profiles';
 import { ContentModule } from '../modules/content';
 import { OrganizationsModule } from '../modules/organizations';
 import { AnalyticsModule } from '../modules/analytics';
-import { getContractAddressesByChainId } from '../config/contracts';
+import { RolesModule } from '../modules/roles';
+import { getContractAddressesByChainId } from '../config/deployedContracts';
 
 /**
  * Core SDK class for interacting with the Tribes by Astrix platform
@@ -30,6 +31,7 @@ export class AstrixSDK {
   private _content: ContentModule | null = null;
   private _organizations: OrganizationsModule | null = null;
   private _analytics: AnalyticsModule | null = null;
+  private _roles: RolesModule | null = null;
   
   // Contract addresses for the Astrix ecosystem
   private contractAddresses: ContractAddresses = {} as ContractAddresses;
@@ -72,6 +74,7 @@ export class AstrixSDK {
       this._content = new ContentModule(this.provider, this.config);
       this._organizations = new OrganizationsModule(this.provider, this.config);
       this._analytics = new AnalyticsModule(this.provider, this.config);
+      this._roles = new RolesModule(this.provider, this.config);
     } catch (error) {
       throw new AstrixSDKError(
         ErrorType.SDK_ERROR,
@@ -88,26 +91,16 @@ export class AstrixSDK {
    */
   private async initContractAddresses(contractAddresses?: ContractAddresses): Promise<void> {
     if (contractAddresses) {
-      // Use provided contract addresses
       this.contractAddresses = contractAddresses;
-      if (this.config.verbose) {
-        console.log('Using provided contract addresses');
-      }
     } else {
-      // Get the network from the provider
       const network = await this.provider.getNetwork();
       const chainId = Number(network.chainId);
-      
-      // Get default addresses for this network
       try {
         const addresses = getContractAddressesByChainId(chainId);
         if (!addresses) {
           throw new Error(`Unsupported network: ${chainId}. Please provide custom contract addresses.`);
         }
         this.contractAddresses = addresses;
-        if (this.config.verbose) {
-          console.log(`Initialized with contract addresses for chain ID ${chainId}`);
-        }
       } catch (error) {
         throw new Error(`Unsupported network: ${chainId}. Please provide custom contract addresses.`);
       }
@@ -130,11 +123,6 @@ export class AstrixSDK {
       if (this._content) this._content.setSigner(signer);
       if (this._organizations) this._organizations.setSigner(signer);
       if (this._analytics) this._analytics.setSigner(signer);
-      
-      if (this.config.verbose) {
-        const address = await signer.getAddress();
-        console.log(`Connected with address: ${address}`);
-      }
     } catch (error) {
       throw new AstrixSDKError(
         ErrorType.CONNECTION_ERROR,
@@ -289,5 +277,18 @@ export class AstrixSDK {
       );
     }
     return this._analytics;
+  }
+  
+  /**
+   * Get the roles module
+   */
+  public get roles(): RolesModule {
+    if (!this._roles) {
+      throw new AstrixSDKError(
+        ErrorType.SDK_ERROR,
+        'Roles module not initialized'
+      );
+    }
+    return this._roles;
   }
 } 

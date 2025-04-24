@@ -70,12 +70,12 @@ export class TribesModule extends BaseModule {
       const receipt = await tx.wait();
       
       // Extract tribeId from event
-      const event = receipt.logs.find((log: any) => {
-        return log instanceof ethers.EventLog && log.eventName === "TribeCreated";
+      const event = receipt.logs.find((log: ethers.Log | ethers.EventLog) => {
+        return log.topics && log.topics[0] === ethers.id("TribeCreated(uint256,address,string)");
       }) as ethers.EventLog | undefined;
       
-      if (!event) {
-        throw new Error('Tribe creation event not found');
+      if (!event || !event.args) {
+        throw new Error('Tribe creation event not found or args undefined');
       }
       
       const tribeId = Number(event.args[0]);
@@ -402,7 +402,7 @@ export class TribesModule extends BaseModule {
   public async getTribeDetails(tribeId: number): Promise<TribeDetails> {
     try {
       const tribeController = this.getTribeControllerContract();
-      const tribeData = await tribeController.getTribe(tribeId);
+      const tribeData = await tribeController.getTribeDetails(tribeId);
       
       return {
         id: tribeId,
@@ -412,9 +412,11 @@ export class TribesModule extends BaseModule {
         joinType: tribeData.joinType,
         entryFee: tribeData.entryFee,
         memberCount: Number(tribeData.memberCount),
-        creationTime: Number(tribeData.creationTime),
-        nftRequirements: tribeData.nftRequirements,
-        organization: tribeData.organization || undefined
+        creationTime: Number(tribeData.creationTime) || 0,
+        nftRequirements: tribeData.nftRequirements || [],
+        organization: tribeData.organization || undefined,
+        isActive: tribeData.isActive || true,
+        canMerge: tribeData.canMerge || false
       };
     } catch (error) {
       return this.handleError(
@@ -455,10 +457,18 @@ export class TribesModule extends BaseModule {
    */
   public async getMembers(tribeId: number): Promise<string[]> {
     try {
-      const tribeController = this.getTribeControllerContract();
-      const members = await tribeController.getMembers(tribeId);
+      // This function is a placeholder until the contract adds support for it
+      this.log(`Warning: getMembers function is not yet supported by the contract`, {
+        tribeId
+      });
       
-      return members;
+      // Return an empty array for now
+      return [];
+      
+      // Original implementation (commented out until contract supports it)
+      // const tribeController = this.getTribeControllerContract();
+      // const members = await tribeController.getMembers(tribeId);
+      // return members;
     } catch (error) {
       return this.handleError(
         error,
@@ -478,9 +488,9 @@ export class TribesModule extends BaseModule {
       validateAddress(address, 'address');
       
       const tribeController = this.getTribeControllerContract();
-      const tribes = await tribeController.getUserTribes(address);
+      const tribes: bigint[] = await tribeController.getUserTribes(address);
       
-      return tribes.map((tribeId: any) => Number(tribeId));
+      return tribes.map((tribeId: bigint) => Number(tribeId));
     } catch (error) {
       return this.handleError(
         error,
@@ -512,19 +522,151 @@ export class TribesModule extends BaseModule {
   }
 
   /**
-   * Get all tribes
-   * @returns Array of tribe IDs
+   * Get all tribes with pagination
+   * @param offset The starting index for pagination
+   * @param limit The maximum number of tribes to return
+   * @returns Object containing tribe IDs and total count
    */
-  public async getAllTribes(): Promise<number[]> {
+  public async getAllTribes(offset: number = 0, limit: number = 100): Promise<{tribeIds: number[], total: number}> {
     try {
       const tribeController = this.getTribeControllerContract();
-      const tribes = await tribeController.getAllTribes();
+      const result = await tribeController.getAllTribes(offset, limit);
       
-      return tribes.map((tribeId: any) => Number(tribeId));
+      return {
+        tribeIds: result.tribeIds.map((id: bigint) => Number(id)),
+        total: Number(result.total)
+      };
     } catch (error) {
       return this.handleError(
         error,
         'Failed to get all tribes',
+        ErrorType.CONTRACT_ERROR
+      );
+    }
+  }
+
+  /**
+   * Check if a tribe exists
+   * @param tribeId Tribe ID to check
+   * @returns True if the tribe exists
+   */
+  public async tribeExists(tribeId: number): Promise<boolean> {
+    try {
+      const tribeController = this.getTribeControllerContract();
+      
+      // Check if the method exists
+      if (typeof tribeController.tribeExists !== 'function') {
+        this.log('Warning: tribeExists method not available in contract', {});
+        // Try to get tribe details as a fallback
+        try {
+          await tribeController.getTribeDetails(tribeId);
+          return true; // If no error, tribe exists
+        } catch (detailsError) {
+          return false; // Error getting details, tribe doesn't exist
+        }
+      }
+      
+      return await tribeController.tribeExists(tribeId);
+    } catch (error) {
+      this.log(`Error checking if tribe ${tribeId} exists, assuming it doesn't`, { error });
+      return false;
+    }
+  }
+
+  /**
+   * Get the total number of tribes
+   * @returns Total number of tribes
+   */
+  public async getTribeCount(): Promise<number> {
+    try {
+      const tribeController = this.getTribeControllerContract();
+      
+      // Check if the method exists
+      if (typeof tribeController.getTribeCount !== 'function') {
+        this.log('Warning: getTribeCount method not available in contract', {});
+        return 0;
+      }
+      
+      const count = await tribeController.getTribeCount();
+      return Number(count);
+    } catch (error) {
+      // Return 0 for any errors, indicating no tribes available
+      this.log('Error in getTribeCount, returning 0', { error });
+      return 0;
+    }
+  }
+
+  /**
+   * Check if a user is an active member of a tribe
+   * @param tribeId Tribe ID
+   * @param address User address
+   * @returns True if the user is an active member
+   */
+  public async isActiveMember(tribeId: number, address: string): Promise<boolean> {
+    try {
+      const status = await this.getMemberStatus(tribeId, address);
+      // MemberStatus.ACTIVE = 2
+      return status === MemberStatus.ACTIVE;
+    } catch (error) {
+      return this.handleError(
+        error,
+        `Failed to check if ${address} is an active member of tribe ${tribeId}`,
+        ErrorType.CONTRACT_ERROR
+      );
+    }
+  }
+
+  /**
+   * Find the first tribe the user is a member of, useful for testing
+   * @param address User address
+   * @returns Tribe ID of the first tribe the user is a member of, or 0 if none
+   */
+  public async findFirstActiveTribe(address: string): Promise<number> {
+    try {
+      const tribes = await this.getUserTribes(address);
+      
+      if (tribes.length === 0) {
+        return 0;
+      }
+      
+      // Find the first tribe where the user is an active member
+      for (const tribeId of tribes) {
+        const isActive = await this.isActiveMember(tribeId, address);
+        if (isActive) {
+          return tribeId;
+        }
+      }
+      
+      return 0;
+    } catch (error) {
+      return this.handleError(
+        error,
+        `Failed to find first active tribe for ${address}`,
+        ErrorType.CONTRACT_ERROR
+      );
+    }
+  }
+
+  /**
+   * Check if a user can post in a tribe
+   * @param tribeId Tribe ID
+   * @param address User address
+   * @returns True if the user can post in the tribe
+   */
+  public async canPostInTribe(tribeId: number, address: string): Promise<boolean> {
+    try {
+      // First check if the tribe exists
+      const exists = await this.tribeExists(tribeId);
+      if (!exists) {
+        return false;
+      }
+      
+      // Then check if the user is an active member
+      return await this.isActiveMember(tribeId, address);
+    } catch (error) {
+      return this.handleError(
+        error,
+        `Failed to check if ${address} can post in tribe ${tribeId}`,
         ErrorType.CONTRACT_ERROR
       );
     }

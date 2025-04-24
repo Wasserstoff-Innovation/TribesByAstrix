@@ -15,6 +15,6 @@
     "./scripts",
     "./test",
     "./typechain-types"
-  ],
+, "examples/sdk-usage/assign-roles.ts", "examples/sdk-usage/assign-tribe-roles.ts", "examples/sdk-usage/test-runner.js", "examples/sdk-usage/setup-tribe-token.ts", "examples/sdk-usage/create-test-tribe.ts"  ],
   "files": ["hardhat.config.ts"]
 } 

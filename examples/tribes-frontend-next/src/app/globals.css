@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import custom styles to ensure basic Tailwind classes work */
+@import './styles.css';
+@import './styles/astrix-theme.css';
+
+:root {
+  /* Base colors */
+  --background: #ffffff;
+  --foreground: #171717;
+  
+  /* Primary colors */
+  --primary: #B0E681;
+  --primary-dark: #9ED065;
+  --primary-light: #C8EDA5;
+  --primary-foreground: #171717; /* Black/dark text for primary background */
+  
+  /* Grid background */
+  --grid-background-light: linear-gradient(90deg, #e0e0e0 1px, transparent 0), linear-gradient(180deg, #e0e0e0 1px, transparent 0);
+  --grid-background-dark: linear-gradient(90deg, #303030 1px, transparent 0), linear-gradient(180deg, #303030 1px, transparent 0);
+  
+  /* Border radius */
+  --radius: 0.5rem;
+  --radius-full: 9999px;
+  
+  /* Transitions */
+  --transition-all: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-enhanced: 0 4px 24px 0 rgb(0 0 0 / 0.05);
+  
+  /* Typography */
+  --font-family: 'Inter', sans-serif;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* Animation */
+  --animation-default: 200ms ease-in-out;
+  --animation-slow: 400ms ease-in-out;
+  
+  /* Status Colors */
+  --success-bg: rgba(176, 230, 129, 0.2);
+  --success-text: #B0E681;
+  --warning-bg: rgba(234, 179, 8, 0.2);
+  --warning-text: #EAB308;
+  --error-bg: rgba(239, 68, 68, 0.2);
+  --error-text: #EF4444;
+  --info-bg: rgba(59, 130, 246, 0.2);
+  --info-text: #3B82F6;
+  
+  /* Gradients */
+  --gradient-card: linear-gradient(to bottom right, #f8fafc, #f1f5f9, #e2e8f0);
+  
+  --navbar-height: 4rem; /* 64px, matches h-16 in Tailwind */
+}
+
+/* Dark mode overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0A0C10; /* Use background-dark from tailwind */
+    --foreground: #F8F9FA; /* Use foreground-dark from tailwind */
+    
+    --primary: #B0E681;
+    --primary-dark: #9ED065;
+    --primary-light: #C8EDA5;
+    --primary-foreground: #171717; /* Black/dark text for primary background */
+    
+    /* Dark mode gradients */
+    --gradient-card: linear-gradient(to bottom right, hsl(222, 84%, 10%), hsl(222, 84%, 8%), hsl(222, 84%, 6%));
+    --gradient-page: radial-gradient(circle at top right, hsl(217, 91%, 8%), hsl(222, 84%, 4%), hsl(224, 71%, 2%));
+    --gradient-glow: radial-gradient(circle at center, hsla(100, 60%, 71%, 0.1), transparent 50%); /* Adjusted glow to primary */
+    --gradient-hover: linear-gradient(to bottom right, hsla(100, 60%, 71%, 0.1), hsla(100, 60%, 71%, 0.05)); /* Adjusted hover to primary */
+  }
+}
+
+body {
+  background: var(--background);
+  background-image: var(--grid-background-light);
+  background-size: 20px 20px; /* Adjust grid size */
+  color: var(--foreground);
+  font-family: var(--font-family);
+}
+
+.dark body {
+  background-image: var(--grid-background-dark);
+}
+
+/* Utility classes */
+.page-container {
+  @apply container mx-auto px-4 py-6;
+}
+
+.page-title {
+  @apply text-2xl font-bold mb-6;
+}

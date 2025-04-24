@@ -3,13 +3,18 @@ import { ethers, upgrades } from "hardhat";
 import { ProjectController, PostMinter, TribeController, RoleManager } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { EventLog } from "ethers";
-import { deployContracts } from "../util/deployContracts";
+import { deployContracts } from "../../test/util/deployContracts";
 
 describe("Project Controller", function () {
     let projectController: ProjectController;
     let postMinter: PostMinter;
     let tribeController: TribeController;
     let roleManager: RoleManager;
+    
+    // Manager contracts
+    let creationManager: any;
+    let interactionManager: any;
+    let queryManager: any;
 
     let owner: SignerWithAddress;
     let admin: SignerWithAddress;
@@ -50,6 +55,11 @@ describe("Project Controller", function () {
         tribeController = deployment.contracts.tribeController;
         postMinter = deployment.contracts.postMinter;
         
+        // Get manager contract instances
+        creationManager = await ethers.getContractAt("PostCreationManager", await postMinter.creationManager());
+        interactionManager = await ethers.getContractAt("PostInteractionManager", await postMinter.interactionManager());
+        queryManager = await ethers.getContractAt("PostQueryManager", await postMinter.queryManager());
+        
         // Extract signers
         [owner, admin, projectCreator, teamMember, reviewer, nonMember] = await ethers.getSigners();
 
@@ -61,37 +71,64 @@ describe("Project Controller", function () {
         );
         await projectController.waitForDeployment();
 
+        // Define roles
+        const PROJECT_CREATOR_ROLE = ethers.keccak256(ethers.toUtf8Bytes("PROJECT_CREATOR_ROLE"));
+        const REVIEWER_ROLE = ethers.keccak256(ethers.toUtf8Bytes("REVIEWER_ROLE"));
+        const RATE_LIMIT_MANAGER_ROLE = ethers.keccak256(ethers.toUtf8Bytes("RATE_LIMIT_MANAGER_ROLE"));
+        const DEFAULT_ADMIN_ROLE = await roleManager.DEFAULT_ADMIN_ROLE();
+
         // Grant reviewer role to the reviewer
-        await projectController.grantRole(ethers.keccak256(ethers.toUtf8Bytes("REVIEWER_ROLE")), reviewer.address);
-        await roleManager.grantRole(ethers.keccak256(ethers.toUtf8Bytes("REVIEWER_ROLE")), reviewer.address);
+        await projectController.grantRole(REVIEWER_ROLE, reviewer.address);
+        await roleManager.grantRole(REVIEWER_ROLE, reviewer.address);
 
         // Grant PROJECT_CREATOR_ROLE through RoleManager
-        const PROJECT_CREATOR_ROLE = ethers.keccak256(ethers.toUtf8Bytes("PROJECT_CREATOR_ROLE"));
         await roleManager.grantRole(PROJECT_CREATOR_ROLE, projectCreator.address);
         await roleManager.grantRole(PROJECT_CREATOR_ROLE, teamMember.address);
         
-        // Grant rate limit manager role to participants
-        await postMinter.grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), projectCreator.address);
-        await postMinter.grantRole(await postMinter.RATE_LIMIT_MANAGER_ROLE(), teamMember.address);
+        // Grant roles directly on manager contracts
+        await creationManager.grantRole(DEFAULT_ADMIN_ROLE, owner.address);
+        await creationManager.grantRole(PROJECT_CREATOR_ROLE, projectCreator.address);
+        await creationManager.grantRole(PROJECT_CREATOR_ROLE, teamMember.address);
+        await creationManager.grantRole(RATE_LIMIT_MANAGER_ROLE, projectCreator.address);
+        await creationManager.grantRole(RATE_LIMIT_MANAGER_ROLE, teamMember.address);
         
-        // Create test tribe
-        const tx = await tribeController.connect(admin).createTribe(
-            "Test Tribe",
-            JSON.stringify({ name: "Test Tribe", description: "A test tribe" }),
-            [admin.address],
-            0, // PUBLIC
-            0, // No entry fee
-            [] // No NFT requirements
-        );
-        const receipt = await tx.wait();
-        const event = receipt?.logs.find(
-            x => x instanceof EventLog && x.eventName === "TribeCreated"
-        ) as EventLog;
-        tribeId = event ? Number(event.args[0]) : 0;
-
-        // Add members to tribe
-        await tribeController.connect(projectCreator).joinTribe(tribeId);
-        await tribeController.connect(teamMember).joinTribe(tribeId);
+        // Grant rate limit manager role to participants via PostMinter as well (for other interactions)
+        await postMinter.grantRole(RATE_LIMIT_MANAGER_ROLE, projectCreator.address);
+        await postMinter.grantRole(RATE_LIMIT_MANAGER_ROLE, teamMember.address);
+        
+        // Use the default tribe created by deployContracts
+        tribeId = 0;
+        
+        // Ensure all test users are members of the tribe
+        console.log("Setting up tribe membership for all users");
+        
+        // Helper function to ensure tribe membership
+        async function ensureTribeMembership(user: SignerWithAddress, name: string) {
+            const status = Number(await tribeController.getMemberStatus(tribeId, user.address));
+            console.log(`${name} initial membership status: ${status}`);
+            if (status !== 1) { // 1 = ACTIVE
+                console.log(`${name} joining tribe...`);
+                await tribeController.connect(user).joinTribe(tribeId);
+                const newStatus = Number(await tribeController.getMemberStatus(tribeId, user.address));
+                console.log(`${name} new membership status: ${newStatus}`);
+                if (newStatus !== 1) {
+                    throw new Error(`Failed to make ${name} join tribe, status: ${newStatus}`);
+                }
+            }
+        }
+        
+        // Ensure all test users are active tribe members
+        await ensureTribeMembership(owner, "Owner");
+        await ensureTribeMembership(admin, "Admin");
+        await ensureTribeMembership(projectCreator, "ProjectCreator");
+        await ensureTribeMembership(teamMember, "TeamMember");
+        await ensureTribeMembership(reviewer, "Reviewer");
+        
+        // Wait for any cooldowns
+        await ethers.provider.send("evm_increaseTime", [61]);
+        await ethers.provider.send("evm_mine", []);
+        
+        console.log("Tribe setup completed successfully");
     });
 
     describe("Project Creation", function () {
@@ -123,7 +160,8 @@ describe("Project Controller", function () {
                 }
             };
 
-            const tx = await postMinter.connect(projectCreator).createPost(
+            // Use creationManager directly
+            const tx = await creationManager.connect(projectCreator).createPost(
                 tribeId,
                 JSON.stringify(replaceBigInts(projectData)),
                 false,
@@ -132,7 +170,7 @@ describe("Project Controller", function () {
             );
             const receipt = await tx.wait();
             const postEvent = receipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "PostCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "PostCreated"
             ) as EventLog;
             const postId = postEvent ? Number(postEvent.args[0]) : 0;
 
@@ -163,7 +201,8 @@ describe("Project Controller", function () {
                 }
             };
 
-            const tx = await postMinter.connect(projectCreator).createPost(
+            // Use creationManager directly
+            const tx = await creationManager.connect(projectCreator).createPost(
                 tribeId,
                 JSON.stringify(replaceBigInts(projectData)),
                 false,
@@ -172,7 +211,7 @@ describe("Project Controller", function () {
             );
             const receipt = await tx.wait();
             const postEvent = receipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "PostCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "PostCreated"
             ) as EventLog;
             const postId = postEvent ? Number(postEvent.args[0]) : 0;
 
@@ -214,7 +253,8 @@ describe("Project Controller", function () {
                 }
             };
 
-            const tx = await postMinter.connect(projectCreator).createPost(
+            // Use creationManager directly
+            const tx = await creationManager.connect(projectCreator).createPost(
                 tribeId,
                 JSON.stringify(replaceBigInts(projectData)),
                 false,
@@ -223,7 +263,7 @@ describe("Project Controller", function () {
             );
             const receipt = await tx.wait();
             const postEvent = receipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "PostCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "PostCreated"
             ) as EventLog;
             const postId = postEvent ? Number(postEvent.args[0]) : 0;
 
@@ -231,7 +271,7 @@ describe("Project Controller", function () {
             const projectTx = await projectController.connect(projectCreator).validateAndCreateProject(postId);
             const projectReceipt = await projectTx.wait();
             const projectEvent = projectReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "ProjectCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "ProjectCreated"
             ) as EventLog;
             projectId = projectEvent ? Number(projectEvent.args[0]) : 0;
         });
@@ -292,7 +332,8 @@ describe("Project Controller", function () {
                 }
             };
 
-            const tx = await postMinter.connect(projectCreator).createPost(
+            // Use creationManager directly
+            const tx = await creationManager.connect(projectCreator).createPost(
                 tribeId,
                 JSON.stringify(replaceBigInts(projectData)),
                 false,
@@ -301,7 +342,7 @@ describe("Project Controller", function () {
             );
             const receipt = await tx.wait();
             const postEvent = receipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "PostCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "PostCreated"
             ) as EventLog;
             const postId = postEvent ? Number(postEvent.args[0]) : 0;
 
@@ -309,7 +350,7 @@ describe("Project Controller", function () {
             const projectTx = await projectController.connect(projectCreator).validateAndCreateProject(postId);
             const projectReceipt = await projectTx.wait();
             const projectEvent = projectReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "ProjectCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "ProjectCreated"
             ) as EventLog;
             projectId = projectEvent ? Number(projectEvent.args[0]) : 0;
 
@@ -450,7 +491,8 @@ describe("Project Controller", function () {
             await ethers.provider.send("evm_increaseTime", [61]); // 61 seconds
             await ethers.provider.send("evm_mine", []);
 
-            const tx = await postMinter.connect(projectCreator).createPost(
+            // Use creationManager directly
+            const tx = await creationManager.connect(projectCreator).createPost(
                 tribeId,
                 JSON.stringify(replaceBigInts(projectData)),
                 false,
@@ -459,7 +501,7 @@ describe("Project Controller", function () {
             );
             const receipt = await tx.wait();
             const postEvent = receipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "PostCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "PostCreated"
             ) as EventLog;
             const postId = postEvent ? Number(postEvent.args[0]) : 0;
 
@@ -467,7 +509,7 @@ describe("Project Controller", function () {
             const projectTx = await projectController.connect(projectCreator).validateAndCreateProject(postId);
             const projectReceipt = await projectTx.wait();
             const projectEvent = projectReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "ProjectCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "ProjectCreated"
             ) as EventLog;
             const dependentProjectId = projectEvent ? Number(projectEvent.args[0]) : 0;
 
@@ -498,7 +540,7 @@ describe("Project Controller", function () {
         let maliciousUser: SignerWithAddress;
 
         beforeEach(async function () {
-            [maliciousUser] = await ethers.getSigners();
+            [maliciousUser] = await ethers.getSigners(); // We need to ensure this user is fetched correctly
 
             // Create project post
             const projectData = {
@@ -527,7 +569,8 @@ describe("Project Controller", function () {
                 }
             };
 
-            const tx = await postMinter.connect(projectCreator).createPost(
+            // Use creationManager directly
+            const tx = await creationManager.connect(projectCreator).createPost(
                 tribeId,
                 JSON.stringify(replaceBigInts(projectData)),
                 false,
@@ -536,7 +579,7 @@ describe("Project Controller", function () {
             );
             const receipt = await tx.wait();
             const postEvent = receipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "PostCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "PostCreated"
             ) as EventLog;
             const postId = postEvent ? Number(postEvent.args[0]) : 0;
 
@@ -544,7 +587,7 @@ describe("Project Controller", function () {
             const projectTx = await projectController.connect(projectCreator).validateAndCreateProject(postId);
             const projectReceipt = await projectTx.wait();
             const projectEvent = projectReceipt?.logs.find(
-                x => x instanceof EventLog && x.eventName === "ProjectCreated"
+                (x: any) => x instanceof EventLog && x.eventName === "ProjectCreated"
             ) as EventLog;
             projectId = projectEvent ? Number(projectEvent.args[0]) : 0;
         });

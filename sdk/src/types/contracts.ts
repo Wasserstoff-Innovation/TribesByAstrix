@@ -144,4 +144,11 @@ export function isEncryptedPostCreatedEvent(log: ethers.Log): boolean {
  */
 export function isSignatureGatedPostCreatedEvent(log: ethers.Log): boolean {
   return log instanceof ethers.EventLog && log.eventName === "SignatureGatedPostCreated";
+}
+
+/**
+ * Type guard for checking post interaction events
+ */
+export function isPostInteractionEvent(log: ethers.Log): boolean {
+  return log instanceof ethers.EventLog && log.eventName === "PostInteraction";
 } 

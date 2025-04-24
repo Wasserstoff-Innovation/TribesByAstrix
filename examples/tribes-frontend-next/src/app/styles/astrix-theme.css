@@ -1,0 +1,237 @@
+/* Astrix Theme - Design tokens inspired by the Astrix UI */
+
+/* Colors */
+:root {
+  /* Base colors */
+  --astrix-primary: #B0E681;
+  --astrix-primary-dark: #9ED065;
+  --astrix-primary-light: #C8EDA5;
+  --astrix-background: #ffffff;
+  --astrix-foreground: #171717;
+  
+  /* Accent & UI colors */
+  --astrix-accent: #B0E681;
+  --astrix-accent-dark: #9ED065;
+  --astrix-accent-light: #C8EDA5;
+  
+  /* Status colors */
+  --astrix-success: #10b981;
+  --astrix-warning: #eab308;
+  --astrix-error: #ef4444;
+  --astrix-info: #3b82f6;
+  
+  /* Gradients */
+  --astrix-gradient-primary: linear-gradient(135deg, var(--astrix-primary-light), var(--astrix-primary-dark));
+  --astrix-gradient-accent: linear-gradient(135deg, var(--astrix-accent-light), var(--astrix-accent-dark));
+  --astrix-gradient-card: linear-gradient(to bottom right, hsl(222, 84%, 5%), hsl(222, 84%, 4%), hsl(222, 84%, 3%));
+  --astrix-gradient-page: radial-gradient(circle at top right, hsl(217, 91%, 8%), hsl(222, 84%, 4%), hsl(224, 71%, 2%));
+}
+
+/* Dark mode colors */
+.dark {
+  --astrix-primary: #B0E681;
+  --astrix-primary-dark: #9ED065;
+  --astrix-primary-light: #C8EDA5;
+  --astrix-background: #0f172a;
+  --astrix-foreground: #ffffff;
+  --astrix-accent: #B0E681;
+  --astrix-accent-dark: #9ED065;
+  --astrix-accent-light: #C8EDA5;
+}
+
+/* Typography */
+.astrix-h1 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+}
+
+.astrix-h2 {
+  font-size: 1.875rem;
+  font-weight: 600;
+  line-height: 1.25;
+  margin-bottom: 0.75rem;
+}
+
+.astrix-h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 0.5rem;
+}
+
+.astrix-text-body {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.astrix-text-small {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.astrix-text-xs {
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+/* Cards */
+.astrix-card {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background-color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.astrix-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.dark .astrix-card {
+  background-color: #1e293b;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+}
+
+/* Buttons */
+.astrix-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.astrix-button-primary {
+  background-color: var(--astrix-primary);
+  color: var(--primary-foreground);
+}
+
+.astrix-button-primary:hover {
+  background-color: var(--astrix-primary-dark);
+  color: var(--primary-foreground);
+}
+
+.astrix-button-secondary {
+  background-color: white;
+  color: var(--astrix-primary);
+  border: 1px solid var(--astrix-primary);
+}
+
+.astrix-button-secondary:hover {
+  background-color: #f9fafb;
+}
+
+.dark .astrix-button-secondary {
+  background-color: #1e293b;
+  border-color: var(--astrix-primary);
+}
+
+.astrix-button-gradient {
+  background-image: var(--astrix-gradient-primary);
+  color: var(--primary-foreground);
+}
+
+.astrix-button-gradient:hover {
+  opacity: 0.9;
+}
+
+/* Form elements */
+.astrix-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid #d1d5db;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.astrix-input:focus {
+  outline: none;
+  border-color: var(--astrix-primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+.dark .astrix-input {
+  background-color: #1e293b;
+  border-color: #4b5563;
+  color: white;
+}
+
+/* Tribe specific styles */
+.tribe-banner {
+  height: 160px;
+  background-image: var(--astrix-gradient-primary);
+  background-size: cover;
+  background-position: center;
+}
+
+.tribe-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 4px solid white;
+  margin-top: -40px;
+  background-color: var(--astrix-primary-light);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.tribe-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.tribe-badge-primary {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--astrix-primary);
+}
+
+.tribe-badge-success {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--astrix-success);
+}
+
+/* Custom animation classes */
+.astrix-animate-fade {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.astrix-animate-slide-up {
+  animation: slideUp 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+} 

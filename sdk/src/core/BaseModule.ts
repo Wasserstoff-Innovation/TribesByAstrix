@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { ethers, InterfaceAbi } from 'ethers';
 import { AstrixSDKConfig, ErrorType, CacheOptions } from '../types/core';
 import { AstrixSDKError } from '../types/errors';
 
@@ -16,8 +16,8 @@ export abstract class BaseModule {
   protected signer: ethers.Signer | null = null;
   protected config: AstrixSDKConfig;
   
-  // Cache storage
-  private cache: Map<string, CacheEntry<any>> = new Map();
+  // Use unknown for cached value type
+  private cache: Map<string, CacheEntry<unknown>> = new Map();
   private blockListener: (blockNumber: number) => void;
   private currentBlockNumber: number = 0;
   
@@ -36,7 +36,6 @@ export abstract class BaseModule {
     // Create block listener function
     this.blockListener = (blockNumber: number) => {
       this.currentBlockNumber = blockNumber;
-      this.log(`New block: ${blockNumber}`);
       
       // Invalidate cache entries that depend on block number
       this.invalidateBlockBasedCache(blockNumber);
@@ -60,7 +59,6 @@ export abstract class BaseModule {
     this.provider.getBlockNumber()
       .then(blockNumber => {
         this.currentBlockNumber = blockNumber;
-        this.log(`Initial block number: ${blockNumber}`);
       })
       .catch(error => {
         this.log(`Error getting initial block number: ${error.message}`);
@@ -74,7 +72,6 @@ export abstract class BaseModule {
     for (const [key, entry] of this.cache.entries()) {
       // If this entry has a blockNumber and it's not the current block
       if (entry.blockNumber && entry.blockNumber < currentBlock) {
-        this.log(`Invalidating cache for key: ${key} (block: ${entry.blockNumber} < current: ${currentBlock})`);
         this.cache.delete(key);
       }
     }
@@ -103,11 +100,12 @@ export abstract class BaseModule {
   protected requireSigner(): ethers.Signer {
     if (!this.signer) {
       throw new AstrixSDKError(
-        ErrorType.UNAUTHORIZED,
-        'No signer connected. Please call connect() first.'
+        ErrorType.CONNECTION_ERROR,
+        'Signer is required for this operation. Please connect a wallet.'
       );
     }
-    return this.signer;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return this.signer!;
   }
 
   /**
@@ -118,7 +116,7 @@ export abstract class BaseModule {
    */
   protected getContract<T extends ethers.BaseContract>(
     address: string,
-    abi: any,
+    abi: InterfaceAbi,
     useSigner: boolean = false
   ): T {
     if (useSigner) {
@@ -146,12 +144,10 @@ export abstract class BaseModule {
     const shouldUseCache = this.shouldUseCache(cachedItem, options);
     
     if (shouldUseCache) {
-      this.log(`Cache hit for key: ${cacheKey}`);
       return cachedItem!.value as T;
     }
     
     // Cache miss or expired, fetch fresh data
-    this.log(`Cache miss for key: ${cacheKey}`);
     try {
       const result = await fetchFn();
       
@@ -163,9 +159,9 @@ export abstract class BaseModule {
       });
       
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       this.handleError(error, `Failed to fetch data for cache key: ${cacheKey}`);
-      throw error; // Never reached due to handleError, but needed for TypeScript
+      throw error;
     }
   }
   
@@ -173,7 +169,7 @@ export abstract class BaseModule {
    * Determine if cached data should be used
    */
   private shouldUseCache(
-    cachedItem: CacheEntry<any> | undefined,
+    cachedItem: CacheEntry<unknown> | undefined,
     options?: CacheOptions
   ): boolean {
     if (!cachedItem) return false;
@@ -198,7 +194,6 @@ export abstract class BaseModule {
    * Build a standardized cache key
    */
   private buildCacheKey(key: string): string {
-    // Add chainId to make cache keys network-specific
     const chainId = this.config.chainId || 'unknown';
     return `${chainId}:${key}`;
   }
@@ -210,7 +205,6 @@ export abstract class BaseModule {
   protected invalidateCache(key: string): void {
     const cacheKey = this.buildCacheKey(key);
     this.cache.delete(cacheKey);
-    this.log(`Invalidated cache for key: ${cacheKey}`);
   }
   
   /**
@@ -221,11 +215,9 @@ export abstract class BaseModule {
     const prefix = this.config.chainId ? `${this.config.chainId}:` : '';
     const fullPattern = `${prefix}${pattern}`;
     
-    // Loop through all cache entries
     for (const key of this.cache.keys()) {
       if (key.includes(fullPattern)) {
         this.cache.delete(key);
-        this.log(`Invalidated cache for key: ${key}`);
       }
     }
   }
@@ -235,7 +227,6 @@ export abstract class BaseModule {
    */
   protected clearCache(): void {
     this.cache.clear();
-    this.log('Cleared entire cache');
   }
 
   /**
@@ -245,43 +236,36 @@ export abstract class BaseModule {
    * @param type Error type
    */
   protected handleError(
-    error: any,
+    error: unknown,
     message: string = 'Operation failed',
     type: ErrorType = ErrorType.CONTRACT_ERROR
   ): never {
-    // Check if error is already an AstrixSDKError
     if (error instanceof AstrixSDKError) {
       throw error;
     }
-
-    // Handle specific error types
-    if (error.code === 'INSUFFICIENT_FUNDS') {
-      throw new AstrixSDKError(
-        ErrorType.INSUFFICIENT_FUNDS,
-        'Insufficient funds for transaction',
-        undefined,
-        error
-      );
-    }
-
-    if (error.code === 'TIMEOUT') {
-      throw new AstrixSDKError(
-        ErrorType.TIMEOUT,
-        'Transaction timed out',
-        undefined,
-        error
-      );
-    }
-
-    // Extract error message if available
+    
     let errorMessage = message;
-    if (error.reason) {
-      errorMessage += `: ${error.reason}`;
-    } else if (error.message) {
-      errorMessage += `: ${error.message}`;
+    let code = ErrorType.SDK_ERROR; // Default to SDK_ERROR
+
+    // Try to extract code and reason from ethers error
+    if (typeof error === 'object' && error !== null) {
+        const ethersError = error as any; // Cast to any for property access
+        if (ethersError.code) {
+            // Use the specific ethers code if available, otherwise keep SDK_ERROR
+            code = ethersError.code; 
+        } else {
+            code = ErrorType.SDK_ERROR; // Fallback if code property doesn't exist
+        }
+        if (ethersError.reason) {
+            errorMessage += `: ${ethersError.reason}`;
+        } else if (ethersError.message) {
+             errorMessage += `: ${ethersError.message}`;
+        }
+    } else {
+        code = ErrorType.SDK_ERROR; // Fallback for non-object errors
     }
 
-    throw new AstrixSDKError(type, errorMessage, undefined, error);
+    throw new AstrixSDKError(type, errorMessage, code, error);
   }
 
   /**
@@ -289,13 +273,15 @@ export abstract class BaseModule {
    * @param message Message to log
    * @param data Optional data to log
    */
-  protected log(message: string, data?: any): void {
-    if (this.config.verbose) {
-      console.log(`[Astrix SDK] ${message}`);
-      if (data !== undefined) {
-        console.log(data);
-      }
-    }
+  protected log(_message: string, _data?: Record<string, unknown> | string | number): void {
+    // Logging is currently disabled within the SDK itself.
+    // Consuming applications can implement their own logging if needed.
+    // if (this.config.verbose) {
+      // console.log(`[Astrix SDK] ${message}`);
+      // if (data !== undefined) {
+      //   console.log(data);
+      // }
+    // } 
   }
   
   /**

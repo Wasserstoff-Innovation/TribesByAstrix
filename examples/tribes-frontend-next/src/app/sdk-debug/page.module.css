@@ -1,0 +1,139 @@
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  color: #2563eb;
+}
+
+.info {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.button {
+  background-color: #3b82f6;
+  color: white;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.button:hover {
+  background-color: #2563eb;
+}
+
+.button:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+.buttonSecondary {
+  background-color: #6b7280;
+  color: white;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+  margin-top: 1rem;
+}
+
+.buttonSecondary:hover {
+  background-color: #4b5563;
+}
+
+.buttonSecondary:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.account {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.error {
+  background-color: #fee2e2;
+  border: 1px solid #ef4444;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.error h3 {
+  color: #b91c1c;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.error p {
+  color: #7f1d1d;
+}
+
+.success {
+  background-color: #d1fae5;
+  border: 1px solid #10b981;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.success h3 {
+  color: #047857;
+  font-weight: 600;
+}
+
+.logContainer {
+  background-color: #f3f4f6;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+}
+
+.logTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #1f2937;
+}
+
+.log {
+  background-color: #111827;
+  color: #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  font-family: monospace;
+  height: 400px;
+  overflow-y: auto;
+}
+
+.logEntry {
+  padding: 0.25rem 0;
+  border-bottom: 1px solid #374151;
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.emptyLog {
+  color: #9ca3af;
+  font-style: italic;
+  text-align: center;
+  padding: 2rem 0;
+} 

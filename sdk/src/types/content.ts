@@ -124,15 +124,23 @@ export interface PostInfo {
  */
 export interface PostDetails {
   id: number;
-  creator: string;
   tribeId: number;
+  creator: string;
   metadata: string;
   isGated: boolean;
   collectibleContract: string;
   collectibleId: number;
   isEncrypted: boolean;
   accessSigner: string;
-  createdAt?: number;
+  createdAt: number;
+  reportCount: number;
+  interactionCounts: {
+    likes: number;
+    dislikes: number;
+    shares: number;
+    comments: number;
+    saves: number;
+  };
 }
 
 /**
@@ -276,4 +284,13 @@ export interface ParsedPostData extends PostDetails {
     createdAt?: number;
     [key: string]: any;
   };
+}
+
+export interface InteractionCounts {
+  likes: bigint;
+  dislikes: bigint;
+  shares: bigint;
+  comments: bigint;
+  saves: bigint;
+  // Add other counts as needed
 } 

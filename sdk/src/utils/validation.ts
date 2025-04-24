@@ -114,4 +114,12 @@ export function validateTribeId(tribeId: number): void {
       `Invalid tribe ID: ${tribeId}. Must be a positive integer.`
     );
   }
+}
+
+/**
+ * Check if a value is an object
+ * @param obj Object to check
+ */
+export function isObject(obj: Record<string, unknown>): boolean {
+  return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
 } 

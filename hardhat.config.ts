@@ -51,6 +51,20 @@ const config: HardhatUserConfig = {
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       gasPrice: 52000000000 // 52 gwei
     },
+    // Add Linea Sepolia network
+    lineaSepolia: {
+      url: process.env.LINEA_SEPOLIA_RPC_URL || "https://rpc.sepolia.linea.build",
+      chainId: 59141,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      gasPrice: 1000000000 // 1 gwei
+    },
+    // Add XDC network
+    xdc: {
+      url: process.env.XDC_RPC_URL || "https://erpc.xinfin.network",
+      chainId: 50,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      gasPrice: 500000000 // 0.5 gwei
+    },
     // Add other networks as needed
     // Example:
     // goerli: {
@@ -93,7 +107,29 @@ const config: HardhatUserConfig = {
     }
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY || "",
+      lineaSepolia: process.env.LINEASCAN_API_KEY || "",
+      xdc: process.env.XDC_API_KEY || ""
+    },
+    customChains: [
+      {
+        network: "lineaSepolia",
+        chainId: 59141,
+        urls: {
+          apiURL: "https://api.lineascan.build/api",
+          browserURL: "https://sepolia.lineascan.build"
+        }
+      },
+      {
+        network: "xdc",
+        chainId: 50,
+        urls: {
+          apiURL: "https://xdc.blocksscan.io/api",
+          browserURL: "https://xdc.blocksscan.io"
+        }
+      }
+    ]
   }
 };
 

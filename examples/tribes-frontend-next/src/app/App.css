@@ -1,0 +1,261 @@
+/* CSS Variables for Design System */
+:root {
+  /* ------------------------- */
+  /* Colors                    */
+  /* ------------------------- */
+
+  /* Base Palette */
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-dark-primary: #0E0F0C; /* rgb(14, 15, 12) from .bg-primary and image */
+  --color-dark-secondary: #171717; /* from --foreground, potential dark text/element */
+  --color-gray-light: #e5e7eb;   /* from border reset */
+  --color-gray-medium: #757575;  /* from --toastify-text-color-light */
+  --color-gray-dark: #616161;   /* from --toastify-spinner-color */
+
+  /* Theme Colors (assuming dark theme is primary based on image) */
+  --color-background-page: var(--color-dark-primary); /* Primary dark background */
+  --color-text-primary: var(--color-white);         /* Primary text on dark bg */
+  --color-text-secondary: var(--color-gray-medium); /* Secondary text */
+  --color-border-default: var(--color-gray-light);  /* Default subtle border */
+
+  /* Card Specific */
+  --color-background-card: rgba(40, 40, 40, 0.8); /* Example: Slightly lighter, semi-transparent dark */
+  --color-text-card: var(--color-text-primary);
+
+  /* Status Colors */
+  --color-status-info: #3498db;
+  --color-status-success: #07bc0c;
+  --color-status-warning: #f1c40f;
+  --color-status-error: hsl(6, 78%, 57%);
+  --color-status-error-text: var(--color-white);
+  --color-status-warning-text: var(--color-white);
+  --color-status-success-text: var(--color-white);
+  --color-status-info-text: var(--color-white);
+
+  /* ------------------------- */
+  /* Typography                */
+  /* ------------------------- */
+
+  /* Font Families */
+  --font-family-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-family-fallback: Arial, Helvetica, sans-serif;
+  --font-family-base: var(--font-family-sans);
+
+  /* Font Sizes */
+  --font-size-base: 1rem; /* Typically 16px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-lg: 1.125rem; /* 18px */
+
+  /* Line Heights */
+  --line-height-base: 1.5;
+  --line-height-heading: 1.2;
+
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ------------------------- */
+  /* Spacing                   */
+  /* ------------------------- */
+  --spacing-unit: 4px;
+  --spacing-1: calc(1 * var(--spacing-unit));   /* 4px */
+  --spacing-2: calc(2 * var(--spacing-unit));   /* 8px */
+  --spacing-3: calc(3 * var(--spacing-unit));   /* 12px */
+  --spacing-4: calc(4 * var(--spacing-unit));   /* 16px */
+  --spacing-5: calc(5 * var(--spacing-unit));   /* 20px */
+  --spacing-6: calc(6 * var(--spacing-unit));   /* 24px */
+  --spacing-8: calc(8 * var(--spacing-unit));   /* 32px */
+  --spacing-10: calc(10 * var(--spacing-unit)); /* 40px */
+  --spacing-12: calc(12 * var(--spacing-unit)); /* 48px */
+  --spacing-16: calc(16 * var(--spacing-unit)); /* 64px */
+
+  /* ------------------------- */
+  /* Borders & Radius          */
+  /* ------------------------- */
+  --border-width-default: 1px;
+  --border-style-default: solid;
+  --border-color-default: var(--color-border-default);
+
+  --border-radius-small: 4px;
+  --border-radius-medium: 6px;
+  --border-radius-large: 8px;
+  --border-radius-xl: 12px;
+  --border-radius-card: var(--border-radius-large);
+  --border-radius-full: 9999px; /* For pills/circles */
+
+  /* ------------------------- */
+  /* Shadows & Opacity        */
+  /* ------------------------- */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  --opacity-disabled: 0.5;
+  --opacity-semi-transparent: 0.7;
+
+  /* ------------------------- */
+  /* Layout & Z-Index          */
+  /* ------------------------- */
+  --z-index-toast: 9999;
+  --z-index-modal: 1000;
+  --z-index-dropdown: 500;
+  --z-index-sticky: 100;
+  --z-index-base: 1;
+}
+
+/* Apply base styles using variables */
+*,
+*::before,
+*::after {
+  box-sizing: var(--box-sizing-default);
+  margin: 0;
+  padding: 0;
+  border-width: 0;
+  border-style: solid;
+  border-color: var(--border-color-default);
+}
+
+html {
+  line-height: var(--line-height-base);
+  font-family: var(--font-family-base);
+  -webkit-text-size-adjust: 100%;
+  -moz-tab-size: 4;
+  tab-size: 4;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-background-page);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-base);
+  line-height: 1.6;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header styles */
+.App-header {
+  background-color: var(--color-dark-primary);
+  color: var(--color-text-primary);
+  padding: var(--spacing-8) var(--spacing-4);
+  text-align: center;
+}
+
+.App-header h1 {
+  font-size: calc(2 * var(--font-size-base));
+  margin-bottom: var(--spacing-2);
+}
+
+.App-header p {
+  font-size: var(--font-size-lg);
+  opacity: 0.8;
+}
+
+/* Main content styles */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-4);
+}
+
+/* Utility classes */
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.px-4 {
+  padding-left: var(--spacing-4);
+  padding-right: var(--spacing-4);
+}
+
+.py-8 {
+  padding-top: var(--spacing-8);
+  padding-bottom: var(--spacing-8);
+}
+
+.max-w-lg {
+  max-width: 32rem;
+}
+
+.p-6 {
+  padding: var(--spacing-6);
+}
+
+.mt-8 {
+  margin-top: var(--spacing-8);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-xl {
+  font-size: var(--font-size-lg);
+}
+
+.font-bold {
+  font-weight: var(--font-weight-bold);
+}
+
+.mb-2 {
+  margin-bottom: var(--spacing-2);
+}
+
+.space-y-4 > * + * {
+  margin-top: var(--spacing-4);
+}
+
+.rounded-lg {
+  border-radius: var(--border-radius-large);
+}
+
+.bg-white {
+  background-color: var(--color-white);
+}
+
+.shadow-md {
+  box-shadow: var(--shadow-md);
+}
+
+.border {
+  border-width: var(--border-width-default);
+}
+
+.border-gray-200 {
+  border-color: var(--color-gray-light);
+}
+
+.bg-gray-50 {
+  background-color: #f9fafb;
+}
+
+.text-sm {
+  font-size: var(--font-size-sm);
+}
+
+.text-gray-500 {
+  color: var(--color-gray-medium);
+}
+
+.border-red-300 {
+  border-color: #fca5a5;
+}
+
+.bg-red-50 {
+  background-color: #fef2f2;
+}
+
+.text-red-800 {
+  color: var(--color-status-error);
+}

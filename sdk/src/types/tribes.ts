@@ -335,4 +335,14 @@ export interface TribeDetails {
    * Organization address that funds the tribe
    */
   organization?: string;
+
+  /**
+   * Whether the tribe is active
+   */
+  isActive?: boolean;
+
+  /**
+   * Whether the tribe can be merged
+   */
+  canMerge?: boolean;
 } 

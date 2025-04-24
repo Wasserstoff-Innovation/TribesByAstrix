@@ -37,9 +37,16 @@ function captureOutput(type: string, ...args: any[]) {
     const testTitle = (global as any).currentTest?.title;
     if (testTitle) {
         const output = testOutputs.get(testTitle) || [];
-        output.push(`[${type}] ${args.map(arg => 
-            typeof arg === 'object' ? JSON.stringify(arg) : arg
-        ).join(' ')}`);
+        output.push(`[${type}] ${args.map(arg => {
+            if (typeof arg === 'object') {
+                // Handle BigInt serialization
+                return JSON.stringify(arg, (key, value) => 
+                    typeof value === 'bigint' ? value.toString() : value
+                );
+            } else {
+                return arg;
+            }
+        }).join(' ')}`);
         testOutputs.set(testTitle, output);
     }
     return type === 'error' ? originalError(...args) :

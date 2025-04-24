@@ -17,7 +17,8 @@ export enum NetworkId {
   MONAD_MAINNET = 1284,
   XDC_TESTNET = 51,
   XDC_MAINNET = 50,
-  LOCAL = 31337
+  LOCAL = 31337,
+  LINEA_SEPOLIA = 59141
 }
 
 /**
@@ -41,6 +42,8 @@ export function getNetworkName(networkId: NetworkId): string {
       return 'XDC Mainnet';
     case NetworkId.LOCAL:
       return 'Local Development';
+    case NetworkId.LINEA_SEPOLIA:
+      return 'Linea Sepolia Testnet';
     default:
       return 'Unknown Network';
   }
@@ -69,6 +72,8 @@ export function chainIdToNetworkId(chainId: number): NetworkId | undefined {
       return NetworkId.XDC_MAINNET;
     case 31337:
       return NetworkId.LOCAL;
+    case 59141:
+      return NetworkId.LINEA_SEPOLIA;
     default:
       return undefined;
   }
