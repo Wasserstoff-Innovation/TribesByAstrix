@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@wasserstoff/tribes-sdk": "^1.0.3",
+    "@wasserstoff/tribes-sdk": "^1.0.4",
     "axios": "^1.8.4",
     "date-fns": "^4.1.0",
     "ethers": "^6.13.5",

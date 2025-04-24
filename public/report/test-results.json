@@ -1,12 +1,12 @@
 {
-  "timestamp": "2025-04-24T12:45:03.185Z",
+  "timestamp": "2025-04-24T16:22:35.876Z",
   "summary": {
     "total": 211,
     "passed": 211,
     "failed": 0,
-    "duration": 12291,
-    "startTime": "2025-04-24T12:45:03.185Z",
-    "endTime": "2025-04-24T12:45:17.081Z"
+    "duration": 12550,
+    "startTime": "2025-04-24T16:22:35.876Z",
+    "endTime": "2025-04-24T16:22:50.111Z"
   },
   "results": [
     {
@@ -15,7 +15,7 @@
       "testName": "✓ Should allow claiming with correct payment and points",
       "description": "✓ Should allow claiming with correct payment and points",
       "status": "passed",
-      "duration": 39,
+      "duration": 40,
       "output": [
         "[log] Starting test: \u001b[33mCollectible Claiming\u001b[39m - ✓ Should allow claiming with correct payment and points",
         "[log] \u001b[36m\u001b[39m\n\u001b[36mSetting up test environment...\u001b[39m",
@@ -29,7 +29,7 @@
         "Duration: 2ms",
         "[log] Ending test: ✓ Should allow claiming with correct payment and points (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.795Z"
+      "timestamp": "2025-04-24T16:22:44.691Z"
     },
     {
       "id": 132,
@@ -37,7 +37,7 @@
       "testName": "✗ Should prevent claiming beyond max supply",
       "description": "✗ Should prevent claiming beyond max supply",
       "status": "passed",
-      "duration": 40,
+      "duration": 41,
       "output": [
         "[log] Starting test: \u001b[33mCollectible Claiming\u001b[39m - ✗ Should prevent claiming beyond max supply",
         "[log] \u001b[36m\u001b[39m\n\u001b[36mSetting up test environment...\u001b[39m",
@@ -51,7 +51,7 @@
         "Duration: 2ms",
         "[log] Ending test: ✗ Should prevent claiming beyond max supply (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.912Z"
+      "timestamp": "2025-04-24T16:22:44.809Z"
     },
     {
       "id": 130,
@@ -73,7 +73,7 @@
         "Duration: 1ms",
         "[log] Ending test: ✗ Should prevent claiming with insufficient payment (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.833Z"
+      "timestamp": "2025-04-24T16:22:44.729Z"
     },
     {
       "id": 131,
@@ -95,7 +95,7 @@
         "Duration: 1ms",
         "[log] Ending test: ✗ Should prevent claiming with insufficient points (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.872Z"
+      "timestamp": "2025-04-24T16:22:44.768Z"
     },
     {
       "id": 126,
@@ -103,7 +103,7 @@
       "testName": "✓ Should allow tribe admin to create a collectible",
       "description": "✓ Should allow tribe admin to create a collectible",
       "status": "passed",
-      "duration": 38,
+      "duration": 41,
       "output": [
         "[log] Starting test: \u001b[33mCollectible Creation\u001b[39m - ✓ Should allow tribe admin to create a collectible",
         "[log] \u001b[36m\u001b[39m\n\u001b[36mSetting up test environment...\u001b[39m",
@@ -117,7 +117,7 @@
         "Duration: 2ms",
         "[log] Ending test: ✓ Should allow tribe admin to create a collectible (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.680Z"
+      "timestamp": "2025-04-24T16:22:44.573Z"
     },
     {
       "id": 128,
@@ -125,7 +125,7 @@
       "testName": "✗ Should prevent creating collectible with invalid parameters",
       "description": "✗ Should prevent creating collectible with invalid parameters",
       "status": "passed",
-      "duration": 39,
+      "duration": 40,
       "output": [
         "[log] Starting test: \u001b[33mCollectible Creation\u001b[39m - ✗ Should prevent creating collectible with invalid parameters",
         "[log] \u001b[36m\u001b[39m\n\u001b[36mSetting up test environment...\u001b[39m",
@@ -136,10 +136,10 @@
         "[log] \u001b[32m✓ Roles configured\u001b[39m",
         "[log] \u001b[32m✓ Test tribe created\u001b[39m",
         "[log] \u001b[32m✓ Test members added\u001b[39m",
-        "Duration: 4ms",
+        "Duration: 3ms",
         "[log] Ending test: ✗ Should prevent creating collectible with invalid parameters (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.756Z"
+      "timestamp": "2025-04-24T16:22:44.651Z"
     },
     {
       "id": 127,
@@ -147,7 +147,7 @@
       "testName": "✗ Should prevent non-admin from creating collectible",
       "description": "✗ Should prevent non-admin from creating collectible",
       "status": "passed",
-      "duration": 37,
+      "duration": 38,
       "output": [
         "[log] Starting test: \u001b[33mCollectible Creation\u001b[39m - ✗ Should prevent non-admin from creating collectible",
         "[log] \u001b[36m\u001b[39m\n\u001b[36mSetting up test environment...\u001b[39m",
@@ -161,7 +161,7 @@
         "Duration: 1ms",
         "[log] Ending test: ✗ Should prevent non-admin from creating collectible (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.717Z"
+      "timestamp": "2025-04-24T16:22:44.611Z"
     },
     {
       "id": 133,
@@ -183,7 +183,7 @@
         "Duration: 1ms",
         "[log] Ending test: ✓ Should allow admin to deactivate collectible (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.950Z"
+      "timestamp": "2025-04-24T16:22:44.848Z"
     },
     {
       "id": 135,
@@ -191,7 +191,7 @@
       "testName": "✗ Should prevent claiming deactivated collectible",
       "description": "✗ Should prevent claiming deactivated collectible",
       "status": "passed",
-      "duration": 37,
+      "duration": 39,
       "output": [
         "[log] Starting test: \u001b[33mCollectible Management\u001b[39m - ✗ Should prevent claiming deactivated collectible",
         "[log] \u001b[36m\u001b[39m\n\u001b[36mSetting up test environment...\u001b[39m",
@@ -202,10 +202,10 @@
         "[log] \u001b[32m✓ Roles configured\u001b[39m",
         "[log] \u001b[32m✓ Test tribe created\u001b[39m",
         "[log] \u001b[32m✓ Test members added\u001b[39m",
-        "Duration: 1ms",
+        "Duration: 2ms",
         "[log] Ending test: ✗ Should prevent claiming deactivated collectible (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:12.024Z"
+      "timestamp": "2025-04-24T16:22:44.924Z"
     },
     {
       "id": 134,
@@ -227,7 +227,7 @@
         "Duration: 1ms",
         "[log] Ending test: ✗ Should prevent non-admin from deactivating collectible (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.987Z"
+      "timestamp": "2025-04-24T16:22:44.885Z"
     },
     {
       "id": 136,
@@ -235,7 +235,7 @@
       "testName": "✗ Should prevent direct NFT minting",
       "description": "✗ Should prevent direct NFT minting",
       "status": "passed",
-      "duration": 36,
+      "duration": 37,
       "output": [
         "[log] Starting test: \u001b[33mDirect NFT Interactions\u001b[39m - ✗ Should prevent direct NFT minting",
         "[log] \u001b[36m\u001b[39m\n\u001b[36mSetting up test environment...\u001b[39m",
@@ -246,10 +246,10 @@
         "[log] \u001b[32m✓ Roles configured\u001b[39m",
         "[log] \u001b[32m✓ Test tribe created\u001b[39m",
         "[log] \u001b[32m✓ Test members added\u001b[39m",
-        "Duration: 1ms",
+        "Duration: 2ms",
         "[log] Ending test: ✗ Should prevent direct NFT minting (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:12.060Z"
+      "timestamp": "2025-04-24T16:22:44.961Z"
     },
     {
       "id": 137,
@@ -268,10 +268,10 @@
         "[log] \u001b[32m✓ Roles configured\u001b[39m",
         "[log] \u001b[32m✓ Test tribe created\u001b[39m",
         "[log] \u001b[32m✓ Test members added\u001b[39m",
-        "Duration: 3ms",
+        "Duration: 2ms",
         "[log] Ending test: ✗ Should prevent unauthorized transfers (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:12.098Z"
+      "timestamp": "2025-04-24T16:22:44.999Z"
     },
     {
       "id": 53,
@@ -299,7 +299,7 @@
         "Duration: 3ms",
         "[log] Ending test: Should allow user to update their profile metadata (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:06.771Z"
+      "timestamp": "2025-04-24T16:22:39.557Z"
     },
     {
       "id": 50,
@@ -307,7 +307,7 @@
       "testName": "Should create a valid user profile",
       "description": "Should create a valid user profile",
       "status": "passed",
-      "duration": 106,
+      "duration": 110,
       "output": [
         "[log] Starting test: \u001b[35m1. Profile Creation & Validation\u001b[39m - Should create a valid user profile",
         "[log] \u001b[32m✓ RoleManager deployed\u001b[39m",
@@ -323,10 +323,10 @@
         "[log] \u001b[36m\u001b[39m\n\u001b[36m=== User Profile Creation Flow ===\u001b[39m",
         "[log] \u001b[33mCreating profile for user1...\u001b[39m",
         "[log] \u001b[32m✓ Profile created with ID: 0\u001b[39m",
-        "Duration: 4ms",
+        "Duration: 3ms",
         "[log] Ending test: Should create a valid user profile (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:06.313Z"
+      "timestamp": "2025-04-24T16:22:39.261Z"
     },
     {
       "id": 51,
@@ -351,10 +351,10 @@
         "[log] \u001b[33mCreating first profile with 'testuser' username...\u001b[39m",
         "[log] \u001b[33mAttempting to create second profile with same username...\u001b[39m",
         "[log] \u001b[32m✓ Duplicate username properly rejected\u001b[39m",
-        "Duration: 5ms",
+        "Duration: 4ms",
         "[log] Ending test: Should prevent creating a profile with duplicate username (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:06.412Z"
+      "timestamp": "2025-04-24T16:22:39.360Z"
     },
     {
       "id": 54,
@@ -362,7 +362,7 @@
       "testName": "Should prevent unauthorized metadata updates",
       "description": "Should prevent unauthorized metadata updates",
       "status": "passed",
-      "duration": 93,
+      "duration": 99,
       "output": [
         "[log] Starting test: \u001b[35m1. Profile Creation & Validation\u001b[39m - Should prevent unauthorized metadata updates",
         "[log] \u001b[32m✓ RoleManager deployed\u001b[39m",
@@ -379,10 +379,10 @@
         "[log] \u001b[33mCreating profile owned by user1...\u001b[39m",
         "[log] \u001b[33mAttempting unauthorized update from user2...\u001b[39m",
         "[log] \u001b[32m✓ Unauthorized update properly rejected\u001b[39m",
-        "Duration: 2ms",
+        "Duration: 3ms",
         "[log] Ending test: Should prevent unauthorized metadata updates (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:06.864Z"
+      "timestamp": "2025-04-24T16:22:39.656Z"
     },
     {
       "id": 52,
@@ -390,7 +390,7 @@
       "testName": "Should validate username format requirements",
       "description": "Should validate username format requirements",
       "status": "passed",
-      "duration": 260,
+      "duration": 98,
       "output": [
         "[log] Starting test: \u001b[35m1. Profile Creation & Validation\u001b[39m - Should validate username format requirements",
         "[log] \u001b[32m✓ RoleManager deployed\u001b[39m",
@@ -406,10 +406,10 @@
         "[log] \u001b[36m\u001b[39m\n\u001b[36m=== Username Format Validation ===\u001b[39m",
         "[log] \u001b[33mTesting various invalid usernames...\u001b[39m",
         "[log] \u001b[32m✓ Username validation properly enforced\u001b[39m",
-        "Duration: 7ms",
+        "Duration: 6ms",
         "[log] Ending test: Should validate username format requirements (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:06.672Z"
+      "timestamp": "2025-04-24T16:22:39.458Z"
     },
     {
       "id": 86,
@@ -429,7 +429,7 @@
         "Duration: 3ms",
         "[log] Ending test: Should demonstrate complete tribe creation and management flow (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:10.237Z"
+      "timestamp": "2025-04-24T16:22:43.042Z"
     },
     {
       "id": 84,
@@ -449,7 +449,7 @@
         "Duration: 4ms",
         "[log] Ending test: Forbidden test: Should prevent banned moderator from exercising moderator powers (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:10.142Z"
+      "timestamp": "2025-04-24T16:22:42.925Z"
     },
     {
       "id": 85,
@@ -457,7 +457,7 @@
       "testName": "Forbidden test: Should handle changing tribe gating after member joins",
       "description": "Forbidden test: Should handle changing tribe gating after member joins",
       "status": "passed",
-      "duration": 8,
+      "duration": 9,
       "output": [
         "[log] Starting test: \u001b[35m2. Advanced Scenarios & Edge Cases\u001b[39m - Forbidden test: Should handle changing tribe gating after member joins",
         "[log] \u001b[36m\u001b[39m\n\u001b[36m=== Dynamic Gating Change Test ====\u001b[39m",
@@ -484,10 +484,10 @@
         "[log] \u001b[33mThis has been partially fixed with our TribeController modifications\u001b[39m",
         "[log] \u001b[33mBut PostMinter may need additional changes to properly handle grandfathered users\u001b[39m",
         "[log] \u001b[32m✓ Dynamic gating change test completed.\u001b[39m",
-        "Duration: 8ms",
+        "Duration: 9ms",
         "[log] Ending test: Forbidden test: Should handle changing tribe gating after member joins (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:10.150Z"
+      "timestamp": "2025-04-24T16:22:42.934Z"
     },
     {
       "id": 87,
@@ -495,7 +495,7 @@
       "testName": "Should demonstrate complete member onboarding and engagement flow",
       "description": "Should demonstrate complete member onboarding and engagement flow",
       "status": "passed",
-      "duration": 43,
+      "duration": 41,
       "output": [
         "[log] Starting test: \u001b[35m2. Member Onboarding & Engagement\u001b[39m - Should demonstrate complete member onboarding and engagement flow",
         "[log] \u001b[36m\u001b[39m\n\u001b[36m=== Member Onboarding & Engagement Flow ===\u001b[39m",
@@ -506,10 +506,10 @@
         "[log] \u001b[33mAwarding engagement points...\u001b[39m",
         "[log] \u001b[33mCreating community poll...\u001b[39m",
         "[log] \u001b[32m✓ Member onboarding and engagement flow complete\u001b[39m\n\u001b[32m\u001b[39m",
-        "Duration: 43ms",
+        "Duration: 40ms",
         "[log] Ending test: Should demonstrate complete member onboarding and engagement flow (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:10.280Z"
+      "timestamp": "2025-04-24T16:22:43.083Z"
     },
     {
       "id": 56,
@@ -517,7 +517,7 @@
       "testName": "Should allow updating tribe configuration",
       "description": "Should allow updating tribe configuration",
       "status": "passed",
-      "duration": 95,
+      "duration": 100,
       "output": [
         "[log] Starting test: \u001b[35m2. Tribe Management\u001b[39m - Should allow updating tribe configuration",
         "[log] \u001b[32m✓ RoleManager deployed\u001b[39m",
@@ -538,7 +538,7 @@
         "Duration: 2ms",
         "[log] Ending test: Should allow updating tribe configuration (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:07.053Z"
+      "timestamp": "2025-04-24T16:22:39.850Z"
     },
     {
       "id": 55,
@@ -546,7 +546,7 @@
       "testName": "Should create different types of tribes",
       "description": "Should create different types of tribes",
       "status": "passed",
-      "duration": 93,
+      "duration": 94,
       "output": [
         "[log] Starting test: \u001b[35m2. Tribe Management\u001b[39m - Should create different types of tribes",
         "[log] \u001b[32m✓ RoleManager deployed\u001b[39m",
@@ -567,7 +567,7 @@
         "Duration: 4ms",
         "[log] Ending test: Should create different types of tribes (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:06.958Z"
+      "timestamp": "2025-04-24T16:22:39.750Z"
     },
     {
       "id": 57,
@@ -575,7 +575,7 @@
       "testName": "Should handle different tribe joining flows",
       "description": "Should handle different tribe joining flows",
       "status": "passed",
-      "duration": 94,
+      "duration": 97,
       "output": [
         "[log] Starting test: \u001b[35m2. Tribe Management\u001b[39m - Should handle different tribe joining flows",
         "[log] \u001b[32m✓ RoleManager deployed\u001b[39m",
@@ -598,10 +598,10 @@
         "[log] \u001b[33mCreator approving user1 for private tribe...\u001b[39m",
         "[log] \u001b[33mUser1 joining invite code tribe with code...\u001b[39m",
         "[log] \u001b[32m✓ Successfully tested different joining flows\u001b[39m",
-        "Duration: 6ms",
+        "Duration: 5ms",
         "[log] Ending test: Should handle different tribe joining flows (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:07.148Z"
+      "timestamp": "2025-04-24T16:22:39.947Z"
     },
     {
       "id": 58,
@@ -609,7 +609,7 @@
       "testName": "Should properly enforce access control in tribe management",
       "description": "Should properly enforce access control in tribe management",
       "status": "passed",
-      "duration": 97,
+      "duration": 95,
       "output": [
         "[log] Starting test: \u001b[35m2. Tribe Management\u001b[39m - Should properly enforce access control in tribe management",
         "[log] \u001b[32m✓ RoleManager deployed\u001b[39m",
@@ -627,10 +627,10 @@
         "[log] \u001b[33mTesting member banning permissions...\u001b[39m",
         "[log] \u001b[33mTesting tribe configuration update permissions...\u001b[39m",
         "[log] \u001b[32m✓ Tribe management access control properly enforced\u001b[39m",
-        "Duration: 6ms",
+        "Duration: 4ms",
         "[log] Ending test: Should properly enforce access control in tribe management (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:07.245Z"
+      "timestamp": "2025-04-24T16:22:40.042Z"
     },
     {
       "id": 59,
@@ -638,7 +638,7 @@
       "testName": "Should demonstrate complete user onboarding flow",
       "description": "Should demonstrate complete user onboarding flow",
       "status": "passed",
-      "duration": 117,
+      "duration": 118,
       "output": [
         "[log] Starting test: \u001b[35m3. Combined User Journeys\u001b[39m - Should demonstrate complete user onboarding flow",
         "[log] \u001b[32m✓ RoleManager deployed\u001b[39m",
@@ -665,10 +665,10 @@
         "[log] \u001b[33mUser1 interacting with welcome post...\u001b[39m",
         "[log] \u001b[32m✓ Post interaction recorded\u001b[39m",
         "[log] \u001b[32m\u001b[39m\n\u001b[32m✓ Complete user onboarding journey successfully demonstrated\u001b[39m",
-        "Duration: 23ms",
+        "Duration: 27ms",
         "[log] Ending test: Should demonstrate complete user onboarding flow (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:07.362Z"
+      "timestamp": "2025-04-24T16:22:40.160Z"
     },
     {
       "id": 60,
@@ -676,7 +676,7 @@
       "testName": "Should handle error cases across the user journey",
       "description": "Should handle error cases across the user journey",
       "status": "passed",
-      "duration": 118,
+      "duration": 121,
       "output": [
         "[log] Starting test: \u001b[35m3. Combined User Journeys\u001b[39m - Should handle error cases across the user journey",
         "[log] \u001b[32m✓ RoleManager deployed\u001b[39m",
@@ -702,10 +702,10 @@
         "[log] \u001b[32m✓ Non-member post creation properly rejected\u001b[39m",
         "[log] \u001b[32m✓ Post cooldown properly enforced\u001b[39m",
         "[log] \u001b[32m\u001b[39m\n\u001b[32m✓ Error handling throughout user journey successfully demonstrated\u001b[39m",
-        "Duration: 20ms",
+        "Duration: 23ms",
         "[log] Ending test: Should handle error cases across the user journey (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:07.480Z"
+      "timestamp": "2025-04-24T16:22:40.281Z"
     },
     {
       "id": 91,
@@ -713,7 +713,7 @@
       "testName": "Should demonstrate advanced content gating scenarios",
       "description": "Should demonstrate advanced content gating scenarios",
       "status": "passed",
-      "duration": 16,
+      "duration": 17,
       "output": [
         "[log] Starting test: \u001b[35m3. Content Creation & Interactions\u001b[39m - Should demonstrate advanced content gating scenarios",
         "[log] \u001b[36m\u001b[39m\n\u001b[36m=== Advanced Content Gating Flow ===\u001b[39m",
@@ -723,10 +723,10 @@
         "[log] \u001b[33mTesting access control...\u001b[39m",
         "[log] \u001b[33mUser claiming collectible and joining tribe...\u001b[39m",
         "[log] \u001b[32m✓ Advanced gating scenarios complete\u001b[39m\n\u001b[32m\u001b[39m",
-        "Duration: 15ms",
+        "Duration: 16ms",
         "[log] Ending test: Should demonstrate advanced content gating scenarios (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:10.376Z"
+      "timestamp": "2025-04-24T16:22:43.211Z"
     },
     {
       "id": 94,
@@ -734,7 +734,7 @@
       "testName": "Should demonstrate advanced post types and metadata",
       "description": "Should demonstrate advanced post types and metadata",
       "status": "passed",
-      "duration": 38,
+      "duration": 44,
       "output": [
         "[log] Starting test: \u001b[35m3. Content Creation & Interactions\u001b[39m - Should demonstrate advanced post types and metadata",
         "[log] \u001b[36m\u001b[39m\n\u001b[36m=== Advanced Post Types ===\u001b[39m",
@@ -742,10 +742,10 @@
         "[log] \u001b[33mCreating event post...\u001b[39m",
         "[log] \u001b[33mCreating milestone post...\u001b[39m",
         "[log] \u001b[32m✓ Advanced post types complete\u001b[39m\n\u001b[32m\u001b[39m",
-        "Duration: 38ms",
+        "Duration: 43ms",
         "[log] Ending test: Should demonstrate advanced post types and metadata (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:10.429Z"
+      "timestamp": "2025-04-24T16:22:43.270Z"
     },
     {
       "id": 90,
@@ -761,10 +761,10 @@
         "[log] \u001b[33m\u001b[39m\n\u001b[33mTesting permission and access control...\u001b[39m",
         "[log] \u001b[33m\u001b[39m\n\u001b[33mTesting rate limiting...\u001b[39m",
         "[log] \u001b[32m✓ Error handling tests complete\u001b[39m\n\u001b[32m\u001b[39m",
-        "Duration: 25ms",
+        "Duration: 26ms",
         "[log] Ending test: Should demonstrate comprehensive error handling and edge cases (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:10.360Z"
+      "timestamp": "2025-04-24T16:22:43.194Z"
     },
     {
       "id": 92,
@@ -780,10 +780,10 @@
         "[log] \u001b[33mGetting user feed...\u001b[39m",
         "[log] \u001b[33mGetting filtered feed...\u001b[39m",
         "[log] \u001b[32m✓ Content discovery flow complete\u001b[39m\n\u001b[32m\u001b[39m",
-        "Duration: 5ms",
+        "Duration: 6ms",
         "[log] Ending test: Should demonstrate content discovery and feed management (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:10.382Z"
+      "timestamp": "2025-04-24T16:22:43.217Z"
     },
     {
       "id": 88,
@@ -791,7 +791,7 @@
       "testName": "Should demonstrate different post types and content creation",
       "description": "Should demonstrate different post types and content creation",
       "status": "passed",
-      "duration": 33,
+      "duration": 72,
       "output": [
         "[log] Starting test: \u001b[35m3. Content Creation & Interactions\u001b[39m - Should demonstrate different post types and content creation",
         "[log] \u001b[36m\u001b[39m\n\u001b[36m=== Content Creation Flow ===\u001b[39m",
@@ -799,10 +799,10 @@
         "[log] \u001b[33mCreating gated announcement...\u001b[39m",
         "[log] \u001b[33mCreating interactive poll...\u001b[39m",
         "[log] \u001b[32m✓ Content creation complete\u001b[39m\n\u001b[32m\u001b[39m",
-        "Duration: 33ms",
+        "Duration: 43ms",
         "[log] Ending test: Should demonstrate different post types and content creation (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:10.313Z"
+      "timestamp": "2025-04-24T16:22:43.155Z"
     },
     {
       "id": 93,
@@ -815,10 +815,10 @@
         "[log] Starting test: \u001b[35m3. Content Creation & Interactions\u001b[39m - Should demonstrate post interaction scenarios",
         "[log] \u001b[36m\u001b[39m\n\u001b[36m=== Post Interaction Scenarios ===\u001b[39m",
         "[log] \u001b[32m✓ Post interaction scenarios complete\u001b[39m\n\u001b[32m\u001b[39m",
-        "Duration: 9ms",
+        "Duration: 8ms",
         "[log] Ending test: Should demonstrate post interaction scenarios (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:10.391Z"
+      "timestamp": "2025-04-24T16:22:43.226Z"
     },
     {
       "id": 89,
@@ -826,16 +826,16 @@
       "testName": "Should demonstrate post interactions and updates",
       "description": "Should demonstrate post interactions and updates",
       "status": "passed",
-      "duration": 21,
+      "duration": 13,
       "output": [
         "[log] Starting test: \u001b[35m3. Content Creation & Interactions\u001b[39m - Should demonstrate post interactions and updates",
         "[log] \u001b[36m\u001b[39m\n\u001b[36m=== Post Interactions Flow ===\u001b[39m",
         "[log] \u001b[33mUser1 interacting with post...\u001b[39m",
         "[log] \u001b[32m✓ Post interactions complete\u001b[39m\n\u001b[32m\u001b[39m",
-        "Duration: 20ms",
+        "Duration: 12ms",
         "[log] Ending test: Should demonstrate post interactions and updates (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:10.334Z"
+      "timestamp": "2025-04-24T16:22:43.168Z"
     },
     {
       "id": 96,
@@ -843,7 +843,7 @@
       "testName": "Should demonstrate complete fundraiser flow",
       "description": "Should demonstrate complete fundraiser flow",
       "status": "passed",
-      "duration": 46,
+      "duration": 74,
       "output": [
         "[log] Starting test: \u001b[35m4. Project & Fundraising Management\u001b[39m - Should demonstrate complete fundraiser flow",
         "[log] \u001b[36m\u001b[39m\n\u001b[36m=== Fundraiser Creation Flow ===\u001b[39m",
@@ -851,10 +851,10 @@
         "[log] \u001b[32m✓ Fundraiser created with post ID: 15\u001b[39m",
         "[log] \u001b[33mSimulating fundraiser contribution...\u001b[39m",
         "[log] \u001b[32m✓ Fundraiser contribution recorded\u001b[39m",
-        "Duration: 45ms",
+        "Duration: 74ms",
         "[log] Ending test: Should demonstrate complete fundraiser flow (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:10.578Z"
+      "timestamp": "2025-04-24T16:22:43.452Z"
     },
     {
       "id": 95,
@@ -862,7 +862,7 @@
       "testName": "Should demonstrate complete project creation flow",
       "description": "Should demonstrate complete project creation flow",
       "status": "passed",
-      "duration": 103,
+      "duration": 108,
       "output": [
         "[log] Starting test: \u001b[35m4. Project & Fundraising Management\u001b[39m - Should demonstrate complete project creation flow",
         "[log] \u001b[36m\u001b[39m\n\u001b[36m=== Project Creation Flow ===\u001b[39m",
@@ -876,10 +876,10 @@
         "[log] \u001b[33mTesting unauthorized update attempt...\u001b[39m",
         "[log] \u001b[32m✓ Unauthorized update properly rejected\u001b[39m",
         "[log] \u001b[32m✓ Project creation flow test complete\u001b[39m",
-        "Duration: 103ms",
+        "Duration: 107ms",
         "[log] Ending test: Should demonstrate complete project creation flow (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:10.532Z"
+      "timestamp": "2025-04-24T16:22:43.378Z"
     },
     {
       "id": 101,
@@ -887,13 +887,13 @@
       "testName": "Should calculate member activity scores correctly",
       "description": "Should calculate member activity scores correctly",
       "status": "passed",
-      "duration": 85,
+      "duration": 83,
       "output": [
         "[log] Starting test: Activity Scores - Should calculate member activity scores correctly",
         "Duration: 3ms",
         "[log] Ending test: Should calculate member activity scores correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.017Z"
+      "timestamp": "2025-04-24T16:22:43.926Z"
     },
     {
       "id": 102,
@@ -901,13 +901,13 @@
       "testName": "Should handle invalid queries gracefully",
       "description": "Should handle invalid queries gracefully",
       "status": "passed",
-      "duration": 100,
+      "duration": 80,
       "output": [
         "[log] Starting test: Activity Scores - Should handle invalid queries gracefully",
-        "Duration: 3ms",
+        "Duration: 2ms",
         "[log] Ending test: Should handle invalid queries gracefully (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.117Z"
+      "timestamp": "2025-04-24T16:22:44.006Z"
     },
     {
       "id": 109,
@@ -915,13 +915,13 @@
       "testName": "Should allow admin to update verifier",
       "description": "Should allow admin to update verifier",
       "status": "passed",
-      "duration": 12,
+      "duration": 14,
       "output": [
         "[log] Starting test: Admin Functions - Should allow admin to update verifier",
         "Duration: 2ms",
         "[log] Ending test: Should allow admin to update verifier (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.275Z"
+      "timestamp": "2025-04-24T16:22:44.162Z"
     },
     {
       "id": 110,
@@ -929,13 +929,13 @@
       "testName": "Should prevent non-admin from updating verifier",
       "description": "Should prevent non-admin from updating verifier",
       "status": "passed",
-      "duration": 13,
+      "duration": 11,
       "output": [
         "[log] Starting test: Admin Functions - Should prevent non-admin from updating verifier",
         "Duration: 1ms",
         "[log] Ending test: Should prevent non-admin from updating verifier (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.288Z"
+      "timestamp": "2025-04-24T16:22:44.173Z"
     },
     {
       "id": 154,
@@ -943,7 +943,7 @@
       "testName": "Should allow tribe member to create a public post",
       "description": "Should allow tribe member to create a public post",
       "status": "passed",
-      "duration": 133,
+      "duration": 147,
       "output": [
         "[log] Starting test: Basic Post Creation and Access - Should allow tribe member to create a public post",
         "[log] Deploying contracts for testing",
@@ -986,10 +986,10 @@
         "[log] Post data verified successfully",
         "[log] \nStep 3: Checking post access",
         "[log] Access control verified successfully",
-        "Duration: 12ms",
+        "Duration: 13ms",
         "[log] Ending test: Should allow tribe member to create a public post (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:14.066Z"
+      "timestamp": "2025-04-24T16:22:47.032Z"
     },
     {
       "id": 155,
@@ -997,7 +997,7 @@
       "testName": "Should create and manage collectible-gated post",
       "description": "Should create and manage collectible-gated post",
       "status": "passed",
-      "duration": 136,
+      "duration": 148,
       "output": [
         "[log] Starting test: Basic Post Creation and Access - Should create and manage collectible-gated post",
         "[log] Deploying contracts for testing",
@@ -1041,10 +1041,10 @@
         "[log] \nStep 3: Verifying access control",
         "[log] User2 (with collectible) can view post",
         "[log] User3 (without collectible) cannot view post",
-        "Duration: 11ms",
+        "Duration: 10ms",
         "[log] Ending test: Should create and manage collectible-gated post (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:14.202Z"
+      "timestamp": "2025-04-24T16:22:47.180Z"
     },
     {
       "id": 156,
@@ -1052,7 +1052,7 @@
       "testName": "Should handle encrypted posts with proper key management",
       "description": "Should handle encrypted posts with proper key management",
       "status": "passed",
-      "duration": 130,
+      "duration": 131,
       "output": [
         "[log] Starting test: Basic Post Creation and Access - Should handle encrypted posts with proper key management",
         "[log] Deploying contracts for testing",
@@ -1099,10 +1099,10 @@
         "[log] Decryption key access verified",
         "[log] \nStep 5: Verifying key derivation",
         "[log] Key derivation verified",
-        "Duration: 3ms",
+        "Duration: 4ms",
         "[log] Ending test: Should handle encrypted posts with proper key management (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:14.332Z"
+      "timestamp": "2025-04-24T16:22:47.311Z"
     },
     {
       "id": 104,
@@ -1110,13 +1110,13 @@
       "testName": "Should allow claiming a collectible with correct payment",
       "description": "Should allow claiming a collectible with correct payment",
       "status": "passed",
-      "duration": 37,
+      "duration": 35,
       "output": [
         "[log] Starting test: Collectible Claiming - Should allow claiming a collectible with correct payment",
         "Duration: 1ms",
         "[log] Ending test: Should allow claiming a collectible with correct payment (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.190Z"
+      "timestamp": "2025-04-24T16:22:44.076Z"
     },
     {
       "id": 105,
@@ -1130,7 +1130,7 @@
         "Duration: 0ms",
         "[log] Ending test: Should prevent claiming with insufficient payment (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.224Z"
+      "timestamp": "2025-04-24T16:22:44.110Z"
     },
     {
       "id": 103,
@@ -1138,13 +1138,13 @@
       "testName": "Should create a collectible successfully",
       "description": "Should create a collectible successfully",
       "status": "passed",
-      "duration": 36,
+      "duration": 34,
       "output": [
         "[log] Starting test: Collectible Creation - Should create a collectible successfully",
         "Duration: 2ms",
         "[log] Ending test: Should create a collectible successfully (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.153Z"
+      "timestamp": "2025-04-24T16:22:44.041Z"
     },
     {
       "id": 14,
@@ -1152,7 +1152,7 @@
       "testName": "Should create a free collectible",
       "description": "Should create a free collectible",
       "status": "passed",
-      "duration": 139,
+      "duration": 141,
       "output": [
         "[log] Starting test: Collectible Management Journey - Should create a free collectible",
         "[log] Deploying contracts for testing",
@@ -1184,7 +1184,7 @@
         "Duration: 2ms",
         "[log] Ending test: Should create a free collectible (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:04.905Z"
+      "timestamp": "2025-04-24T16:22:37.751Z"
     },
     {
       "id": 40,
@@ -1192,13 +1192,13 @@
       "testName": "Should create different types of posts",
       "description": "Should create different types of posts",
       "status": "passed",
-      "duration": 32,
+      "duration": 25,
       "output": [
         "[log] Starting test: Content Creator Journey - Should create different types of posts",
-        "Duration: 32ms",
+        "Duration: 24ms",
         "[log] Ending test: Should create different types of posts (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.859Z"
+      "timestamp": "2025-04-24T16:22:38.782Z"
     },
     {
       "id": 43,
@@ -1206,14 +1206,14 @@
       "testName": "Should handle post deletion",
       "description": "Should handle post deletion",
       "status": "passed",
-      "duration": 7,
+      "duration": 8,
       "output": [
         "[log] Starting test: Content Creator Journey - Should handle post deletion",
-        "[log] Post after deletion: [\"5\",\"0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65\",\"1\",\"{\\\"title\\\":\\\"Test Post\\\",\\\"content\\\":\\\"Test Content\\\",\\\"createdAt\\\":1745498705}\",false,\"0x0000000000000000000000000000000000000000\",\"0\",false,\"0x0000000000000000000000000000000000000000\"]",
-        "Duration: 7ms",
+        "[log] Post after deletion: [\"5\",\"0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65\",\"1\",\"{\\\"title\\\":\\\"Test Post\\\",\\\"content\\\":\\\"Test Content\\\",\\\"createdAt\\\":1745511758}\",false,\"0x0000000000000000000000000000000000000000\",\"0\",false,\"0x0000000000000000000000000000000000000000\"]",
+        "Duration: 8ms",
         "[log] Ending test: Should handle post deletion (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.880Z"
+      "timestamp": "2025-04-24T16:22:38.804Z"
     },
     {
       "id": 41,
@@ -1227,7 +1227,7 @@
         "Duration: 8ms",
         "[log] Ending test: Should handle post interactions (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.867Z"
+      "timestamp": "2025-04-24T16:22:38.790Z"
     },
     {
       "id": 42,
@@ -1235,13 +1235,13 @@
       "testName": "Should handle post reporting",
       "description": "Should handle post reporting",
       "status": "passed",
-      "duration": 5,
+      "duration": 6,
       "output": [
         "[log] Starting test: Content Creator Journey - Should handle post reporting",
-        "Duration: 5ms",
+        "Duration: 6ms",
         "[log] Ending test: Should handle post reporting (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.873Z"
+      "timestamp": "2025-04-24T16:22:38.796Z"
     },
     {
       "id": 38,
@@ -1256,7 +1256,7 @@
         "Duration: 2ms",
         "[log] Ending test: Should ensure users can't interact with their own fundraiser (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.599Z"
+      "timestamp": "2025-04-24T16:22:38.520Z"
     },
     {
       "id": 39,
@@ -1269,10 +1269,10 @@
         "[log] Starting test: Contribution Scenarios - Should prevent interactions with deleted fundraiser",
         "[log] Created test fundraiser with ID: 12",
         "[log] Created test fundraiser for deletion with ID: 13",
-        "Duration: 14ms",
+        "Duration: 15ms",
         "[log] Ending test: Should prevent interactions with deleted fundraiser (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.699Z"
+      "timestamp": "2025-04-24T16:22:38.620Z"
     },
     {
       "id": 37,
@@ -1280,14 +1280,14 @@
       "testName": "Should simulate contribution through interaction",
       "description": "Should simulate contribution through interaction",
       "status": "passed",
-      "duration": 10,
+      "duration": 11,
       "output": [
         "[log] Starting test: Contribution Scenarios - Should simulate contribution through interaction",
         "[log] Created test fundraiser with ID: 10",
         "Duration: 2ms",
         "[log] Ending test: Should simulate contribution through interaction (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.583Z"
+      "timestamp": "2025-04-24T16:22:38.504Z"
     },
     {
       "id": 47,
@@ -1295,13 +1295,13 @@
       "testName": "Should handle invalid metadata",
       "description": "Should handle invalid metadata",
       "status": "passed",
-      "duration": 4,
+      "duration": 5,
       "output": [
         "[log] Starting test: Error Cases - Should handle invalid metadata",
         "Duration: 4ms",
         "[log] Ending test: Should handle invalid metadata (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:06.186Z"
+      "timestamp": "2025-04-24T16:22:39.130Z"
     },
     {
       "id": 48,
@@ -1309,13 +1309,13 @@
       "testName": "Should handle permission errors",
       "description": "Should handle permission errors",
       "status": "passed",
-      "duration": 1,
+      "duration": 2,
       "output": [
         "[log] Starting test: Error Cases - Should handle permission errors",
         "Duration: 1ms",
         "[log] Ending test: Should handle permission errors (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:06.187Z"
+      "timestamp": "2025-04-24T16:22:39.132Z"
     },
     {
       "id": 49,
@@ -1323,13 +1323,13 @@
       "testName": "Should handle rate limiting",
       "description": "Should handle rate limiting",
       "status": "passed",
-      "duration": 20,
+      "duration": 19,
       "output": [
         "[log] Starting test: Error Cases - Should handle rate limiting",
-        "Duration: 20ms",
+        "Duration: 19ms",
         "[log] Ending test: Should handle rate limiting (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:06.207Z"
+      "timestamp": "2025-04-24T16:22:39.151Z"
     },
     {
       "id": 112,
@@ -1337,13 +1337,13 @@
       "testName": "Should allow organizer to create event",
       "description": "Should allow organizer to create event",
       "status": "passed",
-      "duration": 18,
+      "duration": 19,
       "output": [
         "[log] Starting test: Event Creation - Should allow organizer to create event",
         "Duration: 2ms",
         "[log] Ending test: Should allow organizer to create event (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.462Z"
+      "timestamp": "2025-04-24T16:22:44.354Z"
     },
     {
       "id": 113,
@@ -1357,7 +1357,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should prevent non-organizer from creating event (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.475Z"
+      "timestamp": "2025-04-24T16:22:44.367Z"
     },
     {
       "id": 20,
@@ -1371,7 +1371,7 @@
         "Duration: 2ms",
         "[log] Ending test: Should create a physical event with basic details (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.249Z"
+      "timestamp": "2025-04-24T16:22:38.091Z"
     },
     {
       "id": 21,
@@ -1385,7 +1385,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should prevent non-organizer from creating event (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.251Z"
+      "timestamp": "2025-04-24T16:22:38.093Z"
     },
     {
       "id": 22,
@@ -1399,7 +1399,7 @@
         "Duration: 3ms",
         "[log] Ending test: Should test contract-level validations for event creation (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.254Z"
+      "timestamp": "2025-04-24T16:22:38.096Z"
     },
     {
       "id": 30,
@@ -1407,13 +1407,13 @@
       "testName": "Should allow organizer to cancel event",
       "description": "Should allow organizer to cancel event",
       "status": "passed",
-      "duration": 2,
+      "duration": 1,
       "output": [
         "[log] Starting test: Event Management - Should allow organizer to cancel event",
-        "Duration: 1ms",
+        "Duration: 0ms",
         "[log] Ending test: Should allow organizer to cancel event (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.275Z"
+      "timestamp": "2025-04-24T16:22:38.116Z"
     },
     {
       "id": 124,
@@ -1424,10 +1424,10 @@
       "duration": 13,
       "output": [
         "[log] Starting test: Event Management - Should allow organizer to cancel event",
-        "Duration: 0ms",
+        "Duration: 1ms",
         "[log] Ending test: Should allow organizer to cancel event (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.629Z"
+      "timestamp": "2025-04-24T16:22:44.519Z"
     },
     {
       "id": 28,
@@ -1435,13 +1435,13 @@
       "testName": "Should allow organizer to update metadata",
       "description": "Should allow organizer to update metadata",
       "status": "passed",
-      "duration": 3,
+      "duration": 2,
       "output": [
         "[log] Starting test: Event Management - Should allow organizer to update metadata",
         "Duration: 1ms",
         "[log] Ending test: Should allow organizer to update metadata (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.271Z"
+      "timestamp": "2025-04-24T16:22:38.112Z"
     },
     {
       "id": 122,
@@ -1449,13 +1449,13 @@
       "testName": "Should allow organizer to update metadata",
       "description": "Should allow organizer to update metadata",
       "status": "passed",
-      "duration": 15,
+      "duration": 14,
       "output": [
         "[log] Starting test: Event Management - Should allow organizer to update metadata",
         "Duration: 1ms",
         "[log] Ending test: Should allow organizer to update metadata (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.603Z"
+      "timestamp": "2025-04-24T16:22:44.493Z"
     },
     {
       "id": 32,
@@ -1466,10 +1466,10 @@
       "duration": 1,
       "output": [
         "[log] Starting test: Event Management - Should prevent non-organizer from canceling event",
-        "Duration: 1ms",
+        "Duration: 0ms",
         "[log] Ending test: Should prevent non-organizer from canceling event (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.278Z"
+      "timestamp": "2025-04-24T16:22:38.119Z"
     },
     {
       "id": 29,
@@ -1477,13 +1477,13 @@
       "testName": "Should prevent non-organizer from updating metadata",
       "description": "Should prevent non-organizer from updating metadata",
       "status": "passed",
-      "duration": 2,
+      "duration": 3,
       "output": [
         "[log] Starting test: Event Management - Should prevent non-organizer from updating metadata",
         "Duration: 1ms",
         "[log] Ending test: Should prevent non-organizer from updating metadata (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.273Z"
+      "timestamp": "2025-04-24T16:22:38.115Z"
     },
     {
       "id": 123,
@@ -1497,7 +1497,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should prevent non-organizer from updating metadata (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.616Z"
+      "timestamp": "2025-04-24T16:22:44.506Z"
     },
     {
       "id": 31,
@@ -1505,13 +1505,13 @@
       "testName": "Should prevent ticket purchase after cancellation",
       "description": "Should prevent ticket purchase after cancellation",
       "status": "passed",
-      "duration": 1,
+      "duration": 2,
       "output": [
         "[log] Starting test: Event Management - Should prevent ticket purchase after cancellation",
-        "Duration: 0ms",
+        "Duration: 1ms",
         "[log] Ending test: Should prevent ticket purchase after cancellation (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.276Z"
+      "timestamp": "2025-04-24T16:22:38.118Z"
     },
     {
       "id": 125,
@@ -1525,7 +1525,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should prevent ticket purchase after cancellation (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.642Z"
+      "timestamp": "2025-04-24T16:22:44.532Z"
     },
     {
       "id": 45,
@@ -1533,7 +1533,7 @@
       "testName": "Should retrieve paginated tribe feed",
       "description": "Should retrieve paginated tribe feed",
       "status": "passed",
-      "duration": 141,
+      "duration": 155,
       "output": [
         "[log] Starting test: Feed Management - Should retrieve paginated tribe feed",
         "[log] Deploying contracts for testing",
@@ -1562,10 +1562,10 @@
         "[log] Granting test roles to users in interaction manager",
         "[log] Granting test roles to users in query manager",
         "[log] Contract deployment and setup completed",
-        "Duration: 1ms",
+        "Duration: 0ms",
         "[log] Ending test: Should retrieve paginated tribe feed (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:06.037Z"
+      "timestamp": "2025-04-24T16:22:38.977Z"
     },
     {
       "id": 46,
@@ -1573,7 +1573,7 @@
       "testName": "Should retrieve user-specific feed",
       "description": "Should retrieve user-specific feed",
       "status": "passed",
-      "duration": 145,
+      "duration": 148,
       "output": [
         "[log] Starting test: Feed Management - Should retrieve user-specific feed",
         "[log] Deploying contracts for testing",
@@ -1605,7 +1605,7 @@
         "Duration: 4ms",
         "[log] Ending test: Should retrieve user-specific feed (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:06.182Z"
+      "timestamp": "2025-04-24T16:22:39.125Z"
     },
     {
       "id": 160,
@@ -1613,7 +1613,7 @@
       "testName": "Should retrieve paginated posts by tribe",
       "description": "Should retrieve paginated posts by tribe",
       "status": "passed",
-      "duration": 193,
+      "duration": 213,
       "output": [
         "[log] Starting test: Feed Querying - Should retrieve paginated posts by tribe",
         "[log] Deploying contracts for testing",
@@ -1660,7 +1660,7 @@
         "Duration: 2ms",
         "[log] Ending test: Should retrieve paginated posts by tribe (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:14.937Z"
+      "timestamp": "2025-04-24T16:22:47.946Z"
     },
     {
       "id": 162,
@@ -1668,7 +1668,7 @@
       "testName": "Should retrieve paginated posts by tribe and user",
       "description": "Should retrieve paginated posts by tribe and user",
       "status": "passed",
-      "duration": 201,
+      "duration": 209,
       "output": [
         "[log] Starting test: Feed Querying - Should retrieve paginated posts by tribe and user",
         "[log] Deploying contracts for testing",
@@ -1710,10 +1710,10 @@
         "[log] Step 1: Retrieving user1's posts in tribe",
         "[log] Retrieved 3 posts for user1 in tribe",
         "[log] Verified post ownership and tribe membership",
-        "Duration: 2ms",
+        "Duration: 3ms",
         "[log] Ending test: Should retrieve paginated posts by tribe and user (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.342Z"
+      "timestamp": "2025-04-24T16:22:48.354Z"
     },
     {
       "id": 161,
@@ -1721,7 +1721,7 @@
       "testName": "Should retrieve paginated posts by user",
       "description": "Should retrieve paginated posts by user",
       "status": "passed",
-      "duration": 204,
+      "duration": 199,
       "output": [
         "[log] Starting test: Feed Querying - Should retrieve paginated posts by user",
         "[log] Deploying contracts for testing",
@@ -1765,10 +1765,10 @@
         "[log] \nStep 2: Retrieving user2's posts with pagination",
         "[log] Retrieved 3 posts for user2 (first page)",
         "[log] Verified post ownership",
-        "Duration: 5ms",
+        "Duration: 4ms",
         "[log] Ending test: Should retrieve paginated posts by user (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.141Z"
+      "timestamp": "2025-04-24T16:22:48.145Z"
     },
     {
       "id": 163,
@@ -1776,7 +1776,7 @@
       "testName": "Should retrieve user feed across tribes",
       "description": "Should retrieve user feed across tribes",
       "status": "passed",
-      "duration": 222,
+      "duration": 220,
       "output": [
         "[log] Starting test: Feed Querying - Should retrieve user feed across tribes",
         "[log] Deploying contracts for testing",
@@ -1820,10 +1820,10 @@
         "[log] \nStep 2: Retrieving user feed",
         "[log] Retrieved 5 posts from user feed",
         "[log] Feed contains posts from both tribes (Tribe1: 2, Tribe2: 3)",
-        "Duration: 22ms",
+        "Duration: 23ms",
         "[log] Ending test: Should retrieve user feed across tribes (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.564Z"
+      "timestamp": "2025-04-24T16:22:48.574Z"
     },
     {
       "id": 33,
@@ -1831,7 +1831,7 @@
       "testName": "Should create a standard fundraiser",
       "description": "Should create a standard fundraiser",
       "status": "passed",
-      "duration": 33,
+      "duration": 67,
       "output": [
         "[log] Starting test: Fundraiser Creation Scenarios - Should create a standard fundraiser",
         "[log] Debug: About to create fundraiser with tribeId 1",
@@ -1842,10 +1842,10 @@
         "[log] Debug: FundraiserCreator has PROJECT_CREATOR_ROLE: true",
         "[log] Debug: Creating post using testTribeId 0 with creationManager directly",
         "[log] Post created successfully",
-        "Duration: 33ms",
+        "Duration: 67ms",
         "[log] Ending test: Should create a standard fundraiser (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.449Z"
+      "timestamp": "2025-04-24T16:22:38.326Z"
     },
     {
       "id": 35,
@@ -1853,16 +1853,16 @@
       "testName": "Should create fundraiser with flexible durations",
       "description": "Should create fundraiser with flexible durations",
       "status": "passed",
-      "duration": 34,
+      "duration": 61,
       "output": [
         "[log] Starting test: Fundraiser Creation Scenarios - Should create fundraiser with flexible durations",
         "[log] Created 7-day fundraiser",
         "[log] Created 30-day fundraiser",
         "[log] Created 90-day fundraiser",
-        "Duration: 34ms",
+        "Duration: 61ms",
         "[log] Ending test: Should create fundraiser with flexible durations (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.514Z"
+      "timestamp": "2025-04-24T16:22:38.422Z"
     },
     {
       "id": 34,
@@ -1870,16 +1870,16 @@
       "testName": "Should create fundraiser with multiple currencies",
       "description": "Should create fundraiser with multiple currencies",
       "status": "passed",
-      "duration": 31,
+      "duration": 35,
       "output": [
         "[log] Starting test: Fundraiser Creation Scenarios - Should create fundraiser with multiple currencies",
         "[log] Created ETH fundraiser",
         "[log] Created USDC fundraiser",
         "[log] Created TRIBE_TOKEN fundraiser",
-        "Duration: 31ms",
+        "Duration: 34ms",
         "[log] Ending test: Should create fundraiser with multiple currencies (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.480Z"
+      "timestamp": "2025-04-24T16:22:38.361Z"
     },
     {
       "id": 36,
@@ -1887,16 +1887,16 @@
       "testName": "Should handle different slab configurations",
       "description": "Should handle different slab configurations",
       "status": "passed",
-      "duration": 59,
+      "duration": 71,
       "output": [
         "[log] Starting test: Fundraiser Creation Scenarios - Should handle different slab configurations",
         "[log] Created slab config test 1",
         "[log] Created slab config test 2",
         "[log] Created slab config test 3",
-        "Duration: 58ms",
+        "Duration: 71ms",
         "[log] Ending test: Should handle different slab configurations (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.573Z"
+      "timestamp": "2025-04-24T16:22:38.493Z"
     },
     {
       "id": 18,
@@ -1910,7 +1910,7 @@
         "Duration: 4ms",
         "[log] Ending test: Should handle concurrent claiming from multiple users (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.172Z"
+      "timestamp": "2025-04-24T16:22:38.013Z"
     },
     {
       "id": 19,
@@ -1924,7 +1924,7 @@
         "Duration: 4ms",
         "[log] Ending test: Should handle supply limits correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.210Z"
+      "timestamp": "2025-04-24T16:22:38.051Z"
     },
     {
       "id": 202,
@@ -1938,7 +1938,7 @@
         "Duration: 3ms",
         "[log] Ending test: Should enforce invite code usage limits (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.926Z"
+      "timestamp": "2025-04-24T16:22:49.947Z"
     },
     {
       "id": 201,
@@ -1946,13 +1946,13 @@
       "testName": "Should handle invite code revocation",
       "description": "Should handle invite code revocation",
       "status": "passed",
-      "duration": 42,
+      "duration": 41,
       "output": [
         "[log] Starting test: Invite Code Management - Should handle invite code revocation",
-        "Duration: 1ms",
+        "Duration: 2ms",
         "[log] Ending test: Should handle invite code revocation (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.883Z"
+      "timestamp": "2025-04-24T16:22:49.904Z"
     },
     {
       "id": 200,
@@ -1960,13 +1960,13 @@
       "testName": "Should manage invite codes correctly",
       "description": "Should manage invite codes correctly",
       "status": "passed",
-      "duration": 43,
+      "duration": 42,
       "output": [
         "[log] Starting test: Invite Code Management - Should manage invite codes correctly",
-        "Duration: 2ms",
+        "Duration: 1ms",
         "[log] Ending test: Should manage invite codes correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.841Z"
+      "timestamp": "2025-04-24T16:22:49.863Z"
     },
     {
       "id": 186,
@@ -1974,13 +1974,13 @@
       "testName": "Should allow joining with valid invite code",
       "description": "Should allow joining with valid invite code",
       "status": "passed",
-      "duration": 40,
+      "duration": 41,
       "output": [
         "[log] Starting test: Invite Code Tribe - Should allow joining with valid invite code",
         "Duration: 1ms",
         "[log] Ending test: Should allow joining with valid invite code (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.269Z"
+      "timestamp": "2025-04-24T16:22:49.284Z"
     },
     {
       "id": 190,
@@ -1988,13 +1988,13 @@
       "testName": "Should enforce invite code usage limits",
       "description": "Should enforce invite code usage limits",
       "status": "passed",
-      "duration": 40,
+      "duration": 41,
       "output": [
         "[log] Starting test: Invite Code Tribe - Should enforce invite code usage limits",
-        "Duration: 3ms",
+        "Duration: 2ms",
         "[log] Ending test: Should enforce invite code usage limits (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.433Z"
+      "timestamp": "2025-04-24T16:22:49.446Z"
     },
     {
       "id": 189,
@@ -2002,13 +2002,13 @@
       "testName": "Should handle invite code expiry correctly",
       "description": "Should handle invite code expiry correctly",
       "status": "passed",
-      "duration": 44,
+      "duration": 43,
       "output": [
         "[log] Starting test: Invite Code Tribe - Should handle invite code expiry correctly",
-        "Duration: 3ms",
+        "Duration: 4ms",
         "[log] Ending test: Should handle invite code expiry correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.393Z"
+      "timestamp": "2025-04-24T16:22:49.405Z"
     },
     {
       "id": 185,
@@ -2022,7 +2022,7 @@
         "Duration: 0ms",
         "[log] Ending test: Should not allow direct joining without invite code (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.229Z"
+      "timestamp": "2025-04-24T16:22:49.243Z"
     },
     {
       "id": 187,
@@ -2030,13 +2030,13 @@
       "testName": "Should not allow joining with invalid invite code",
       "description": "Should not allow joining with invalid invite code",
       "status": "passed",
-      "duration": 40,
+      "duration": 39,
       "output": [
         "[log] Starting test: Invite Code Tribe - Should not allow joining with invalid invite code",
         "Duration: 1ms",
         "[log] Ending test: Should not allow joining with invalid invite code (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.309Z"
+      "timestamp": "2025-04-24T16:22:49.323Z"
     },
     {
       "id": 188,
@@ -2044,13 +2044,13 @@
       "testName": "Should track invite code usage correctly",
       "description": "Should track invite code usage correctly",
       "status": "passed",
-      "duration": 40,
+      "duration": 39,
       "output": [
         "[log] Starting test: Invite Code Tribe - Should track invite code usage correctly",
         "Duration: 1ms",
         "[log] Ending test: Should track invite code usage correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.349Z"
+      "timestamp": "2025-04-24T16:22:49.362Z"
     },
     {
       "id": 206,
@@ -2058,13 +2058,13 @@
       "testName": "Should allow creating a proposal",
       "description": "Should allow creating a proposal",
       "status": "passed",
-      "duration": 5,
+      "duration": 14,
       "output": [
         "[log] Starting test: Journey 5.1: Create Proposal - Should allow creating a proposal",
         "Duration: 2ms",
         "[log] Ending test: Should allow creating a proposal (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:17.058Z"
+      "timestamp": "2025-04-24T16:22:50.088Z"
     },
     {
       "id": 207,
@@ -2078,7 +2078,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should increment proposalId after each creation (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:17.062Z"
+      "timestamp": "2025-04-24T16:22:50.092Z"
     },
     {
       "id": 208,
@@ -2086,13 +2086,13 @@
       "testName": "Should allow voting on proposal",
       "description": "Should allow voting on proposal",
       "status": "passed",
-      "duration": 5,
+      "duration": 4,
       "output": [
         "[log] Starting test: Journey 5.2: Vote on Proposal - Should allow voting on proposal",
-        "Duration: 2ms",
+        "Duration: 1ms",
         "[log] Ending test: Should allow voting on proposal (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:17.067Z"
+      "timestamp": "2025-04-24T16:22:50.096Z"
     },
     {
       "id": 209,
@@ -2100,13 +2100,13 @@
       "testName": "Should track vote counts correctly",
       "description": "Should track vote counts correctly",
       "status": "passed",
-      "duration": 4,
+      "duration": 5,
       "output": [
         "[log] Starting test: Journey 5.2: Vote on Proposal - Should track vote counts correctly",
         "Duration: 2ms",
         "[log] Ending test: Should track vote counts correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:17.071Z"
+      "timestamp": "2025-04-24T16:22:50.101Z"
     },
     {
       "id": 210,
@@ -2114,13 +2114,13 @@
       "testName": "Should emit vote event regardless of vote choice",
       "description": "Should emit vote event regardless of vote choice",
       "status": "passed",
-      "duration": 6,
+      "duration": 5,
       "output": [
         "[log] Starting test: Journey 5.3: Unauthorized Vote Attempt - Should emit vote event regardless of vote choice",
-        "Duration: 2ms",
+        "Duration: 3ms",
         "[log] Ending test: Should emit vote event regardless of vote choice (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:17.077Z"
+      "timestamp": "2025-04-24T16:22:50.106Z"
     },
     {
       "id": 211,
@@ -2128,13 +2128,13 @@
       "testName": "Should only count positive votes",
       "description": "Should only count positive votes",
       "status": "passed",
-      "duration": 4,
+      "duration": 5,
       "output": [
         "[log] Starting test: Journey 5.3: Unauthorized Vote Attempt - Should only count positive votes",
-        "Duration: 2ms",
+        "Duration: 1ms",
         "[log] Ending test: Should only count positive votes (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:17.081Z"
+      "timestamp": "2025-04-24T16:22:50.111Z"
     },
     {
       "id": 3,
@@ -2142,7 +2142,7 @@
       "testName": "Should complete full login process",
       "description": "Should complete full login process",
       "status": "passed",
-      "duration": 19,
+      "duration": 18,
       "output": [
         "[log] Starting test: Login Journey - Should complete full login process",
         "[log] \nStep 1: Checking NFT balance",
@@ -2156,7 +2156,7 @@
         "Duration: 3ms",
         "[log] Ending test: Should complete full login process (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:04.576Z"
+      "timestamp": "2025-04-24T16:22:37.415Z"
     },
     {
       "id": 4,
@@ -2170,7 +2170,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should handle login with non-existent profile (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:04.592Z"
+      "timestamp": "2025-04-24T16:22:37.431Z"
     },
     {
       "id": 5,
@@ -2178,13 +2178,13 @@
       "testName": "Should handle login with transferred profile",
       "description": "Should handle login with transferred profile",
       "status": "passed",
-      "duration": 17,
+      "duration": 16,
       "output": [
         "[log] Starting test: Login Journey - Should handle login with transferred profile",
         "Duration: 2ms",
         "[log] Ending test: Should handle login with transferred profile (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:04.609Z"
+      "timestamp": "2025-04-24T16:22:37.447Z"
     },
     {
       "id": 198,
@@ -2192,13 +2192,13 @@
       "testName": "Should handle member approval flow correctly",
       "description": "Should handle member approval flow correctly",
       "status": "passed",
-      "duration": 39,
+      "duration": 41,
       "output": [
         "[log] Starting test: Member Management - Should handle member approval flow correctly",
-        "Duration: 1ms",
+        "Duration: 2ms",
         "[log] Ending test: Should handle member approval flow correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.756Z"
+      "timestamp": "2025-04-24T16:22:49.780Z"
     },
     {
       "id": 197,
@@ -2206,13 +2206,13 @@
       "testName": "Should handle member banning correctly",
       "description": "Should handle member banning correctly",
       "status": "passed",
-      "duration": 42,
+      "duration": 41,
       "output": [
         "[log] Starting test: Member Management - Should handle member banning correctly",
         "Duration: 2ms",
         "[log] Ending test: Should handle member banning correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.717Z"
+      "timestamp": "2025-04-24T16:22:49.739Z"
     },
     {
       "id": 199,
@@ -2220,13 +2220,13 @@
       "testName": "Should handle member rejection flow correctly",
       "description": "Should handle member rejection flow correctly",
       "status": "passed",
-      "duration": 42,
+      "duration": 41,
       "output": [
         "[log] Starting test: Member Management - Should handle member rejection flow correctly",
         "Duration: 2ms",
         "[log] Ending test: Should handle member rejection flow correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.798Z"
+      "timestamp": "2025-04-24T16:22:49.821Z"
     },
     {
       "id": 98,
@@ -2234,13 +2234,13 @@
       "testName": "Should get most active members based on points",
       "description": "Should get most active members based on points",
       "status": "passed",
-      "duration": 78,
+      "duration": 96,
       "output": [
         "[log] Starting test: Member Queries - Should get most active members based on points",
-        "Duration: 4ms",
+        "Duration: 3ms",
         "[log] Ending test: Should get most active members based on points (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:10.758Z"
+      "timestamp": "2025-04-24T16:22:43.670Z"
     },
     {
       "id": 97,
@@ -2248,13 +2248,13 @@
       "testName": "Should get paginated list of tribe members",
       "description": "Should get paginated list of tribe members",
       "status": "passed",
-      "duration": 102,
+      "duration": 122,
       "output": [
         "[log] Starting test: Member Queries - Should get paginated list of tribe members",
         "Duration: 5ms",
         "[log] Ending test: Should get paginated list of tribe members (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:10.680Z"
+      "timestamp": "2025-04-24T16:22:43.574Z"
     },
     {
       "id": 205,
@@ -2262,13 +2262,13 @@
       "testName": "Should handle all member status transitions correctly",
       "description": "Should handle all member status transitions correctly",
       "status": "passed",
-      "duration": 43,
+      "duration": 41,
       "output": [
         "[log] Starting test: Member Status Transitions - Should handle all member status transitions correctly",
         "Duration: 3ms",
         "[log] Ending test: Should handle all member status transitions correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:17.053Z"
+      "timestamp": "2025-04-24T16:22:50.073Z"
     },
     {
       "id": 68,
@@ -2276,7 +2276,7 @@
       "testName": "Should allow reviewer to approve milestone",
       "description": "Should allow reviewer to approve milestone",
       "status": "passed",
-      "duration": 146,
+      "duration": 141,
       "output": [
         "[log] Starting test: Milestone Management - Should allow reviewer to approve milestone",
         "[log] Deploying contracts for testing",
@@ -2314,10 +2314,10 @@
         "[log] TeamMember initial membership status: 1",
         "[log] Reviewer initial membership status: 1",
         "[log] Tribe setup completed successfully",
-        "Duration: 5ms",
+        "Duration: 4ms",
         "[log] Ending test: Should allow reviewer to approve milestone (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:08.641Z"
+      "timestamp": "2025-04-24T16:22:41.433Z"
     },
     {
       "id": 69,
@@ -2325,7 +2325,7 @@
       "testName": "Should allow reviewer to reject milestone",
       "description": "Should allow reviewer to reject milestone",
       "status": "passed",
-      "duration": 145,
+      "duration": 139,
       "output": [
         "[log] Starting test: Milestone Management - Should allow reviewer to reject milestone",
         "[log] Deploying contracts for testing",
@@ -2363,10 +2363,10 @@
         "[log] TeamMember initial membership status: 1",
         "[log] Reviewer initial membership status: 1",
         "[log] Tribe setup completed successfully",
-        "Duration: 2ms",
+        "Duration: 3ms",
         "[log] Ending test: Should allow reviewer to reject milestone (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:08.786Z"
+      "timestamp": "2025-04-24T16:22:41.572Z"
     },
     {
       "id": 66,
@@ -2374,7 +2374,7 @@
       "testName": "Should allow starting a milestone",
       "description": "Should allow starting a milestone",
       "status": "passed",
-      "duration": 141,
+      "duration": 147,
       "output": [
         "[log] Starting test: Milestone Management - Should allow starting a milestone",
         "[log] Deploying contracts for testing",
@@ -2415,7 +2415,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should allow starting a milestone (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:08.341Z"
+      "timestamp": "2025-04-24T16:22:41.146Z"
     },
     {
       "id": 67,
@@ -2423,7 +2423,7 @@
       "testName": "Should allow submitting milestone deliverables",
       "description": "Should allow submitting milestone deliverables",
       "status": "passed",
-      "duration": 154,
+      "duration": 146,
       "output": [
         "[log] Starting test: Milestone Management - Should allow submitting milestone deliverables",
         "[log] Deploying contracts for testing",
@@ -2464,7 +2464,7 @@
         "Duration: 2ms",
         "[log] Ending test: Should allow submitting milestone deliverables (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:08.495Z"
+      "timestamp": "2025-04-24T16:22:41.292Z"
     },
     {
       "id": 70,
@@ -2472,7 +2472,7 @@
       "testName": "Should prevent non-reviewer from reviewing milestone",
       "description": "Should prevent non-reviewer from reviewing milestone",
       "status": "passed",
-      "duration": 144,
+      "duration": 142,
       "output": [
         "[log] Starting test: Milestone Management - Should prevent non-reviewer from reviewing milestone",
         "[log] Deploying contracts for testing",
@@ -2510,10 +2510,10 @@
         "[log] TeamMember initial membership status: 1",
         "[log] Reviewer initial membership status: 1",
         "[log] Tribe setup completed successfully",
-        "Duration: 1ms",
+        "Duration: 2ms",
         "[log] Ending test: Should prevent non-reviewer from reviewing milestone (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:08.930Z"
+      "timestamp": "2025-04-24T16:22:41.714Z"
     },
     {
       "id": 72,
@@ -2559,10 +2559,10 @@
         "[log] TeamMember initial membership status: 1",
         "[log] Reviewer initial membership status: 1",
         "[log] Tribe setup completed successfully",
-        "Duration: 18ms",
+        "Duration: 19ms",
         "[log] Ending test: Should prevent starting milestone with incomplete dependencies (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:09.244Z"
+      "timestamp": "2025-04-24T16:22:42.017Z"
     },
     {
       "id": 71,
@@ -2570,7 +2570,7 @@
       "testName": "Should prevent submitting deliverables for non-started milestone",
       "description": "Should prevent submitting deliverables for non-started milestone",
       "status": "passed",
-      "duration": 153,
+      "duration": 142,
       "output": [
         "[log] Starting test: Milestone Management - Should prevent submitting deliverables for non-started milestone",
         "[log] Deploying contracts for testing",
@@ -2611,7 +2611,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should prevent submitting deliverables for non-started milestone (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:09.083Z"
+      "timestamp": "2025-04-24T16:22:41.856Z"
     },
     {
       "id": 44,
@@ -2619,14 +2619,14 @@
       "testName": "Should handle post deletion",
       "description": "Should handle post deletion",
       "status": "passed",
-      "duration": 16,
+      "duration": 18,
       "output": [
         "[log] Starting test: Moderation Journey - Should handle post deletion",
         "[log] Post after deletion: [\"6\",\"0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65\",\"1\",\"{\\\"title\\\":\\\"Test Post\\\",\\\"content\\\":\\\"Test content for deletion\\\",\\\"type\\\":\\\"TEXT\\\"}\",false,\"0x0000000000000000000000000000000000000000\",\"0\",false,\"0x0000000000000000000000000000000000000000\"]",
         "Duration: 4ms",
         "[log] Ending test: Should handle post deletion (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.896Z"
+      "timestamp": "2025-04-24T16:22:38.822Z"
     },
     {
       "id": 157,
@@ -2634,7 +2634,7 @@
       "testName": "Should prevent non-members from creating posts",
       "description": "Should prevent non-members from creating posts",
       "status": "passed",
-      "duration": 123,
+      "duration": 128,
       "output": [
         "[log] Starting test: Negative Scenarios - Should prevent non-members from creating posts",
         "[log] Deploying contracts for testing",
@@ -2675,7 +2675,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should prevent non-members from creating posts (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:14.456Z"
+      "timestamp": "2025-04-24T16:22:47.439Z"
     },
     {
       "id": 159,
@@ -2683,7 +2683,7 @@
       "testName": "Should prevent unauthorized encryption key access",
       "description": "Should prevent unauthorized encryption key access",
       "status": "passed",
-      "duration": 131,
+      "duration": 135,
       "output": [
         "[log] Starting test: Negative Scenarios - Should prevent unauthorized encryption key access",
         "[log] Deploying contracts for testing",
@@ -2724,10 +2724,10 @@
         "[log] Encrypted post created with ID: 0",
         "[log] \nStep 2: Attempting unauthorized key access",
         "[log] Unauthorized key access prevented",
-        "Duration: 2ms",
+        "Duration: 3ms",
         "[log] Ending test: Should prevent unauthorized encryption key access (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:14.744Z"
+      "timestamp": "2025-04-24T16:22:47.733Z"
     },
     {
       "id": 158,
@@ -2735,7 +2735,7 @@
       "testName": "Should validate collectible requirements",
       "description": "Should validate collectible requirements",
       "status": "passed",
-      "duration": 156,
+      "duration": 159,
       "output": [
         "[log] Starting test: Negative Scenarios - Should validate collectible requirements",
         "[log] Deploying contracts for testing",
@@ -2773,10 +2773,10 @@
         "[log] After whitelist update - User2 membership status: 1",
         "[log] \nScenario: Testing collectible validation",
         "[log] Invalid collectible validation successful",
-        "Duration: 29ms",
+        "Duration: 31ms",
         "[log] Ending test: Should validate collectible requirements (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:14.612Z"
+      "timestamp": "2025-04-24T16:22:47.598Z"
     },
     {
       "id": 184,
@@ -2784,13 +2784,13 @@
       "testName": "Should allow joining after acquiring required NFT",
       "description": "Should allow joining after acquiring required NFT",
       "status": "passed",
-      "duration": 43,
+      "duration": 41,
       "output": [
         "[log] Starting test: NFT Gated Tribe - Should allow joining after acquiring required NFT",
         "Duration: 3ms",
         "[log] Ending test: Should allow joining after acquiring required NFT (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.190Z"
+      "timestamp": "2025-04-24T16:22:49.204Z"
     },
     {
       "id": 182,
@@ -2798,13 +2798,13 @@
       "testName": "Should allow joining before NFT requirement is set",
       "description": "Should allow joining before NFT requirement is set",
       "status": "passed",
-      "duration": 41,
+      "duration": 40,
       "output": [
         "[log] Starting test: NFT Gated Tribe - Should allow joining before NFT requirement is set",
         "Duration: 1ms",
         "[log] Ending test: Should allow joining before NFT requirement is set (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.106Z"
+      "timestamp": "2025-04-24T16:22:49.121Z"
     },
     {
       "id": 183,
@@ -2812,13 +2812,13 @@
       "testName": "Should prevent joining after NFT requirement is set without NFT",
       "description": "Should prevent joining after NFT requirement is set without NFT",
       "status": "passed",
-      "duration": 41,
+      "duration": 42,
       "output": [
         "[log] Starting test: NFT Gated Tribe - Should prevent joining after NFT requirement is set without NFT",
-        "Duration: 2ms",
+        "Duration: 1ms",
         "[log] Ending test: Should prevent joining after NFT requirement is set without NFT (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.147Z"
+      "timestamp": "2025-04-24T16:22:49.163Z"
     },
     {
       "id": 106,
@@ -2826,13 +2826,13 @@
       "testName": "Should allow point redemption with valid signature",
       "description": "Should allow point redemption with valid signature",
       "status": "passed",
-      "duration": 12,
+      "duration": 13,
       "output": [
         "[log] Starting test: Point Redemption - Should allow point redemption with valid signature",
         "Duration: 1ms",
         "[log] Ending test: Should allow point redemption with valid signature (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.237Z"
+      "timestamp": "2025-04-24T16:22:44.124Z"
     },
     {
       "id": 108,
@@ -2843,10 +2843,10 @@
       "duration": 12,
       "output": [
         "[log] Starting test: Point Redemption - Should prevent replay attacks",
-        "Duration: 1ms",
+        "Duration: 2ms",
         "[log] Ending test: Should prevent replay attacks (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.262Z"
+      "timestamp": "2025-04-24T16:22:44.148Z"
     },
     {
       "id": 107,
@@ -2854,13 +2854,13 @@
       "testName": "Should reject redemption with invalid signature",
       "description": "Should reject redemption with invalid signature",
       "status": "passed",
-      "duration": 13,
+      "duration": 12,
       "output": [
         "[log] Starting test: Point Redemption - Should reject redemption with invalid signature",
         "Duration: 1ms",
         "[log] Ending test: Should reject redemption with invalid signature (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.250Z"
+      "timestamp": "2025-04-24T16:22:44.136Z"
     },
     {
       "id": 146,
@@ -2868,7 +2868,7 @@
       "testName": "Should return top members correctly",
       "description": "Should return top members correctly",
       "status": "passed",
-      "duration": 123,
+      "duration": 128,
       "output": [
         "[log] Starting test: Point System Analytics - Should return top members correctly",
         "[log] Deploying contracts for testing",
@@ -2900,7 +2900,7 @@
         "Duration: 3ms",
         "[log] Ending test: Should return top members correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:13.188Z"
+      "timestamp": "2025-04-24T16:22:46.114Z"
     },
     {
       "id": 140,
@@ -2908,7 +2908,7 @@
       "testName": "Should allow manual point awards by admin",
       "description": "Should allow manual point awards by admin",
       "status": "passed",
-      "duration": 118,
+      "duration": 122,
       "output": [
         "[log] Starting test: Point System Basic Operations - Should allow manual point awards by admin",
         "[log] Deploying contracts for testing",
@@ -2937,10 +2937,10 @@
         "[log] Granting test roles to users in interaction manager",
         "[log] Granting test roles to users in query manager",
         "[log] Contract deployment and setup completed",
-        "Duration: 1ms",
+        "Duration: 2ms",
         "[log] Ending test: Should allow manual point awards by admin (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:12.453Z"
+      "timestamp": "2025-04-24T16:22:45.367Z"
     },
     {
       "id": 138,
@@ -2948,7 +2948,7 @@
       "testName": "Should award points for actions correctly",
       "description": "Should award points for actions correctly",
       "status": "passed",
-      "duration": 119,
+      "duration": 124,
       "output": [
         "[log] Starting test: Point System Basic Operations - Should award points for actions correctly",
         "[log] Deploying contracts for testing",
@@ -2980,7 +2980,7 @@
         "Duration: 2ms",
         "[log] Ending test: Should award points for actions correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:12.217Z"
+      "timestamp": "2025-04-24T16:22:45.123Z"
     },
     {
       "id": 139,
@@ -2988,7 +2988,7 @@
       "testName": "Should track action counts correctly",
       "description": "Should track action counts correctly",
       "status": "passed",
-      "duration": 117,
+      "duration": 122,
       "output": [
         "[log] Starting test: Point System Basic Operations - Should track action counts correctly",
         "[log] Deploying contracts for testing",
@@ -3017,10 +3017,10 @@
         "[log] Granting test roles to users in interaction manager",
         "[log] Granting test roles to users in query manager",
         "[log] Contract deployment and setup completed",
-        "Duration: 1ms",
+        "Duration: 2ms",
         "[log] Ending test: Should track action counts correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:12.335Z"
+      "timestamp": "2025-04-24T16:22:45.245Z"
     },
     {
       "id": 144,
@@ -3028,7 +3028,7 @@
       "testName": "Should allow claiming collectible with sufficient points",
       "description": "Should allow claiming collectible with sufficient points",
       "status": "passed",
-      "duration": 128,
+      "duration": 122,
       "output": [
         "[log] Starting test: Point System Integration with Collectibles - Should allow claiming collectible with sufficient points",
         "[log] Deploying contracts for testing",
@@ -3057,10 +3057,10 @@
         "[log] Granting test roles to users in interaction manager",
         "[log] Granting test roles to users in query manager",
         "[log] Contract deployment and setup completed",
-        "Duration: 1ms",
+        "Duration: 2ms",
         "[log] Ending test: Should allow claiming collectible with sufficient points (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:12.942Z"
+      "timestamp": "2025-04-24T16:22:45.861Z"
     },
     {
       "id": 145,
@@ -3068,7 +3068,7 @@
       "testName": "Should prevent claiming collectible without sufficient points",
       "description": "Should prevent claiming collectible without sufficient points",
       "status": "passed",
-      "duration": 123,
+      "duration": 125,
       "output": [
         "[log] Starting test: Point System Integration with Collectibles - Should prevent claiming collectible without sufficient points",
         "[log] Deploying contracts for testing",
@@ -3100,7 +3100,7 @@
         "Duration: 2ms",
         "[log] Ending test: Should prevent claiming collectible without sufficient points (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:13.065Z"
+      "timestamp": "2025-04-24T16:22:45.986Z"
     },
     {
       "id": 142,
@@ -3108,7 +3108,7 @@
       "testName": "Should prevent awarding points to non-members",
       "description": "Should prevent awarding points to non-members",
       "status": "passed",
-      "duration": 119,
+      "duration": 125,
       "output": [
         "[log] Starting test: Point System Negative Tests - Should prevent awarding points to non-members",
         "[log] Deploying contracts for testing",
@@ -3140,7 +3140,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should prevent awarding points to non-members (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:12.690Z"
+      "timestamp": "2025-04-24T16:22:45.614Z"
     },
     {
       "id": 143,
@@ -3148,7 +3148,7 @@
       "testName": "Should prevent deducting more points than available",
       "description": "Should prevent deducting more points than available",
       "status": "passed",
-      "duration": 124,
+      "duration": 125,
       "output": [
         "[log] Starting test: Point System Negative Tests - Should prevent deducting more points than available",
         "[log] Deploying contracts for testing",
@@ -3177,10 +3177,10 @@
         "[log] Granting test roles to users in interaction manager",
         "[log] Granting test roles to users in query manager",
         "[log] Contract deployment and setup completed",
-        "Duration: 1ms",
+        "Duration: 2ms",
         "[log] Ending test: Should prevent deducting more points than available (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:12.814Z"
+      "timestamp": "2025-04-24T16:22:45.739Z"
     },
     {
       "id": 141,
@@ -3188,7 +3188,7 @@
       "testName": "Should prevent non-admin from awarding points",
       "description": "Should prevent non-admin from awarding points",
       "status": "passed",
-      "duration": 118,
+      "duration": 122,
       "output": [
         "[log] Starting test: Point System Negative Tests - Should prevent non-admin from awarding points",
         "[log] Deploying contracts for testing",
@@ -3220,7 +3220,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should prevent non-admin from awarding points (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:12.571Z"
+      "timestamp": "2025-04-24T16:22:45.489Z"
     },
     {
       "id": 152,
@@ -3228,13 +3228,13 @@
       "testName": "Should get all posts by user",
       "description": "Should get all posts by user",
       "status": "passed",
-      "duration": 75,
+      "duration": 77,
       "output": [
         "[log] Starting test: Post Listing Tests - Should get all posts by user",
         "Duration: 1ms",
         "[log] Ending test: Should get all posts by user (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:13.855Z"
+      "timestamp": "2025-04-24T16:22:46.806Z"
     },
     {
       "id": 151,
@@ -3248,7 +3248,7 @@
         "Duration: 2ms",
         "[log] Ending test: Should get all posts with pagination (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:13.780Z"
+      "timestamp": "2025-04-24T16:22:46.729Z"
     },
     {
       "id": 153,
@@ -3256,13 +3256,13 @@
       "testName": "Should get post feed for user",
       "description": "Should get post feed for user",
       "status": "passed",
-      "duration": 77,
+      "duration": 79,
       "output": [
         "[log] Starting test: Post Listing Tests - Should get post feed for user",
-        "Duration: 1ms",
+        "Duration: 0ms",
         "[log] Ending test: Should get post feed for user (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:13.932Z"
+      "timestamp": "2025-04-24T16:22:46.885Z"
     },
     {
       "id": 111,
@@ -3270,7 +3270,7 @@
       "testName": "Should enforce post creation cooldown",
       "description": "Should enforce post creation cooldown",
       "status": "passed",
-      "duration": 156,
+      "duration": 162,
       "output": [
         "[log] Starting test: PostMinter Cooldown Test - Should enforce post creation cooldown",
         "[log] Deploying contracts for testing",
@@ -3307,10 +3307,10 @@
         "[log] First post created",
         "[log] \nStep 2: Attempting immediate second post",
         "[log] Cooldown enforcement verified",
-        "Duration: 38ms",
+        "Duration: 40ms",
         "[log] Ending test: Should enforce post creation cooldown (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.444Z"
+      "timestamp": "2025-04-24T16:22:44.335Z"
     },
     {
       "id": 192,
@@ -3318,13 +3318,13 @@
       "testName": "Should allow admin to approve pending member",
       "description": "Should allow admin to approve pending member",
       "status": "passed",
-      "duration": 39,
+      "duration": 40,
       "output": [
         "[log] Starting test: Private Tribe - Should allow admin to approve pending member",
         "Duration: 2ms",
         "[log] Ending test: Should allow admin to approve pending member (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.510Z"
+      "timestamp": "2025-04-24T16:22:49.525Z"
     },
     {
       "id": 193,
@@ -3332,13 +3332,13 @@
       "testName": "Should allow admin to reject pending member",
       "description": "Should allow admin to reject pending member",
       "status": "passed",
-      "duration": 39,
+      "duration": 43,
       "output": [
         "[log] Starting test: Private Tribe - Should allow admin to reject pending member",
         "Duration: 1ms",
         "[log] Ending test: Should allow admin to reject pending member (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.549Z"
+      "timestamp": "2025-04-24T16:22:49.568Z"
     },
     {
       "id": 194,
@@ -3346,13 +3346,13 @@
       "testName": "Should not allow non-admin to approve/reject members",
       "description": "Should not allow non-admin to approve/reject members",
       "status": "passed",
-      "duration": 41,
+      "duration": 42,
       "output": [
         "[log] Starting test: Private Tribe - Should not allow non-admin to approve/reject members",
-        "Duration: 2ms",
+        "Duration: 3ms",
         "[log] Ending test: Should not allow non-admin to approve/reject members (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.590Z"
+      "timestamp": "2025-04-24T16:22:49.610Z"
     },
     {
       "id": 191,
@@ -3360,13 +3360,13 @@
       "testName": "Should set member status to PENDING when requesting to join",
       "description": "Should set member status to PENDING when requesting to join",
       "status": "passed",
-      "duration": 38,
+      "duration": 39,
       "output": [
         "[log] Starting test: Private Tribe - Should set member status to PENDING when requesting to join",
         "Duration: 1ms",
         "[log] Ending test: Should set member status to PENDING when requesting to join (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.471Z"
+      "timestamp": "2025-04-24T16:22:49.485Z"
     },
     {
       "id": 61,
@@ -3374,7 +3374,7 @@
       "testName": "Should create a project from valid post",
       "description": "Should create a project from valid post",
       "status": "passed",
-      "duration": 146,
+      "duration": 151,
       "output": [
         "[log] Starting test: Project Creation - Should create a project from valid post",
         "[log] Deploying contracts for testing",
@@ -3415,7 +3415,7 @@
         "Duration: 14ms",
         "[log] Ending test: Should create a project from valid post (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:07.627Z"
+      "timestamp": "2025-04-24T16:22:40.432Z"
     },
     {
       "id": 62,
@@ -3423,7 +3423,7 @@
       "testName": "Should prevent non-creator from validating post",
       "description": "Should prevent non-creator from validating post",
       "status": "passed",
-      "duration": 141,
+      "duration": 140,
       "output": [
         "[log] Starting test: Project Creation - Should prevent non-creator from validating post",
         "[log] Deploying contracts for testing",
@@ -3464,7 +3464,7 @@
         "Duration: 9ms",
         "[log] Ending test: Should prevent non-creator from validating post (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:07.768Z"
+      "timestamp": "2025-04-24T16:22:40.572Z"
     },
     {
       "id": 76,
@@ -3475,10 +3475,10 @@
       "duration": 20,
       "output": [
         "[log] Starting test: Project Creation Scenarios - Should create a project with milestones",
-        "Duration: 19ms",
+        "Duration: 20ms",
         "[log] Ending test: Should create a project with milestones (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:09.827Z"
+      "timestamp": "2025-04-24T16:22:42.603Z"
     },
     {
       "id": 77,
@@ -3486,13 +3486,13 @@
       "testName": "Should handle milestone submissions and reviews",
       "description": "Should handle milestone submissions and reviews",
       "status": "passed",
-      "duration": 27,
+      "duration": 26,
       "output": [
         "[log] Starting test: Project Creation Scenarios - Should handle milestone submissions and reviews",
-        "Duration: 27ms",
+        "Duration: 26ms",
         "[log] Ending test: Should handle milestone submissions and reviews (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:09.854Z"
+      "timestamp": "2025-04-24T16:22:42.629Z"
     },
     {
       "id": 78,
@@ -3500,13 +3500,13 @@
       "testName": "Should handle project status updates",
       "description": "Should handle project status updates",
       "status": "passed",
-      "duration": 22,
+      "duration": 25,
       "output": [
         "[log] Starting test: Project Creation Scenarios - Should handle project status updates",
-        "Duration: 22ms",
+        "Duration: 25ms",
         "[log] Ending test: Should handle project status updates (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:09.876Z"
+      "timestamp": "2025-04-24T16:22:42.654Z"
     },
     {
       "id": 79,
@@ -3520,7 +3520,7 @@
         "Duration: 10ms",
         "[log] Ending test: Should prevent unauthorized updates (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:09.886Z"
+      "timestamp": "2025-04-24T16:22:42.665Z"
     },
     {
       "id": 82,
@@ -3528,13 +3528,13 @@
       "testName": "Should handle milestone completion updates",
       "description": "Should handle milestone completion updates",
       "status": "passed",
-      "duration": 26,
+      "duration": 25,
       "output": [
         "[log] Starting test: Project Update Scenarios - Should handle milestone completion updates",
-        "Duration: 12ms",
+        "Duration: 11ms",
         "[log] Ending test: Should handle milestone completion updates (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:09.965Z"
+      "timestamp": "2025-04-24T16:22:42.753Z"
     },
     {
       "id": 81,
@@ -3542,13 +3542,13 @@
       "testName": "Should handle progress updates",
       "description": "Should handle progress updates",
       "status": "passed",
-      "duration": 22,
+      "duration": 24,
       "output": [
         "[log] Starting test: Project Update Scenarios - Should handle progress updates",
-        "Duration: 11ms",
+        "Duration: 12ms",
         "[log] Ending test: Should handle progress updates (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:09.939Z"
+      "timestamp": "2025-04-24T16:22:42.728Z"
     },
     {
       "id": 83,
@@ -3556,13 +3556,13 @@
       "testName": "Should validate update permissions",
       "description": "Should validate update permissions",
       "status": "passed",
-      "duration": 22,
+      "duration": 24,
       "output": [
         "[log] Starting test: Project Update Scenarios - Should validate update permissions",
-        "Duration: 10ms",
+        "Duration: 11ms",
         "[log] Ending test: Should validate update permissions (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:09.987Z"
+      "timestamp": "2025-04-24T16:22:42.777Z"
     },
     {
       "id": 80,
@@ -3570,13 +3570,13 @@
       "testName": "Should prevent unauthorized updates",
       "description": "Should prevent unauthorized updates",
       "status": "passed",
-      "duration": 31,
+      "duration": 39,
       "output": [
         "[log] Starting test: Project Validation Scenarios - Should prevent unauthorized updates",
-        "Duration: 12ms",
+        "Duration: 11ms",
         "[log] Ending test: Should prevent unauthorized updates (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:09.917Z"
+      "timestamp": "2025-04-24T16:22:42.704Z"
     },
     {
       "id": 164,
@@ -3584,13 +3584,13 @@
       "testName": "Should assign roles correctly",
       "description": "Should assign roles correctly",
       "status": "passed",
-      "duration": 31,
+      "duration": 37,
       "output": [
         "[log] Starting test: Role Assignment - Should assign roles correctly",
         "Duration: 2ms",
         "[log] Ending test: Should assign roles correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.595Z"
+      "timestamp": "2025-04-24T16:22:48.611Z"
     },
     {
       "id": 166,
@@ -3598,13 +3598,13 @@
       "testName": "Should only allow admin to assign roles",
       "description": "Should only allow admin to assign roles",
       "status": "passed",
-      "duration": 20,
+      "duration": 19,
       "output": [
         "[log] Starting test: Role Assignment - Should only allow admin to assign roles",
-        "Duration: 4ms",
+        "Duration: 3ms",
         "[log] Ending test: Should only allow admin to assign roles (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.634Z"
+      "timestamp": "2025-04-24T16:22:48.649Z"
     },
     {
       "id": 165,
@@ -3612,13 +3612,13 @@
       "testName": "Should remove roles correctly",
       "description": "Should remove roles correctly",
       "status": "passed",
-      "duration": 18,
+      "duration": 19,
       "output": [
         "[log] Starting test: Role Assignment - Should remove roles correctly",
         "Duration: 2ms",
         "[log] Ending test: Should remove roles correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.614Z"
+      "timestamp": "2025-04-24T16:22:48.630Z"
     },
     {
       "id": 168,
@@ -3626,13 +3626,13 @@
       "testName": "Should check for all roles correctly",
       "description": "Should check for all roles correctly",
       "status": "passed",
-      "duration": 18,
+      "duration": 19,
       "output": [
         "[log] Starting test: Role Verification - Should check for all roles correctly",
         "Duration: 1ms",
         "[log] Ending test: Should check for all roles correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.671Z"
+      "timestamp": "2025-04-24T16:22:48.688Z"
     },
     {
       "id": 167,
@@ -3640,13 +3640,13 @@
       "testName": "Should check for any role correctly",
       "description": "Should check for any role correctly",
       "status": "passed",
-      "duration": 19,
+      "duration": 20,
       "output": [
         "[log] Starting test: Role Verification - Should check for any role correctly",
         "Duration: 1ms",
         "[log] Ending test: Should check for any role correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.653Z"
+      "timestamp": "2025-04-24T16:22:48.669Z"
     },
     {
       "id": 169,
@@ -3654,13 +3654,13 @@
       "testName": "Should get user roles correctly",
       "description": "Should get user roles correctly",
       "status": "passed",
-      "duration": 19,
+      "duration": 20,
       "output": [
         "[log] Starting test: Role Verification - Should get user roles correctly",
         "Duration: 1ms",
         "[log] Ending test: Should get user roles correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.690Z"
+      "timestamp": "2025-04-24T16:22:48.708Z"
     },
     {
       "id": 195,
@@ -3668,13 +3668,13 @@
       "testName": "Should allow moderator to perform moderation actions",
       "description": "Should allow moderator to perform moderation actions",
       "status": "passed",
-      "duration": 43,
+      "duration": 47,
       "output": [
         "[log] Starting test: Role-based Access Control - Should allow moderator to perform moderation actions",
-        "Duration: 2ms",
+        "Duration: 1ms",
         "[log] Ending test: Should allow moderator to perform moderation actions (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.633Z"
+      "timestamp": "2025-04-24T16:22:49.657Z"
     },
     {
       "id": 196,
@@ -3682,13 +3682,13 @@
       "testName": "Should prevent regular members from performing admin actions",
       "description": "Should prevent regular members from performing admin actions",
       "status": "passed",
-      "duration": 42,
+      "duration": 40,
       "output": [
         "[log] Starting test: Role-based Access Control - Should prevent regular members from performing admin actions",
-        "Duration: 2ms",
+        "Duration: 1ms",
         "[log] Ending test: Should prevent regular members from performing admin actions (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.675Z"
+      "timestamp": "2025-04-24T16:22:49.698Z"
     },
     {
       "id": 7,
@@ -3702,7 +3702,7 @@
         "Duration: 2ms",
         "[log] Ending test: Should create a private tribe with entry fee (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:04.651Z"
+      "timestamp": "2025-04-24T16:22:37.489Z"
     },
     {
       "id": 6,
@@ -3710,13 +3710,13 @@
       "testName": "Should create a public tribe successfully",
       "description": "Should create a public tribe successfully",
       "status": "passed",
-      "duration": 23,
+      "duration": 22,
       "output": [
         "[log] Starting test: Scenario 1: Tribe Creation - Should create a public tribe successfully",
         "Duration: 2ms",
         "[log] Ending test: Should create a public tribe successfully (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:04.632Z"
+      "timestamp": "2025-04-24T16:22:37.470Z"
     },
     {
       "id": 8,
@@ -3730,7 +3730,7 @@
         "Duration: 2ms",
         "[log] Ending test: Should allow tribe admin to update tribe config (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:04.670Z"
+      "timestamp": "2025-04-24T16:22:37.508Z"
     },
     {
       "id": 9,
@@ -3738,13 +3738,13 @@
       "testName": "Should prevent non-admin from updating tribe config",
       "description": "Should prevent non-admin from updating tribe config",
       "status": "passed",
-      "duration": 19,
+      "duration": 18,
       "output": [
         "[log] Starting test: Scenario 2: Update Tribe - Should prevent non-admin from updating tribe config",
         "Duration: 1ms",
         "[log] Ending test: Should prevent non-admin from updating tribe config (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:04.689Z"
+      "timestamp": "2025-04-24T16:22:37.526Z"
     },
     {
       "id": 12,
@@ -3752,13 +3752,13 @@
       "testName": "Should allow admin to approve pending members",
       "description": "Should allow admin to approve pending members",
       "status": "passed",
-      "duration": 18,
+      "duration": 25,
       "output": [
         "[log] Starting test: Scenario 3: Join a Tribe - Should allow admin to approve pending members",
-        "Duration: 1ms",
+        "Duration: 4ms",
         "[log] Ending test: Should allow admin to approve pending members (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:04.746Z"
+      "timestamp": "2025-04-24T16:22:37.590Z"
     },
     {
       "id": 13,
@@ -3766,13 +3766,13 @@
       "testName": "Should allow admin to reject pending members and return entry fee",
       "description": "Should allow admin to reject pending members and return entry fee",
       "status": "passed",
-      "duration": 19,
+      "duration": 20,
       "output": [
         "[log] Starting test: Scenario 3: Join a Tribe - Should allow admin to reject pending members and return entry fee",
-        "Duration: 2ms",
+        "Duration: 1ms",
         "[log] Ending test: Should allow admin to reject pending members and return entry fee (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:04.766Z"
+      "timestamp": "2025-04-24T16:22:37.610Z"
     },
     {
       "id": 10,
@@ -3780,13 +3780,13 @@
       "testName": "Should allow instant join for public tribes",
       "description": "Should allow instant join for public tribes",
       "status": "passed",
-      "duration": 18,
+      "duration": 19,
       "output": [
         "[log] Starting test: Scenario 3: Join a Tribe - Should allow instant join for public tribes",
         "Duration: 1ms",
         "[log] Ending test: Should allow instant join for public tribes (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:04.707Z"
+      "timestamp": "2025-04-24T16:22:37.545Z"
     },
     {
       "id": 11,
@@ -3800,7 +3800,7 @@
         "Duration: 2ms",
         "[log] Ending test: Should require approval for private tribes (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:04.728Z"
+      "timestamp": "2025-04-24T16:22:37.565Z"
     },
     {
       "id": 16,
@@ -3814,7 +3814,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should create a private community with entry fee (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.060Z"
+      "timestamp": "2025-04-24T16:22:37.903Z"
     },
     {
       "id": 15,
@@ -3822,13 +3822,13 @@
       "testName": "Should create a public community with basic configuration",
       "description": "Should create a public community with basic configuration",
       "status": "passed",
-      "duration": 80,
+      "duration": 77,
       "output": [
         "[log] Starting test: Scenario 9.1: Creating a Community - Should create a public community with basic configuration",
         "Duration: 2ms",
         "[log] Ending test: Should create a public community with basic configuration (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:04.985Z"
+      "timestamp": "2025-04-24T16:22:37.828Z"
     },
     {
       "id": 17,
@@ -3836,13 +3836,13 @@
       "testName": "Should create an invite-only community with collectible requirement",
       "description": "Should create an invite-only community with collectible requirement",
       "status": "passed",
-      "duration": 74,
+      "duration": 72,
       "output": [
         "[log] Starting test: Scenario 9.1: Creating a Community - Should create an invite-only community with collectible requirement",
         "Duration: 1ms",
         "[log] Ending test: Should create an invite-only community with collectible requirement (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.134Z"
+      "timestamp": "2025-04-24T16:22:37.975Z"
     },
     {
       "id": 75,
@@ -3850,7 +3850,7 @@
       "testName": "Should prevent milestone review manipulation",
       "description": "Should prevent milestone review manipulation",
       "status": "passed",
-      "duration": 141,
+      "duration": 144,
       "output": [
         "[log] Starting test: Security Scenarios - Should prevent milestone review manipulation",
         "[log] Deploying contracts for testing",
@@ -3891,7 +3891,7 @@
         "Duration: 2ms",
         "[log] Ending test: Should prevent milestone review manipulation (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:09.675Z"
+      "timestamp": "2025-04-24T16:22:42.450Z"
     },
     {
       "id": 73,
@@ -3899,7 +3899,7 @@
       "testName": "Should prevent unauthorized milestone updates",
       "description": "Should prevent unauthorized milestone updates",
       "status": "passed",
-      "duration": 145,
+      "duration": 147,
       "output": [
         "[log] Starting test: Security Scenarios - Should prevent unauthorized milestone updates",
         "[log] Deploying contracts for testing",
@@ -3937,10 +3937,10 @@
         "[log] TeamMember initial membership status: 1",
         "[log] Reviewer initial membership status: 1",
         "[log] Tribe setup completed successfully",
-        "Duration: 0ms",
+        "Duration: 1ms",
         "[log] Ending test: Should prevent unauthorized milestone updates (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:09.389Z"
+      "timestamp": "2025-04-24T16:22:42.164Z"
     },
     {
       "id": 74,
@@ -3948,7 +3948,7 @@
       "testName": "Should prevent unauthorized team member additions",
       "description": "Should prevent unauthorized team member additions",
       "status": "passed",
-      "duration": 145,
+      "duration": 142,
       "output": [
         "[log] Starting test: Security Scenarios - Should prevent unauthorized team member additions",
         "[log] Deploying contracts for testing",
@@ -3989,7 +3989,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should prevent unauthorized team member additions (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:09.534Z"
+      "timestamp": "2025-04-24T16:22:42.306Z"
     },
     {
       "id": 1,
@@ -3997,7 +3997,7 @@
       "testName": "Should complete full signup process",
       "description": "Should complete full signup process",
       "status": "passed",
-      "duration": 433,
+      "duration": 521,
       "output": [
         "[log] Starting test: Signup Journey - Should complete full signup process",
         "[log] \nStep 1: Checking username availability",
@@ -4010,10 +4010,10 @@
         "[log] Avatar updated",
         "[log] Bio updated",
         "[log] Profile updates verified",
-        "Duration: 8ms",
+        "Duration: 10ms",
         "[log] Ending test: Should complete full signup process (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:04.536Z"
+      "timestamp": "2025-04-24T16:22:37.374Z"
     },
     {
       "id": 2,
@@ -4021,13 +4021,13 @@
       "testName": "Should handle duplicate username signup attempt",
       "description": "Should handle duplicate username signup attempt",
       "status": "passed",
-      "duration": 21,
+      "duration": 23,
       "output": [
         "[log] Starting test: Signup Journey - Should handle duplicate username signup attempt",
-        "Duration: 6ms",
+        "Duration: 8ms",
         "[log] Ending test: Should handle duplicate username signup attempt (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:04.557Z"
+      "timestamp": "2025-04-24T16:22:37.397Z"
     },
     {
       "id": 170,
@@ -4041,7 +4041,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should allow admin to assign fan role (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.707Z"
+      "timestamp": "2025-04-24T16:22:48.725Z"
     },
     {
       "id": 171,
@@ -4055,7 +4055,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should not allow non-admin to assign fan role (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.724Z"
+      "timestamp": "2025-04-24T16:22:48.742Z"
     },
     {
       "id": 63,
@@ -4063,7 +4063,7 @@
       "testName": "Should allow adding team members",
       "description": "Should allow adding team members",
       "status": "passed",
-      "duration": 147,
+      "duration": 144,
       "output": [
         "[log] Starting test: Team Management - Should allow adding team members",
         "[log] Deploying contracts for testing",
@@ -4101,10 +4101,10 @@
         "[log] TeamMember initial membership status: 1",
         "[log] Reviewer initial membership status: 1",
         "[log] Tribe setup completed successfully",
-        "Duration: 3ms",
+        "Duration: 4ms",
         "[log] Ending test: Should allow adding team members (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:07.915Z"
+      "timestamp": "2025-04-24T16:22:40.716Z"
     },
     {
       "id": 65,
@@ -4112,7 +4112,7 @@
       "testName": "Should prevent adding duplicate team members",
       "description": "Should prevent adding duplicate team members",
       "status": "passed",
-      "duration": 144,
+      "duration": 143,
       "output": [
         "[log] Starting test: Team Management - Should prevent adding duplicate team members",
         "[log] Deploying contracts for testing",
@@ -4153,7 +4153,7 @@
         "Duration: 2ms",
         "[log] Ending test: Should prevent adding duplicate team members (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:08.200Z"
+      "timestamp": "2025-04-24T16:22:40.999Z"
     },
     {
       "id": 64,
@@ -4161,7 +4161,7 @@
       "testName": "Should prevent non-creator from adding team members",
       "description": "Should prevent non-creator from adding team members",
       "status": "passed",
-      "duration": 141,
+      "duration": 140,
       "output": [
         "[log] Starting test: Team Management - Should prevent non-creator from adding team members",
         "[log] Deploying contracts for testing",
@@ -4199,10 +4199,10 @@
         "[log] TeamMember initial membership status: 1",
         "[log] Reviewer initial membership status: 1",
         "[log] Tribe setup completed successfully",
-        "Duration: 0ms",
+        "Duration: 1ms",
         "[log] Ending test: Should prevent non-creator from adding team members (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:08.056Z"
+      "timestamp": "2025-04-24T16:22:40.856Z"
     },
     {
       "id": 114,
@@ -4216,7 +4216,7 @@
         "Duration: 2ms",
         "[log] Ending test: Should allow user to purchase tickets (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.489Z"
+      "timestamp": "2025-04-24T16:22:44.381Z"
     },
     {
       "id": 116,
@@ -4230,7 +4230,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should prevent purchase when not enough tickets available (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.515Z"
+      "timestamp": "2025-04-24T16:22:44.407Z"
     },
     {
       "id": 117,
@@ -4244,7 +4244,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should prevent purchase with insufficient payment (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.528Z"
+      "timestamp": "2025-04-24T16:22:44.420Z"
     },
     {
       "id": 115,
@@ -4255,10 +4255,10 @@
       "duration": 13,
       "output": [
         "[log] Starting test: Ticket Purchase - Should refund excess payment",
-        "Duration: 1ms",
+        "Duration: 0ms",
         "[log] Ending test: Should refund excess payment (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.502Z"
+      "timestamp": "2025-04-24T16:22:44.394Z"
     },
     {
       "id": 25,
@@ -4269,10 +4269,10 @@
       "duration": 2,
       "output": [
         "[log] Starting test: Ticket Purchase and Management - Should enforce ticket supply limits",
-        "Duration: 1ms",
+        "Duration: 0ms",
         "[log] Ending test: Should enforce ticket supply limits (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.262Z"
+      "timestamp": "2025-04-24T16:22:38.103Z"
     },
     {
       "id": 27,
@@ -4280,13 +4280,13 @@
       "testName": "Should handle ticket transfers correctly",
       "description": "Should handle ticket transfers correctly",
       "status": "passed",
-      "duration": 4,
+      "duration": 5,
       "output": [
         "[log] Starting test: Ticket Purchase and Management - Should handle ticket transfers correctly",
         "Duration: 2ms",
         "[log] Ending test: Should handle ticket transfers correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.268Z"
+      "timestamp": "2025-04-24T16:22:38.110Z"
     },
     {
       "id": 26,
@@ -4297,10 +4297,10 @@
       "duration": 2,
       "output": [
         "[log] Starting test: Ticket Purchase and Management - Should prevent purchase with insufficient payment",
-        "Duration: 1ms",
+        "Duration: 0ms",
         "[log] Ending test: Should prevent purchase with insufficient payment (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.264Z"
+      "timestamp": "2025-04-24T16:22:38.105Z"
     },
     {
       "id": 23,
@@ -4308,13 +4308,13 @@
       "testName": "Should purchase tickets successfully",
       "description": "Should purchase tickets successfully",
       "status": "passed",
-      "duration": 4,
+      "duration": 3,
       "output": [
         "[log] Starting test: Ticket Purchase and Management - Should purchase tickets successfully",
         "Duration: 2ms",
         "[log] Ending test: Should purchase tickets successfully (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.258Z"
+      "timestamp": "2025-04-24T16:22:38.099Z"
     },
     {
       "id": 24,
@@ -4328,7 +4328,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should refund excess payment (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:05.260Z"
+      "timestamp": "2025-04-24T16:22:38.101Z"
     },
     {
       "id": 118,
@@ -4342,7 +4342,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should allow first transfer (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.542Z"
+      "timestamp": "2025-04-24T16:22:44.434Z"
     },
     {
       "id": 121,
@@ -4350,13 +4350,13 @@
       "testName": "Should handle batch transfers correctly",
       "description": "Should handle batch transfers correctly",
       "status": "passed",
-      "duration": 18,
+      "duration": 17,
       "output": [
         "[log] Starting test: Ticket Transfer - Should handle batch transfers correctly",
-        "Duration: 5ms",
+        "Duration: 4ms",
         "[log] Ending test: Should handle batch transfers correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.588Z"
+      "timestamp": "2025-04-24T16:22:44.479Z"
     },
     {
       "id": 119,
@@ -4370,7 +4370,7 @@
         "Duration: 1ms",
         "[log] Ending test: Should prevent second transfer (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.556Z"
+      "timestamp": "2025-04-24T16:22:44.448Z"
     },
     {
       "id": 120,
@@ -4378,13 +4378,13 @@
       "testName": "Should track transfer status correctly",
       "description": "Should track transfer status correctly",
       "status": "passed",
-      "duration": 14,
+      "duration": 13,
       "output": [
         "[log] Starting test: Ticket Transfer - Should track transfer status correctly",
-        "Duration: 0ms",
+        "Duration: 1ms",
         "[log] Ending test: Should track transfer status correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:11.570Z"
+      "timestamp": "2025-04-24T16:22:44.462Z"
     },
     {
       "id": 99,
@@ -4392,13 +4392,13 @@
       "testName": "Should get popular tribes",
       "description": "Should get popular tribes",
       "status": "passed",
-      "duration": 83,
+      "duration": 82,
       "output": [
         "[log] Starting test: Tribe Analytics - Should get popular tribes",
         "Duration: 3ms",
         "[log] Ending test: Should get popular tribes (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:10.841Z"
+      "timestamp": "2025-04-24T16:22:43.753Z"
     },
     {
       "id": 100,
@@ -4412,7 +4412,7 @@
         "Duration: 2ms",
         "[log] Ending test: Should handle pagination correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:10.931Z"
+      "timestamp": "2025-04-24T16:22:43.843Z"
     },
     {
       "id": 204,
@@ -4420,13 +4420,13 @@
       "testName": "Should handle entry fee changes",
       "description": "Should handle entry fee changes",
       "status": "passed",
-      "duration": 42,
+      "duration": 43,
       "output": [
         "[log] Starting test: Tribe Configuration Updates - Should handle entry fee changes",
         "Duration: 3ms",
         "[log] Ending test: Should handle entry fee changes (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:17.010Z"
+      "timestamp": "2025-04-24T16:22:50.032Z"
     },
     {
       "id": 203,
@@ -4440,7 +4440,7 @@
         "Duration: 2ms",
         "[log] Ending test: Should handle join type changes correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.968Z"
+      "timestamp": "2025-04-24T16:22:49.989Z"
     },
     {
       "id": 177,
@@ -4448,13 +4448,13 @@
       "testName": "Should create a tribe with collectible requirement",
       "description": "Should create a tribe with collectible requirement",
       "status": "passed",
-      "duration": 52,
+      "duration": 43,
       "output": [
         "[log] Starting test: Tribe Creation with Metadata - Should create a tribe with collectible requirement",
         "Duration: 6ms",
         "[log] Ending test: Should create a tribe with collectible requirement (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.901Z"
+      "timestamp": "2025-04-24T16:22:48.918Z"
     },
     {
       "id": 176,
@@ -4462,13 +4462,13 @@
       "testName": "Should create a tribe with detailed metadata",
       "description": "Should create a tribe with detailed metadata",
       "status": "passed",
-      "duration": 39,
+      "duration": 48,
       "output": [
         "[log] Starting test: Tribe Creation with Metadata - Should create a tribe with detailed metadata",
         "Duration: 2ms",
         "[log] Ending test: Should create a tribe with detailed metadata (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.849Z"
+      "timestamp": "2025-04-24T16:22:48.875Z"
     },
     {
       "id": 174,
@@ -4476,13 +4476,13 @@
       "testName": "Should get all tribes with pagination",
       "description": "Should get all tribes with pagination",
       "status": "passed",
-      "duration": 25,
+      "duration": 24,
       "output": [
         "[log] Starting test: Tribe Listing Tests - Should get all tribes with pagination",
         "Duration: 7ms",
         "[log] Ending test: Should get all tribes with pagination (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.790Z"
+      "timestamp": "2025-04-24T16:22:48.806Z"
     },
     {
       "id": 173,
@@ -4490,13 +4490,13 @@
       "testName": "Should get total number of tribes",
       "description": "Should get total number of tribes",
       "status": "passed",
-      "duration": 22,
+      "duration": 21,
       "output": [
         "[log] Starting test: Tribe Listing Tests - Should get total number of tribes",
         "Duration: 4ms",
         "[log] Ending test: Should get total number of tribes (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.765Z"
+      "timestamp": "2025-04-24T16:22:48.782Z"
     },
     {
       "id": 175,
@@ -4504,13 +4504,13 @@
       "testName": "Should get tribe details with metadata",
       "description": "Should get tribe details with metadata",
       "status": "passed",
-      "duration": 19,
+      "duration": 21,
       "output": [
         "[log] Starting test: Tribe Listing Tests - Should get tribe details with metadata",
         "Duration: 2ms",
         "[log] Ending test: Should get tribe details with metadata (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.809Z"
+      "timestamp": "2025-04-24T16:22:48.827Z"
     },
     {
       "id": 178,
@@ -4524,7 +4524,7 @@
         "Duration: 2ms",
         "[log] Ending test: Should track member roles and permissions (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.943Z"
+      "timestamp": "2025-04-24T16:22:48.959Z"
     },
     {
       "id": 179,
@@ -4535,10 +4535,10 @@
       "duration": 42,
       "output": [
         "[log] Starting test: Tribe Membership and Role Management - Should track tribe membership accurately",
-        "Duration: 4ms",
+        "Duration: 3ms",
         "[log] Ending test: Should track tribe membership accurately (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.985Z"
+      "timestamp": "2025-04-24T16:22:49.001Z"
     },
     {
       "id": 181,
@@ -4552,7 +4552,7 @@
         "Duration: 3ms",
         "[log] Ending test: Should handle user membership queries efficiently (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.065Z"
+      "timestamp": "2025-04-24T16:22:49.081Z"
     },
     {
       "id": 180,
@@ -4563,10 +4563,10 @@
       "duration": 39,
       "output": [
         "[log] Starting test: Tribe Metadata Loading and Updates - Should load tribe metadata with member information",
-        "Duration: 1ms",
+        "Duration: 2ms",
         "[log] Ending test: Should load tribe metadata with member information (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:16.024Z"
+      "timestamp": "2025-04-24T16:22:49.040Z"
     },
     {
       "id": 149,
@@ -4574,7 +4574,7 @@
       "testName": "Should handle community engagement scenario",
       "description": "Should handle community engagement scenario",
       "status": "passed",
-      "duration": 128,
+      "duration": 137,
       "output": [
         "[log] Starting test: User Flow Scenarios - Should handle community engagement scenario",
         "[log] Deploying contracts for testing",
@@ -4611,10 +4611,10 @@
         "[log] \nStep 1: Users engaging in discussion",
         "[log] User1 final state - Points: 120, Comments: 1",
         "[log] User2 final state - Points: 25, Comments: 1",
-        "Duration: 3ms",
+        "Duration: 4ms",
         "[log] Ending test: Should handle community engagement scenario (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:13.564Z"
+      "timestamp": "2025-04-24T16:22:46.508Z"
     },
     {
       "id": 150,
@@ -4622,7 +4622,7 @@
       "testName": "Should handle point redemption scenario",
       "description": "Should handle point redemption scenario",
       "status": "passed",
-      "duration": 135,
+      "duration": 140,
       "output": [
         "[log] Starting test: User Flow Scenarios - Should handle point redemption scenario",
         "[log] Deploying contracts for testing",
@@ -4661,10 +4661,10 @@
         "[log] \nStep 2: Approving point deduction",
         "[log] \nStep 3: Redeeming points",
         "[log] Points after redemption: 250",
-        "Duration: 13ms",
+        "Duration: 15ms",
         "[log] Ending test: Should handle point redemption scenario (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:13.699Z"
+      "timestamp": "2025-04-24T16:22:46.648Z"
     },
     {
       "id": 148,
@@ -4672,7 +4672,7 @@
       "testName": "Should track milestone achievements",
       "description": "Should track milestone achievements",
       "status": "passed",
-      "duration": 124,
+      "duration": 127,
       "output": [
         "[log] Starting test: User Flow Scenarios - Should track milestone achievements",
         "[log] Deploying contracts for testing",
@@ -4716,7 +4716,7 @@
         "Duration: 5ms",
         "[log] Ending test: Should track milestone achievements (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:13.436Z"
+      "timestamp": "2025-04-24T16:22:46.371Z"
     },
     {
       "id": 147,
@@ -4724,7 +4724,7 @@
       "testName": "Should track user engagement points correctly",
       "description": "Should track user engagement points correctly",
       "status": "passed",
-      "duration": 124,
+      "duration": 130,
       "output": [
         "[log] Starting test: User Flow Scenarios - Should track user engagement points correctly",
         "[log] Deploying contracts for testing",
@@ -4768,7 +4768,7 @@
         "Duration: 4ms",
         "[log] Ending test: Should track user engagement points correctly (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:13.312Z"
+      "timestamp": "2025-04-24T16:22:46.244Z"
     },
     {
       "id": 172,
@@ -4776,42 +4776,42 @@
       "testName": "Should allow user to access community features if they have the correct role",
       "description": "Should allow user to access community features if they have the correct role",
       "status": "passed",
-      "duration": 19,
+      "duration": 17,
       "output": [
         "[log] Starting test: User Role Access - Should allow user to access community features if they have the correct role",
         "Duration: 1ms",
         "[log] Ending test: Should allow user to access community features if they have the correct role (passed)"
       ],
-      "timestamp": "2025-04-24T12:45:15.743Z"
+      "timestamp": "2025-04-24T16:22:48.760Z"
     }
   ],
   "systemInfo": {
     "memory": {
       "Mach Virtual Memory Statistics": "(page size of 16384 bytes)",
-      "Pages free": "69644.",
-      "Pages active": "572530.",
-      "Pages inactive": "553205.",
-      "Pages speculative": "18070.",
+      "Pages free": "10597.",
+      "Pages active": "546508.",
+      "Pages inactive": "538688.",
+      "Pages speculative": "4829.",
       "Pages throttled": "0.",
-      "Pages wired down": "165103.",
-      "Pages purgeable": "15882.",
-      "\"Translation faults\"": "1694168108.",
-      "Pages copy-on-write": "44224155.",
-      "Pages zero filled": "1061608182.",
-      "Pages reactivated": "116986274.",
-      "Pages purged": "15378118.",
-      "File-backed pages": "218414.",
-      "Anonymous pages": "925391.",
-      "Pages stored in compressor": "762563.",
-      "Pages occupied by compressor": "151975.",
-      "Decompressions": "67402158.",
-      "Compressions": "84778085.",
-      "Pageins": "23976258.",
-      "Pageouts": "550653.",
-      "Swapins": "35523.",
+      "Pages wired down": "163372.",
+      "Pages purgeable": "17444.",
+      "\"Translation faults\"": "1730375489.",
+      "Pages copy-on-write": "45433049.",
+      "Pages zero filled": "1083830120.",
+      "Pages reactivated": "118555749.",
+      "Pages purged": "15531465.",
+      "File-backed pages": "228109.",
+      "Anonymous pages": "861916.",
+      "Pages stored in compressor": "921777.",
+      "Pages occupied by compressor": "266434.",
+      "Decompressions": "67732038.",
+      "Compressions": "85315391.",
+      "Pageins": "24246733.",
+      "Pageouts": "554736.",
+      "Swapins": "55358.",
       "Swapouts": "215548."
     },
-    "cpu": "CPU usage: 4.18% user, 9.37% sys, 86.43% idle",
+    "cpu": "CPU usage: 3.75% user, 10.8% sys, 86.16% idle",
     "disk": [
       "Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on",
       "/dev/disk3s5   460Gi   162Gi   265Gi    38%    4.1M  2.8G    0%   /System/Volumes/Data"
@@ -4823,7 +4823,7 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 39
+      "duration": 40
     },
     {
       "name": "\u001b[33mCollectible Claiming\u001b[39m",
@@ -4841,59 +4841,59 @@
     },
     {
       "name": "\u001b[33mCollectible Claiming\u001b[39m",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 42
+    },
+    {
+      "name": "\u001b[33mCollectible Creation\u001b[39m",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 41
+    },
+    {
+      "name": "\u001b[33mCollectible Creation\u001b[39m",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 38
+    },
+    {
+      "name": "\u001b[33mCollectible Creation\u001b[39m",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
       "duration": 40
     },
     {
-      "name": "\u001b[33mCollectible Creation\u001b[39m",
+      "name": "\u001b[33mCollectible Management\u001b[39m",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
       "duration": 38
     },
     {
-      "name": "\u001b[33mCollectible Creation\u001b[39m",
+      "name": "\u001b[33mCollectible Management\u001b[39m",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
       "duration": 37
     },
     {
-      "name": "\u001b[33mCollectible Creation\u001b[39m",
+      "name": "\u001b[33mCollectible Management\u001b[39m",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
       "duration": 39
     },
     {
-      "name": "\u001b[33mCollectible Management\u001b[39m",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 38
-    },
-    {
-      "name": "\u001b[33mCollectible Management\u001b[39m",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 37
-    },
-    {
-      "name": "\u001b[33mCollectible Management\u001b[39m",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 37
-    },
-    {
       "name": "\u001b[33mDirect NFT Interactions\u001b[39m",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 36
+      "duration": 37
     },
     {
       "name": "\u001b[33mDirect NFT Interactions\u001b[39m",
@@ -4907,7 +4907,7 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 106
+      "duration": 110
     },
     {
       "name": "\u001b[35m1. Profile Creation & Validation\u001b[39m",
@@ -4921,7 +4921,7 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 260
+      "duration": 98
     },
     {
       "name": "\u001b[35m1. Profile Creation & Validation\u001b[39m",
@@ -4935,7 +4935,7 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 94
+      "duration": 99
     },
     {
       "name": "\u001b[35m1. Tribe Creation & Management\u001b[39m",
@@ -4956,28 +4956,14 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 92
+      "duration": 114
     },
     {
       "name": "\u001b[35m2. Member Onboarding & Engagement\u001b[39m",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 43
-    },
-    {
-      "name": "\u001b[35m2. Tribe Management\u001b[39m",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 93
-    },
-    {
-      "name": "\u001b[35m2. Tribe Management\u001b[39m",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 96
+      "duration": 41
     },
     {
       "name": "\u001b[35m2. Tribe Management\u001b[39m",
@@ -4991,35 +4977,49 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
+      "duration": 100
+    },
+    {
+      "name": "\u001b[35m2. Tribe Management\u001b[39m",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
       "duration": 97
     },
     {
-      "name": "\u001b[35m3. Combined User Journeys\u001b[39m",
+      "name": "\u001b[35m2. Tribe Management\u001b[39m",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 117
+      "duration": 95
     },
     {
       "name": "\u001b[35m3. Combined User Journeys\u001b[39m",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 119
+      "duration": 118
+    },
+    {
+      "name": "\u001b[35m3. Combined User Journeys\u001b[39m",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 121
     },
     {
       "name": "\u001b[35m3. Content Creation & Interactions\u001b[39m",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 33
+      "duration": 72
     },
     {
       "name": "\u001b[35m3. Content Creation & Interactions\u001b[39m",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 21
+      "duration": 13
     },
     {
       "name": "\u001b[35m3. Content Creation & Interactions\u001b[39m",
@@ -5033,7 +5033,7 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 16
+      "duration": 17
     },
     {
       "name": "\u001b[35m3. Content Creation & Interactions\u001b[39m",
@@ -5054,63 +5054,63 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 38
+      "duration": 44
     },
     {
       "name": "\u001b[35m4. Project & Fundraising Management\u001b[39m",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 103
+      "duration": 108
     },
     {
       "name": "\u001b[35m4. Project & Fundraising Management\u001b[39m",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 46
+      "duration": 74
     },
     {
       "name": "Activity Scores",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 85
+      "duration": 83
     },
     {
       "name": "Activity Scores",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 100
+      "duration": 81
     },
     {
       "name": "Admin Functions",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 12
+      "duration": 14
     },
     {
       "name": "Admin Functions",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 13
+      "duration": 11
     },
     {
       "name": "Basic Post Creation and Access",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 133
+      "duration": 147
     },
     {
       "name": "Basic Post Creation and Access",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 136
+      "duration": 148
     },
     {
       "name": "Basic Post Creation and Access",
@@ -5124,7 +5124,7 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 37
+      "duration": 35
     },
     {
       "name": "Collectible Claiming",
@@ -5138,49 +5138,49 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 36
+      "duration": 34
     },
     {
       "name": "Collectible Management Journey",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 139
+      "duration": 141
     },
     {
       "name": "Content Creator Journey",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 32
+      "duration": 25
     },
     {
       "name": "Content Creator Journey",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 9
+      "duration": 8
     },
     {
       "name": "Content Creator Journey",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 5
+      "duration": 6
     },
     {
       "name": "Content Creator Journey",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 7
+      "duration": 8
     },
     {
       "name": "Contribution Scenarios",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 10
+      "duration": 11
     },
     {
       "name": "Contribution Scenarios",
@@ -5194,72 +5194,86 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 228
+      "duration": 237
     },
     {
       "name": "Error Cases",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 4
+      "duration": 5
     },
     {
       "name": "Error Cases",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 2
+    },
+    {
+      "name": "Error Cases",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 19
+    },
+    {
+      "name": "Event Creation",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 19
+    },
+    {
+      "name": "Event Creation",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 13
+    },
+    {
+      "name": "Event Creation Scenarios",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 2
+    },
+    {
+      "name": "Event Creation Scenarios",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 2
+    },
+    {
+      "name": "Event Creation Scenarios",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 3
+    },
+    {
+      "name": "Event Management",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 2
+    },
+    {
+      "name": "Event Management",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 3
+    },
+    {
+      "name": "Event Management",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
       "duration": 1
     },
     {
-      "name": "Error Cases",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 20
-    },
-    {
-      "name": "Event Creation",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 18
-    },
-    {
-      "name": "Event Creation",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 13
-    },
-    {
-      "name": "Event Creation Scenarios",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 2
-    },
-    {
-      "name": "Event Creation Scenarios",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 2
-    },
-    {
-      "name": "Event Creation Scenarios",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 3
-    },
-    {
-      "name": "Event Management",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 3
-    },
-    {
       "name": "Event Management",
       "totalTests": 1,
       "passedTests": 1,
@@ -5268,122 +5282,108 @@
     },
     {
       "name": "Event Management",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 2
-    },
-    {
-      "name": "Event Management",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 2
-    },
-    {
-      "name": "Event Management",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 139
-    },
-    {
-      "name": "Event Management",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 15
-    },
-    {
-      "name": "Event Management",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 13
-    },
-    {
-      "name": "Event Management",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 13
-    },
-    {
-      "name": "Event Management",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 13
-    },
-    {
-      "name": "Feed Management",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
       "duration": 141
     },
     {
+      "name": "Event Management",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 14
+    },
+    {
+      "name": "Event Management",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 13
+    },
+    {
+      "name": "Event Management",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 13
+    },
+    {
+      "name": "Event Management",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 13
+    },
+    {
       "name": "Feed Management",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 145
+      "duration": 155
+    },
+    {
+      "name": "Feed Management",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 148
     },
     {
       "name": "Feed Querying",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 193
+      "duration": 213
     },
     {
       "name": "Feed Querying",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 204
+      "duration": 199
     },
     {
       "name": "Feed Querying",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 201
+      "duration": 209
     },
     {
       "name": "Feed Querying",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 222
+      "duration": 220
     },
     {
       "name": "Fundraiser Creation Scenarios",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 33
+      "duration": 67
     },
     {
       "name": "Fundraiser Creation Scenarios",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 31
+      "duration": 35
     },
     {
       "name": "Fundraiser Creation Scenarios",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 34
+      "duration": 61
     },
     {
       "name": "Fundraiser Creation Scenarios",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 59
+      "duration": 71
     },
     {
       "name": "High-Demand Collectible Drop",
@@ -5397,14 +5397,7 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 75
-    },
-    {
-      "name": "Invite Code Management",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 43
+      "duration": 76
     },
     {
       "name": "Invite Code Management",
@@ -5412,6 +5405,13 @@
       "passedTests": 1,
       "failedTests": 0,
       "duration": 42
+    },
+    {
+      "name": "Invite Code Management",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 41
     },
     {
       "name": "Invite Code Management",
@@ -5432,42 +5432,42 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 40
+      "duration": 41
     },
     {
       "name": "Invite Code Tribe",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 40
+      "duration": 39
     },
     {
       "name": "Invite Code Tribe",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 40
+      "duration": 39
     },
     {
       "name": "Invite Code Tribe",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 44
+      "duration": 43
     },
     {
       "name": "Invite Code Tribe",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 40
+      "duration": 41
     },
     {
       "name": "Journey 5.1: Create Proposal",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 5
+      "duration": 14
     },
     {
       "name": "Journey 5.1: Create Proposal",
@@ -5481,35 +5481,35 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 5
+      "duration": 4
     },
     {
       "name": "Journey 5.2: Vote on Proposal",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 4
+      "duration": 5
     },
     {
       "name": "Journey 5.3: Unauthorized Vote Attempt",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 6
+      "duration": 5
     },
     {
       "name": "Journey 5.3: Unauthorized Vote Attempt",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 4
+      "duration": 5
     },
     {
       "name": "Login Journey",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 19
+      "duration": 18
     },
     {
       "name": "Login Journey",
@@ -5530,56 +5530,49 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 42
+      "duration": 41
     },
     {
       "name": "Member Management",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 39
+      "duration": 41
     },
     {
       "name": "Member Management",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 42
+      "duration": 41
     },
     {
       "name": "Member Queries",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 102
+      "duration": 122
     },
     {
       "name": "Member Queries",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 78
+      "duration": 97
     },
     {
       "name": "Member Status Transitions",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 43
+      "duration": 42
     },
     {
       "name": "Milestone Management",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 141
-    },
-    {
-      "name": "Milestone Management",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 154
+      "duration": 147
     },
     {
       "name": "Milestone Management",
@@ -5593,21 +5586,28 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 145
+      "duration": 141
     },
     {
       "name": "Milestone Management",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 144
+      "duration": 139
     },
     {
       "name": "Milestone Management",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 153
+      "duration": 142
+    },
+    {
+      "name": "Milestone Management",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 142
     },
     {
       "name": "Milestone Management",
@@ -5621,28 +5621,42 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 16
+      "duration": 18
     },
     {
       "name": "Negative Scenarios",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 123
+      "duration": 128
     },
     {
       "name": "Negative Scenarios",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 157
+      "duration": 159
     },
     {
       "name": "Negative Scenarios",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 131
+      "duration": 135
+    },
+    {
+      "name": "NFT Gated Tribe",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 40
+    },
+    {
+      "name": "NFT Gated Tribe",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 42
     },
     {
       "name": "NFT Gated Tribe",
@@ -5652,18 +5666,11 @@
       "duration": 41
     },
     {
-      "name": "NFT Gated Tribe",
+      "name": "Point Redemption",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 41
-    },
-    {
-      "name": "NFT Gated Tribe",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 43
+      "duration": 13
     },
     {
       "name": "Point Redemption",
@@ -5677,77 +5684,70 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 13
-    },
-    {
-      "name": "Point Redemption",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 13
+      "duration": 12
     },
     {
       "name": "Point System Analytics",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 123
-    },
-    {
-      "name": "Point System Basic Operations",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 120
-    },
-    {
-      "name": "Point System Basic Operations",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 117
-    },
-    {
-      "name": "Point System Basic Operations",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 118
-    },
-    {
-      "name": "Point System Integration with Collectibles",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
       "duration": 128
     },
     {
-      "name": "Point System Integration with Collectibles",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 123
-    },
-    {
-      "name": "Point System Negative Tests",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 118
-    },
-    {
-      "name": "Point System Negative Tests",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 119
-    },
-    {
-      "name": "Point System Negative Tests",
+      "name": "Point System Basic Operations",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
       "duration": 124
+    },
+    {
+      "name": "Point System Basic Operations",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 122
+    },
+    {
+      "name": "Point System Basic Operations",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 122
+    },
+    {
+      "name": "Point System Integration with Collectibles",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 122
+    },
+    {
+      "name": "Point System Integration with Collectibles",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 125
+    },
+    {
+      "name": "Point System Negative Tests",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 122
+    },
+    {
+      "name": "Point System Negative Tests",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 125
+    },
+    {
+      "name": "Point System Negative Tests",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 125
     },
     {
       "name": "Post Listing Tests",
@@ -5761,28 +5761,21 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 75
+      "duration": 77
     },
     {
       "name": "Post Listing Tests",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 78
+      "duration": 79
     },
     {
       "name": "PostMinter Cooldown Test",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 156
-    },
-    {
-      "name": "Private Tribe",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 38
+      "duration": 162
     },
     {
       "name": "Private Tribe",
@@ -5796,28 +5789,35 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 39
+      "duration": 40
     },
     {
       "name": "Private Tribe",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 41
+      "duration": 43
+    },
+    {
+      "name": "Private Tribe",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 42
     },
     {
       "name": "Project Creation",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 146
+      "duration": 151
     },
     {
       "name": "Project Creation",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 141
+      "duration": 140
     },
     {
       "name": "Project Creation Scenarios",
@@ -5831,14 +5831,14 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 27
+      "duration": 26
     },
     {
       "name": "Project Creation Scenarios",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 22
+      "duration": 26
     },
     {
       "name": "Project Creation Scenarios",
@@ -5852,45 +5852,52 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 22
+      "duration": 24
     },
     {
       "name": "Project Update Scenarios",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 26
+      "duration": 25
     },
     {
       "name": "Project Update Scenarios",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 173
+      "duration": 168
     },
     {
       "name": "Project Validation Scenarios",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 31
+      "duration": 39
     },
     {
       "name": "Role Assignment",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 32
+      "duration": 37
     },
     {
       "name": "Role Assignment",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 18
+      "duration": 19
     },
     {
       "name": "Role Assignment",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 19
+    },
+    {
+      "name": "Role Verification",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
@@ -5908,35 +5915,28 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 18
-    },
-    {
-      "name": "Role Verification",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 19
+      "duration": 20
     },
     {
       "name": "Role-based Access Control",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 43
+      "duration": 48
     },
     {
       "name": "Role-based Access Control",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 42
+      "duration": 40
     },
     {
       "name": "Scenario 1: Tribe Creation",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 23
+      "duration": 22
     },
     {
       "name": "Scenario 1: Tribe Creation",
@@ -5957,7 +5957,7 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 19
+      "duration": 18
     },
     {
       "name": "Scenario 3: Join a Tribe",
@@ -5978,21 +5978,21 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 19
+      "duration": 25
     },
     {
       "name": "Scenario 3: Join a Tribe",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 19
+      "duration": 20
     },
     {
       "name": "Scenario 9.1: Creating a Community",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 80
+      "duration": 77
     },
     {
       "name": "Scenario 9.1: Creating a Community",
@@ -6006,70 +6006,56 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 74
+      "duration": 72
     },
     {
       "name": "Security Scenarios",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 145
-    },
-    {
-      "name": "Security Scenarios",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 145
-    },
-    {
-      "name": "Security Scenarios",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 273
-    },
-    {
-      "name": "Signup Journey",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 433
-    },
-    {
-      "name": "Signup Journey",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 21
-    },
-    {
-      "name": "Special Fan Role Assignment",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 17
-    },
-    {
-      "name": "Special Fan Role Assignment",
-      "totalTests": 1,
-      "passedTests": 1,
-      "failedTests": 0,
-      "duration": 17
-    },
-    {
-      "name": "Team Management",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
       "duration": 147
     },
     {
-      "name": "Team Management",
+      "name": "Security Scenarios",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 141
+      "duration": 142
+    },
+    {
+      "name": "Security Scenarios",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 277
+    },
+    {
+      "name": "Signup Journey",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 521
+    },
+    {
+      "name": "Signup Journey",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 23
+    },
+    {
+      "name": "Special Fan Role Assignment",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 17
+    },
+    {
+      "name": "Special Fan Role Assignment",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 18
     },
     {
       "name": "Team Management",
@@ -6079,6 +6065,20 @@
       "duration": 144
     },
     {
+      "name": "Team Management",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 140
+    },
+    {
+      "name": "Team Management",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "duration": 143
+    },
+    {
       "name": "Ticket Purchase",
       "totalTests": 1,
       "passedTests": 1,
@@ -6111,7 +6111,7 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 4
+      "duration": 3
     },
     {
       "name": "Ticket Purchase and Management",
@@ -6139,7 +6139,7 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 4
+      "duration": 5
     },
     {
       "name": "Ticket Transfer",
@@ -6153,35 +6153,35 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 14
+      "duration": 15
     },
     {
       "name": "Ticket Transfer",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 14
+      "duration": 13
     },
     {
       "name": "Ticket Transfer",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 18
+      "duration": 17
     },
     {
       "name": "Tribe Analytics",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 83
+      "duration": 82
     },
     {
       "name": "Tribe Analytics",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 91
+      "duration": 90
     },
     {
       "name": "Tribe Configuration Updates",
@@ -6195,42 +6195,42 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 42
+      "duration": 43
     },
     {
       "name": "Tribe Creation with Metadata",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 39
+      "duration": 48
     },
     {
       "name": "Tribe Creation with Metadata",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 53
+      "duration": 43
     },
     {
       "name": "Tribe Listing Tests",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 22
+      "duration": 21
     },
     {
       "name": "Tribe Listing Tests",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 25
+      "duration": 24
     },
     {
       "name": "Tribe Listing Tests",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 20
+      "duration": 21
     },
     {
       "name": "Tribe Membership and Role Management",
@@ -6265,35 +6265,35 @@
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 124
+      "duration": 130
     },
     {
       "name": "User Flow Scenarios",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 124
+      "duration": 127
     },
     {
       "name": "User Flow Scenarios",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 128
+      "duration": 137
     },
     {
       "name": "User Flow Scenarios",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 135
+      "duration": 140
     },
     {
       "name": "User Role Access",
       "totalTests": 1,
       "passedTests": 1,
       "failedTests": 0,
-      "duration": 19
+      "duration": 18
     }
   ]
 }

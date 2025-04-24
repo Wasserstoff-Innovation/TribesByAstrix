@@ -1,6 +1,6 @@
 # Tribes by Astrix SDK
 
-[![npm version](https://img.shields.io/npm/v/@astrix-labs/sdk.svg)](https://www.npmjs.com/package/@astrix-labs/sdk)
+[![npm version](https://img.shields.io/npm/v/@wasserstoff/tribes-sdk.svg)](https://www.npmjs.com/package/@wasserstoff/tribes-sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A TypeScript/JavaScript SDK for interacting with the Tribes by Astrix platform.
@@ -8,15 +8,13 @@ A TypeScript/JavaScript SDK for interacting with the Tribes by Astrix platform.
 ## Installation
 
 ```bash
-npm install @astrix-labs/sdk # Or your actual package name
-# or
-yarn add @astrix-labs/sdk
+npm install @wasserstoff/tribes-sdk 
 ```
 
 ## Quick Start
 
 ```typescript
-import { AstrixSDK, InteractionType } from '@astrix-labs/sdk'; // Adjust import path/name
+import { AstrixSDK, InteractionType } from '@wasserstoff/tribes-sdk'; // Use correct package name
 import { ethers } from 'ethers';
 
 // 1. Define Configuration (RPC and Contract Addresses)
