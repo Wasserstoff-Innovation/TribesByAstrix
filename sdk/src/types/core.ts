@@ -102,8 +102,8 @@ export enum ErrorType {
 export interface AstrixError {
   type: ErrorType;
   message: string;
-  details?: any;
-  originalError?: any;
+  details?: unknown;
+  originalError?: unknown;
 }
 
 /**
@@ -118,7 +118,7 @@ export interface EnhancedTransactionReceipt extends ethers.TransactionReceipt {
   /**
    * Decoded events from the transaction receipt
    */
-  decodedEvents?: any[];
+  decodedEvents?: unknown[];
 
   /**
    * Status of the transaction

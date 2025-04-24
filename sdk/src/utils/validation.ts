@@ -75,7 +75,7 @@ export function validateNonEmptyString(value: string, paramName: string = 'value
  * @param paramName Parameter name for error messages
  * @throws AstrixSDKError if the array is empty
  */
-export function validateNonEmptyArray(array: any[], paramName: string = 'array'): void {
+export function validateNonEmptyArray(array: unknown[], paramName: string = 'array'): void {
   if (!Array.isArray(array) || array.length === 0) {
     throw new AstrixSDKError(
       ErrorType.VALIDATION_ERROR,

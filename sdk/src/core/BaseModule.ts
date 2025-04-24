@@ -245,27 +245,27 @@ export abstract class BaseModule {
     }
     
     let errorMessage = message;
-    let code = ErrorType.SDK_ERROR; // Default to SDK_ERROR
+    let code: string | number | undefined = undefined; // Initialize code explicitly
 
     // Try to extract code and reason from ethers error
     if (typeof error === 'object' && error !== null) {
-        const ethersError = error as any; // Cast to any for property access
+        const ethersError = error as Record<string, unknown>; 
         if (ethersError.code) {
-            // Use the specific ethers code if available, otherwise keep SDK_ERROR
-            code = ethersError.code; 
+            code = ethersError.code as string | number;
         } else {
-            code = ErrorType.SDK_ERROR; // Fallback if code property doesn't exist
+            // Optionally set a default SDK error code string if needed, otherwise leave undefined
+             code = 'SDK_ERROR_FALLBACK'; // Example fallback code string
         }
-        if (ethersError.reason) {
+        if (typeof ethersError.reason === 'string') {
             errorMessage += `: ${ethersError.reason}`;
-        } else if (ethersError.message) {
+        } else if (typeof ethersError.message === 'string') {
              errorMessage += `: ${ethersError.message}`;
         }
     } else {
-        code = ErrorType.SDK_ERROR; // Fallback for non-object errors
+         code = 'SDK_ERROR_FALLBACK'; // Fallback code string for non-object errors
     }
 
-    throw new AstrixSDKError(type, errorMessage, code, error);
+    throw new AstrixSDKError(type, errorMessage, code, error); // Pass the extracted/fallback code
   }
 
   /**

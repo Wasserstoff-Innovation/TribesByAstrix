@@ -9,7 +9,7 @@ Journey tests simulate real user interactions, testing multiple contracts and co
 ## Latest Test Run Status
 
 **Status:** ✅ **All Passing** (211 / 211 tests passed)
-**Date:** _[Placeholder - Run `npx hardhat test` to get the latest date]_
+**Date:** [24-April-2025]
 
 *Note: A detailed JSON and CSV report is available in `/public/report/` after running the tests.*
 

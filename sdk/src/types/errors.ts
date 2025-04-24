@@ -46,7 +46,7 @@ export class AstrixSDKError extends Error {
   /**
    * Convert to plain object
    */
-  public toObject(): any {
+  public toObject(): Record<string, unknown> {
     return {
       type: this.type,
       message: this.message,
@@ -83,7 +83,7 @@ export function fromError(error: unknown, defaultMessage: string = 'An unknown e
   );
 }
 
-export function handleError(error: unknown, message: string, type: ErrorType): never {
+export function handleError(error: unknown, message: string, _type: ErrorType): never {
   if (error instanceof AstrixSDKError) {
     throw error;
   }

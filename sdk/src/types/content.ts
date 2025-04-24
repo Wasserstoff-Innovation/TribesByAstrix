@@ -62,6 +62,7 @@ export interface PostContent {
   /**
    * Custom fields
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
@@ -282,7 +283,8 @@ export interface ParsedPostData extends PostDetails {
     };
     tags?: string[];
     createdAt?: number;
-    [key: string]: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [key: string]: any; // Allow flexible metadata structure
   };
 }
 

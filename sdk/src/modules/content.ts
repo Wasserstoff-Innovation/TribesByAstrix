@@ -1001,7 +1001,8 @@ export class ContentModule extends BaseModule {
       
       // Return cleanup function
       // eslint-disable-next-line @typescript-eslint/no-empty-function
-      return () => {
+      return () => { 
+        // Listener removal logic 
         postMinter.off(filter, handleEvent);
         this.log(`Removed post interaction listener`, {
           filter: postId ? `Post ID: ${postId}` : 'All posts'
