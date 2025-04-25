@@ -2,6 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { ThemeProvider } from '../contexts/ThemeContext';
+import { ToastProvider } from '../../components/ui';
+import Navbar from '../../components/Navbar';
+import NavbarWrapper from './NavbarWrapper';
 
 // This is a client-side wrapper component to safely handle any browser API usage
 export default function RootClient({ children }: { children: React.ReactNode }) {
@@ -22,7 +25,10 @@ export default function RootClient({ children }: { children: React.ReactNode }) 
 
   return (
     <ThemeProvider defaultTheme="dark">
-      {children}
+      <ToastProvider position="bottom-right">
+        <NavbarWrapper />
+        {children}
+      </ToastProvider>
     </ThemeProvider>
   );
 } 

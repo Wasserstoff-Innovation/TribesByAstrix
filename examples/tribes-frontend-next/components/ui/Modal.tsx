@@ -25,7 +25,7 @@ export function Modal({
 }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   
-  // Handle ESC key press
+  // Handle ESC key press and body scrolling
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && isOpen && !preventBackdropClose) {
@@ -45,6 +45,36 @@ export function Modal({
       document.body.style.overflow = '';
     };
   }, [isOpen, onClose, preventBackdropClose]);
+  
+  // Add global styles for animations - only runs on client side
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      @keyframes scaleIn {
+        from { transform: scale(0.95); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+      
+      .animation-fade-in {
+        animation: fadeIn 0.2s ease-out;
+      }
+      
+      .animation-scale-in {
+        animation: scaleIn 0.2s ease-out;
+      }
+    `;
+    
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
   
   // Handle backdrop click
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -128,27 +158,4 @@ export function Modal({
       </div>
     </div>
   );
-}
-
-// Add global styles for animations
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  
-  @keyframes scaleIn {
-    from { transform: scale(0.95); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-  }
-  
-  .animation-fade-in {
-    animation: fadeIn 0.2s ease-out;
-  }
-  
-  .animation-scale-in {
-    animation: scaleIn 0.2s ease-out;
-  }
-`;
-document.head.appendChild(style); 
+} 

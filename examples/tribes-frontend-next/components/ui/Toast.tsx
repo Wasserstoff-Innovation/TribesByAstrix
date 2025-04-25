@@ -63,6 +63,55 @@ export function Toast({
   const [progress, setProgress] = useState(100);
 
   useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+  @keyframes slideIn {
+    from {
+      transform: translateX(120%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes fadeOut {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(120%);
+      opacity: 0;
+    }
+  }
+  
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out forwards;
+  }
+  
+  .animate-fade-out {
+    animation: fadeOut 0.3s ease-in forwards;
+  }
+  
+  #toast-container {
+    pointer-events: none;
+  }
+  
+  #toast-container > div > div {
+    pointer-events: auto;
+  }
+`;
+    
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  useEffect(() => {
     if (duration <= 0) return; // Don't auto-close if duration is 0 or negative
 
     const interval = setInterval(() => {
@@ -315,46 +364,3 @@ export function useToasts() {
   
   return context;
 }
-
-// Toast component styles
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes slideIn {
-    from {
-      transform: translateX(120%);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
-  
-  @keyframes fadeOut {
-    from {
-      transform: translateX(0);
-      opacity: 1;
-    }
-    to {
-      transform: translateX(120%);
-      opacity: 0;
-    }
-  }
-  
-  .animate-slide-in {
-    animation: slideIn 0.3s ease-out forwards;
-  }
-  
-  .animate-fade-out {
-    animation: fadeOut 0.3s ease-in forwards;
-  }
-  
-  #toast-container {
-    pointer-events: none;
-  }
-  
-  #toast-container > div > div {
-    pointer-events: auto;
-  }
-`;
-document.head.appendChild(style); 

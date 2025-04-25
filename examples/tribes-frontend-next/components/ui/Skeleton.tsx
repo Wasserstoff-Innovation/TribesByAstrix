@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface SkeletonProps {
   className?: string;
@@ -32,7 +32,30 @@ export function Skeleton({
     rectangular: '',
     rounded: 'rounded-lg'
   };
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+  @keyframes skeletonWave {
+    0% {
+      background-position: -200px 0;
+    }
+    100% {
+      background-position: calc(200px + 100%) 0;
+    }
+  }
   
+  .animate-wave {
+    background: linear-gradient(90deg, rgba(75, 85, 99, 0.2) 25%, rgba(75, 85, 99, 0.5) 37%, rgba(75, 85, 99, 0.2) 63%);
+    background-size: 200px 100%;
+    animation: skeletonWave 1.5s infinite linear;
+  }
+`;
+    document.head.appendChild(style);
+//Loading.
+//Loading.=> {
+//Loading..ad.removeChild(style);
+//Loading..
+  }, []);
   // Default dimensions based on variant
   const getDefaultDimensions = () => {
     switch (variant) {
@@ -151,23 +174,3 @@ export const SkeletonList = ({ items = 5 }: { items?: number }) => (
     ))}
   </div>
 );
-
-// Add global styles for skeleton animations
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes skeletonWave {
-    0% {
-      background-position: -200px 0;
-    }
-    100% {
-      background-position: calc(200px + 100%) 0;
-    }
-  }
-  
-  .animate-wave {
-    background: linear-gradient(90deg, rgba(75, 85, 99, 0.2) 25%, rgba(75, 85, 99, 0.5) 37%, rgba(75, 85, 99, 0.2) 63%);
-    background-size: 200px 100%;
-    animation: skeletonWave 1.5s infinite linear;
-  }
-`;
-document.head.appendChild(style); 

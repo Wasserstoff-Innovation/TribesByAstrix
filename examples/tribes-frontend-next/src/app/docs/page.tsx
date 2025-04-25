@@ -635,6 +635,19 @@ export default function DocsPage() {
   const [isHomepage, setIsHomepage] = useState(true);
   // Add client-side detection
   const [isClient, setIsClient] = useState(false);
+
+  const flattenDocs = () => {
+    const flattened: DocSection[] = [];
+    
+    Object.keys(docsSections).forEach(categoryKey => {
+      const category = docsSections[categoryKey as keyof typeof docsSections];
+      category.sections.forEach(section => {
+        flattened.push(section);
+      });
+    });
+    
+    return flattened;
+  };
   
   useEffect(() => {
     // Only run in browser and set mounted state
@@ -668,18 +681,7 @@ export default function DocsPage() {
     return <LoadingState />;
   }
   
-  const flattenDocs = () => {
-    const flattened: DocSection[] = [];
-    
-    Object.keys(docsSections).forEach(categoryKey => {
-      const category = docsSections[categoryKey as keyof typeof docsSections];
-      category.sections.forEach(section => {
-        flattened.push(section);
-      });
-    });
-    
-    return flattened;
-  };
+
 
   const handleSectionChange = (sectionId: string) => {
     setActiveSection(sectionId);
