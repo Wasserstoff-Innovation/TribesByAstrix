@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tribes by Astrix Frontend
 
-## Getting Started
+<div align="center">
+  <p><em>Building decentralized communities with ownership and rewards</em></p>
+</div>
 
-First, run the development server:
+## Overview
 
+This Next.js application provides a modern UI for interacting with the Tribes by Astrix platform. The interface enables users to create and manage tribes, participate in community activities, and utilize the full range of platform features.
+
+## Documentation Updates
+
+We've significantly enhanced the documentation to provide clearer insights into the system:
+
+1. **Improved Error Codes**: Error codes now map directly to contract error codes with detailed explanations and solutions.
+
+2. **Contract Documentation**: Added comprehensive documentation of contract functions with parameters and return types based on actual implementations.
+
+3. **User Flow Diagrams**: Created visual representations of key user journeys with mermaid diagrams and code examples.
+
+4. **SDK Flow Documentation**: Added specialized diagrams for SDK interactions in a custom theme matching the app's design.
+
+5. **Enhanced Test Reporting**: Improved test report format with detailed tables and statistics on test coverage.
+
+## Key Documentation Files
+
+- [`/src/app/docs/data/error-codes.ts`](./src/app/docs/data/error-codes.ts) - Comprehensive error code documentation
+- [`/src/app/docs/data/contracts.ts`](./src/app/docs/data/contracts.ts) - Detailed contract function documentation
+- [`/src/app/docs/sdk-flows.tsx`](./src/app/docs/sdk-flows.tsx) - Visual SDK flow diagrams with theme-matched styling
+- [`/docs/user-flows.md`](../../docs/user-flows.md) - Enhanced user journey documentation with visual elements
+- [`/docs/test-report.md`](../../docs/test-report.md) - Improved test reporting with detailed statistics
+
+## Viewing the Documentation
+
+To view the enhanced documentation:
+
+1. Start the development server:
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Open your browser and navigate to:
+   - Error codes and contracts: http://localhost:3000/docs
+   - SDK flows: http://localhost:3000/docs/sdk-flows
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Prerequisites
 
-## Learn More
+- Node.js 16+
+- NPM or Yarn
+- A Web3 wallet (MetaMask recommended)
 
-To learn more about Next.js, take a look at the following resources:
+### Setup
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Install dependencies
+npm install
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Start development server
+npm run dev
 
-## Deploy on Vercel
+# Build for production
+npm run build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Environment Variables
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Create a `.env.local` file with the following variables:
+
+```
+NEXT_PUBLIC_RPC_URL=https://rpc.ankr.com/eth_sepolia
+NEXT_PUBLIC_CHAIN_ID=59141
+NEXT_PUBLIC_CONTRACT_ADDRESSES={"tribeController":"0x...","roleManager":"0x..."}
+```
+
+## Key Features
+
+- **Modern UI**: Clean, responsive interface with Tailwind CSS
+- **Web3 Integration**: Seamless wallet connection and transaction handling
+- **Documentation**: Comprehensive in-app documentation for developers
+- **Testing Utilities**: SDK testing interface for quick experimentation
+
+## Contributing
+
+Please see [CONTRIBUTING.md](../../CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.

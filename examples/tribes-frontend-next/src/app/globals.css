@@ -101,3 +101,13 @@ body {
 .page-title {
   @apply text-2xl font-bold mb-6;
 }
+
+/* Custom utility classes */
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

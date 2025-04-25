@@ -1,8 +1,23 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Copy, X, Menu, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Copy, X, Menu, ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { PageContainer } from '../../../components/ui';
+import { docsContent, docsSections } from './data';
+import { MethodDocumentation } from './data/sdk/tribes';
+import { ErrorCode } from './data/error-codes';
+import { Guide, GuideStep } from './data/guides';
+import { FaInfoCircle } from 'react-icons/fa';
+import Link from 'next/link';
+import { 
+  CodeBracketIcon, 
+  DocumentTextIcon, 
+  ExclamationCircleIcon, 
+  BeakerIcon, 
+  ChartBarIcon,
+  PresentationChartLineIcon,
+  DocumentDuplicateIcon
+} from '@heroicons/react/24/outline';
 
 // Documentation structure with nested sections
 interface DocSection {
@@ -21,1031 +36,148 @@ interface DocStructure {
   [key: string]: DocCategory;
 }
 
-const DOCS_STRUCTURE: DocStructure = {
-  gettingStarted: {
-    title: 'Getting Started',
-    sections: [
-      {
-        id: 'introduction',
-        title: 'Introduction',
-        content: () => (
-          <>
-            <p className="mb-4 text-lg leading-relaxed">
-              Tribes by Astrix is a toolkit that allows you to create and manage crypto communities with their own tokens and governance structures.
-            </p>
-            <p className="text-gray-300 leading-relaxed">
-              The SDK provides methods for creating tribes, managing memberships, creating tribe tokens, and setting up point systems for rewarding community activities.
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
-              {cardWithIcon(
-                <div className="text-accent">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-accent">
-                    <path d="M21 6H19V15H21V6Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M11 6H9V15H11V6Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M16 15V18H14H10H6H5H3V9M3 6V3H5H6H10H14H16V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>,
-                'Create Tribes',
-                'Build communities with customizable settings including access controls and membership requirements.'
-              )}
-              {cardWithIcon(
-                <div className="text-accent">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-accent">
-                    <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M3.41 22C3.41 18.13 7.26 15 12 15C12.96 15 13.89 15.13 14.76 15.37" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M22 18C22 18.75 21.79 19.46 21.42 20.06C21.21 20.42 20.94 20.74 20.63 21C19.93 21.63 19.01 22 18 22C16.54 22 15.27 21.22 14.58 20.06C14.21 19.46 14 18.75 14 18C14 16.74 14.58 15.61 15.5 14.88C16.19 14.33 17.06 14 18 14C20.21 14 22 15.79 22 18Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M16.44 18L17.5 19.06L19.56 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>,
-                'Manage Tokens',
-                'Create and distribute community tokens that power your tribe\'s economy and incentives.'
-              )}
-              {cardWithIcon(
-                <div className="text-accent">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-accent">
-                    <path d="M8.5 14.5L5 18M15.5 14.5L19 18M7 10.5H17M7 6.5H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>,
-                'Reward Activities',
-                'Set up reward systems to encourage engagement and active participation in your community.'
-              )}
-            </div>
-          </>
-        )
-      },
-      {
-        id: 'installation',
-        title: 'Installation',
-        content: () => (
-          <>
-            <p className="mb-4">Install the SDK using npm:</p>
-            <CodeBlock
-              code="npm install @wasserstoff/tribes-sdk ethers@6"
-              language="bash"
-            />
-            <p className="mt-4">The SDK requires ethers.js v6 as a peer dependency.</p>
-          </>
-        )
-      },
-      {
-        id: 'configuration',
-        title: 'Configuration',
-        content: () => (
-          <>
-            <p className="mb-4">Initialize the SDK with your provider and contract addresses:</p>
-            
-            {sectionHeading('Basic Setup')}
-            <CodeBlock
-              code={`import { AstrixSDK } from '@wasserstoff/tribes-sdk';
-import { ethers } from 'ethers';
-
-// Initialize SDK with Linea Sepolia testnet
-const sdk = new AstrixSDK({
-  provider: window.ethereum, // Browser provider
-  chainId: 59141, // Linea Sepolia Testnet
-  contracts: {
-    roleManager: '0x123...',      // Role Manager contract address
-    tribeController: '0x456...',  // Tribe Controller contract address
-    astrixToken: '0x789...',      // Astrix Token contract address
-    tokenDispenser: '0xabc...',   // Token Dispenser contract address
-    astrixPointSystem: '0xdef...', // Point System contract address
-    profileNFTMinter: '0xghi...'   // Profile NFT Minter contract address
-  },
-  verbose: true // Enable detailed logging
-});`}
-              language="typescript"
-            />
-            
-            {sectionHeading('Connecting a Wallet')}
-            <p className="mb-4">
-              For read-only operations, the SDK can be used immediately after initialization. For write operations (creating tribes, joining tribes, etc.), you need to connect a signer:
-            </p>
-            <CodeBlock
-              code={`// Initialize for read-only operations
-await sdk.init();
-
-// Connect wallet for write operations
-const provider = new ethers.BrowserProvider(window.ethereum);
-const signer = await provider.getSigner();
-await sdk.connect(signer);
-
-console.log("Connected with address:", await signer.getAddress());`}
-              language="typescript"
-            />
-            
-            {sectionHeading('Using Environment Variables')}
-            <p className="mb-4">
-              In a production environment, it's best to use environment variables for contract addresses:
-            </p>
-            <CodeBlock
-              code={`// Load from environment variables in Next.js
-const sdk = new AstrixSDK({
-  provider: new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL),
-  chainId: parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || '59141'),
-  contracts: {
-    roleManager: process.env.NEXT_PUBLIC_ROLE_MANAGER_ADDRESS || '',
-    tribeController: process.env.NEXT_PUBLIC_TRIBE_CONTROLLER_ADDRESS || '',
-    astrixToken: process.env.NEXT_PUBLIC_ASTRIX_TOKEN_ADDRESS || '',
-    tokenDispenser: process.env.NEXT_PUBLIC_TOKEN_DISPENSER_ADDRESS || '',
-    astrixPointSystem: process.env.NEXT_PUBLIC_POINT_SYSTEM_ADDRESS || '',
-    profileNFTMinter: process.env.NEXT_PUBLIC_PROFILE_NFT_ADDRESS || ''
-  }
-});`}
-              language="typescript"
-            />
-            
-            {infoBox(
-              <div className="text-accent">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-accent">
-                  <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M12 16V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M12 8H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>,
-              'Tip:',
-              'For the development environment, you can find the default contract addresses for Linea Sepolia testnet in the SDK documentation or use the development network provided by Astrix.'
-            )}
-          </>
-        )
-      }
-    ]
-  },
-  sdk: {
-    title: 'SDK Documentation',
-    sections: [
-      {
-        id: 'sdk-overview',
-        title: 'Overview',
-        content: () => (
-          <>
-            <p className="mb-4">
-              A TypeScript/JavaScript SDK for interacting with the Tribes by Astrix platform, enabling seamless integration with tribe management, points system, content creation, and more.
-            </p>
-            
-            {sectionHeading('Core Modules')}
-            <ul className="list-disc pl-6 mb-4">
-              <li><strong>Tribes</strong>: Create and manage tribes, memberships, and tribe settings</li>
-              <li><strong>Points</strong>: Handle tribe tokens, points distribution, and rewards</li>
-              <li><strong>Token</strong>: Interact with the Astrix token and related functions</li>
-              <li><strong>Content</strong>: Create and manage posts and other content</li>
-              <li><strong>Collectibles</strong>: Manage collectible NFTs within tribes</li>
-            </ul>
-            
-            {sectionHeading('Features')}
-            <ul className="list-disc pl-6 mb-4">
-              <li><strong>Easy Integration</strong>: Simple methods to interact with Tribes by Astrix contracts</li>
-              <li><strong>Type Safety</strong>: Full TypeScript support with comprehensive types and interfaces</li>
-              <li><strong>Modular Design</strong>: Use only the modules you need for your application</li>
-              <li><strong>Caching Layer</strong>: Optimized performance with intelligent caching</li>
-              <li><strong>Comprehensive Error Handling</strong>: Clear error messages and recovery options</li>
-              <li><strong>Detailed Documentation</strong>: Complete API documentation and examples</li>
-            </ul>
-
-            {sectionHeading('Example Usage')}
-            <CodeBlock
-              code={`import { AstrixSDK } from '@wasserstoff/tribes-sdk';
-import { ethers } from 'ethers';
-
-// Initialize with Ethereum provider
-const sdk = new AstrixSDK({
-  provider: window.ethereum, // Browser provider or any ethers provider
-  chainId: 59141,           // Linea Sepolia testnet
-  verbose: true             // Optional debug logging
-});
-
-// Initialize for read-only operations
-await sdk.init();
-
-// Connect wallet for write operations
-const provider = new ethers.BrowserProvider(window.ethereum);
-const signer = await provider.getSigner();
-await sdk.connect(signer);
-
-// Create a tribe
-const tribeId = await sdk.tribes.createTribe({
-  name: "My Amazing Tribe",
-  metadata: JSON.stringify({
-    description: "A community for blockchain enthusiasts",
-    logoUrl: "https://example.com/logo.png",
-    coverImageUrl: "https://example.com/cover.png",
-    visibility: "PUBLIC"
-  })
-});
-
-// Get tribe details
-const tribeDetails = await sdk.tribes.getTribeDetails(tribeId);
-console.log("Tribe details:", tribeDetails);`}
-              language="typescript"
-            />
-          </>
-        )
-      },
-      {
-        id: 'tribe-management',
-        title: 'Tribe Management',
-        content: () => (
-          <>
-            <p className="mb-4">
-              The Tribes module provides comprehensive functionality for creating and managing tribes on the platform.
-            </p>
-            
-            {sectionHeading('Creating a Tribe')}
-            <p className="mb-4">
-              Creates a new tribe with the specified name and metadata.
-            </p>
-            <p><strong>Parameters:</strong></p>
-            <ul className="list-disc pl-6 mb-4">
-              {parameterItem('name', 'String', 'The name of the tribe')}
-              {parameterItem('metadata', 'String', 'JSON string with tribe metadata (description, logo, banner, etc.)')}
-              {parameterItem('admins', 'Array (optional)', 'List of additional admin addresses')}
-              {parameterItem('joinType', 'Number (optional)', 'Type of tribe (0=Public, 1=Private, 2=Invite')}
-              {parameterItem('entryFee', 'BigInt (optional)', 'Fee to join the tribe in wei')}
-              {parameterItem('nftRequirements', 'Array (optional)', 'NFT requirements for joining')}
-            </ul>
-            <p><strong>Returns:</strong> Promise&lt;number&gt; - The ID of the newly created tribe</p>
-            
-            <CodeBlock
-              code={`const tribeId = await sdk.tribes.createTribe({
-  name: 'My Awesome Tribe',
-  metadata: JSON.stringify({
-    description: 'A tribe for awesome people',
-    logoUrl: 'https://example.com/logo.png',
-    bannerUrl: 'https://example.com/banner.png',
-    tags: ['awesome', 'community']
-  }),
-  joinType: 0, // Public
-  entryFee: 0n // No entry fee
-});
-
-console.log(\`Created tribe with ID: \${tribeId}\`);`}
-              language="typescript"
-            />
-            
-            {sectionHeading('Getting All Tribes')}
-            <p className="mb-4">Retrieves a list of all tribes on the platform with optional pagination.</p>
-            <p><strong>Parameters:</strong></p>
-            <ul className="list-disc pl-6 mb-4">
-              {parameterItem('offset', 'Number (optional)', 'Pagination offset (default: 0)')}
-              {parameterItem('limit', 'Number (optional)', 'Maximum number of tribes to return (default: 100)')}
-            </ul>
-            <p><strong>Returns:</strong> Promise&lt;{`{ tribeIds: number[], total: number }`}&gt;</p>
-            
-            <CodeBlock
-              code={`// Get all tribes
-const allTribes = await sdk.tribes.getAllTribes();
-console.log(\`Total tribes: \${allTribes.total}\`);
-console.log(\`Tribe IDs: \${allTribes.tribeIds.join(', ')}\`);
-
-// With pagination
-const page1 = await sdk.tribes.getAllTribes(0, 10); // First 10 tribes
-const page2 = await sdk.tribes.getAllTribes(10, 10); // Next 10 tribes`}
-              language="typescript"
-            />
-            
-            {sectionHeading('Getting Tribe Members')}
-            <p className="mb-4">Retrieves a list of all members in a specific tribe.</p>
-            <p><strong>Parameters:</strong></p>
-            <ul className="list-disc pl-6 mb-4">
-              {parameterItem('tribeId', 'Number', 'The ID of the tribe')}
-            </ul>
-            <p><strong>Returns:</strong> Promise&lt;string[]&gt; - Array of member addresses</p>
-            
-            <CodeBlock
-              code={`const members = await sdk.tribes.getMembers(tribeId);
-console.log(\`Tribe has \${members.length} members\`);
-console.log(\`Members: \${members.join(', ')}\`);`}
-              language="typescript"
-            />
-            
-            {sectionHeading('Joining a Tribe')}
-            <p className="mb-4">Allows the connected wallet to join a public tribe.</p>
-            <p><strong>Parameters:</strong></p>
-            <ul className="list-disc pl-6 mb-4">
-              {parameterItem('tribeId', 'Number', 'The ID of the tribe to join')}
-            </ul>
-            <p><strong>Returns:</strong> Promise&lt;string&gt; - Transaction hash</p>
-            
-            <CodeBlock
-              code={`const tx = await sdk.tribes.joinTribe({ tribeId: 42 });
-console.log(\`Joined tribe! Transaction: \${tx}\`);`}
-              language="typescript"
-            />
-            
-            {sectionHeading('Checking Member Status')}
-            <p className="mb-4">Checks the membership status of an address in a tribe.</p>
-            <p><strong>Parameters:</strong></p>
-            <ul className="list-disc pl-6 mb-4">
-              {parameterItem('tribeId', 'Number', 'The ID of the tribe')}
-              {parameterItem('address', 'String', 'The address to check')}
-            </ul>
-            <p><strong>Returns:</strong> Promise&lt;MemberStatus&gt; - Member status enum (0=NotMember, 1=Pending, 2=Member, 3=Admin)</p>
-            
-            <CodeBlock
-              code={`const status = await sdk.tribes.getMemberStatus(tribeId, "0x1234...");
-
-if (status === 2) {
-  console.log("User is a member");
-} else if (status === 3) {
-  console.log("User is an admin");
-} else if (status === 1) {
-  console.log("User has a pending request");
-} else {
-  console.log("User is not a member");
-}`}
-              language="typescript"
-            />
-          </>
-        )
-      },
-      {
-        id: 'tokens-and-points',
-        title: 'Tokens & Points',
-        content: () => (
-          <>
-            <p className="mb-4">
-              The Points module provides functionality for managing tribe tokens and points systems.
-            </p>
-            
-            {sectionHeading('Creating a Tribe Token')}
-            <p className="mb-4">Creates a new ERC20 token for a tribe that can be used for rewards, access control, or other functionality.</p>
-            <p><strong>Parameters:</strong></p>
-            <ul className="list-disc pl-6 mb-4">
-              {parameterItem('tribeId', 'Number', 'The ID of the tribe')}
-              {parameterItem('name', 'String', 'Name of the token')}
-              {parameterItem('symbol', 'String', 'Symbol of the token (ticker)')}
-            </ul>
-            <p><strong>Returns:</strong> Promise&lt;string&gt; - Transaction hash</p>
-            
-            <CodeBlock
-              code={`const tx = await sdk.points.createTribeToken({
-  tribeId: 42,
-  name: "Awesome Tribe Token",
-  symbol: "ATT"
-});
-
-console.log(\`Created tribe token! Transaction: \${tx}\`);`}
-              language="typescript"
-            />
-            
-            {sectionHeading('Getting Tribe Token Address')}
-            <p className="mb-4">Retrieves the address of a tribe's token.</p>
-            <p><strong>Parameters:</strong></p>
-            <ul className="list-disc pl-6 mb-4">
-              {parameterItem('tribeId', 'Number', 'The ID of the tribe')}
-            </ul>
-            <p><strong>Returns:</strong> Promise&lt;string&gt; - Token contract address</p>
-            
-            <CodeBlock
-              code={`const tokenAddress = await sdk.points.getTribeTokenAddress(tribeId);
-console.log(\`Tribe \${tribeId} token address: \${tokenAddress}\`);`}
-              language="typescript"
-            />
-            
-            {sectionHeading('Minting Tokens')}
-            <p className="mb-4">Mints tokens to a specific address.</p>
-            <p><strong>Parameters:</strong></p>
-            <ul className="list-disc pl-6 mb-4">
-              {parameterItem('tribeId', 'Number', 'The ID of the tribe')}
-              {parameterItem('amount', 'BigInt', 'Amount of tokens to mint')}
-              {parameterItem('recipient', 'String', 'Address to receive the tokens')}
-            </ul>
-            <p><strong>Returns:</strong> Promise&lt;string&gt; - Transaction hash</p>
-            
-            <CodeBlock
-              code={`const amount = ethers.parseUnits("100", 18); // 100 tokens with 18 decimals
-const tx = await sdk.points.mintTokens(tribeId, amount, userAddress);
-console.log(\`Minted \${amount} tokens! Transaction: \${tx}\`);`}
-              language="typescript"
-            />
-            
-            {sectionHeading('Setting Point Values for Actions')}
-            <p className="mb-4">Sets the number of points earned for performing different actions within a tribe.</p>
-            <p><strong>Parameters:</strong></p>
-            <ul className="list-disc pl-6 mb-4">
-              {parameterItem('tribeId', 'Number', 'The ID of the tribe')}
-              {parameterItem('actionType', 'String', 'Type of action (e.g., "POST_CREATE", "COMMENT")')}
-              {parameterItem('points', 'Number', 'Number of points for the action')}
-            </ul>
-            <p><strong>Returns:</strong> Promise&lt;string&gt; - Transaction hash</p>
-            
-            <CodeBlock
-              code={`const tx = await sdk.points.setPointsForAction(tribeId, "POST_CREATE", 10);
-console.log(\`Set points for creating posts! Transaction: \${tx}\`);`}
-              language="typescript"
-            />
-            
-            {sectionHeading('Getting User Points')}
-            <p className="mb-4">Gets the total points a user has earned in a tribe.</p>
-            <p><strong>Parameters:</strong></p>
-            <ul className="list-disc pl-6 mb-4">
-              {parameterItem('tribeId', 'Number', 'The ID of the tribe')}
-              {parameterItem('userAddress', 'String', 'Address of the user')}
-            </ul>
-            <p><strong>Returns:</strong> Promise&lt;number&gt; - Total points earned</p>
-            
-            <CodeBlock
-              code={`const points = await sdk.points.getPoints(tribeId, userAddress);
-console.log(\`User has earned \${points} points in tribe \${tribeId}\`);`}
-              language="typescript"
-            />
-          </>
-        )
-      },
-      {
-        id: 'content-management',
-        title: 'Content Management',
-        content: () => (
-          <>
-            <p className="mb-4 text-lg leading-relaxed">
-              The Content module provides functionality for creating and managing posts and other content within tribes.
-              This module lets you create rich posts with metadata, retrieve tribe content, and handle interactive features
-              like reactions and comments.
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
-              <div className="bg-gray-900/60 p-5 rounded-xl border border-gray-800">
-                <h4 className="font-bold text-accent mb-2">Create Content</h4>
-                <p className="text-sm text-gray-300">Create posts and add content to your tribes with customizable metadata.</p>
-              </div>
-              <div className="bg-gray-900/60 p-5 rounded-xl border border-gray-800">
-                <h4 className="font-bold text-accent mb-2">Retrieve Posts</h4>
-                <p className="text-sm text-gray-300">Get posts for a tribe with pagination support to build feeds and content listings.</p>
-              </div>
-              <div className="bg-gray-900/60 p-5 rounded-xl border border-gray-800">
-                <h4 className="font-bold text-accent mb-2">Social Interactions</h4>
-                <p className="text-sm text-gray-300">Enable reactions, comments, and other social interactions on tribe content.</p>
-              </div>
-            </div>
-            
-            {sectionHeading('Creating a Post')}
-            <p className="mb-4">Creates a new post within a tribe with content and metadata to describe the post.</p>
-            
-            <div className="bg-gray-900/40 p-5 rounded-lg border border-gray-800 mb-6">
-              <h4 className="font-semibold text-gray-200 mb-3">Parameters</h4>
-              <ul className="space-y-3">
-                {parameterItem('tribeId', 'Number', 'The ID of the tribe where the post will be created')}
-                {parameterItem('content', 'String', 'The actual content of the post (text)')}
-                {parameterItem('metadata', 'String (JSON)', 'JSON metadata with details about the post format, attachments, etc.')}
-              </ul>
-              
-              <h4 className="font-semibold text-gray-200 mt-6 mb-3">Returns</h4>
-              <p className="flex items-center gap-2">
-                <span className="bg-green-900/50 text-green-300 px-2 py-0.5 rounded-md font-mono text-sm">Promise&lt;number&gt;</span>
-                <span className="text-gray-400 text-sm">Post ID that can be used to reference this post</span>
-              </p>
-            </div>
-            
-            <div className="bg-accent/20 border border-accent/30 p-5 rounded-lg p-4 mb-6">
-              <h4 className="text-accent font-semibold mb-2">Post Metadata Types</h4>
-              <p className="text-sm text-gray-300 mb-3">The metadata field allows you to specify different types of post content:</p>
-              <ul className="list-disc pl-5 text-sm text-gray-300 space-y-1">
-                <li><strong>title</strong>: Title of the post (useful for display in feeds)</li>
-                <li><strong>tags</strong>: Array of tags for categorizing or searching posts</li>
-                <li><strong>attachments</strong>: Array of attachment objects (images, files, etc.)</li>
-                <li><strong>mediaUrls</strong>: External media like images or videos</li>
-                <li><strong>externalLink</strong>: Link to external content</li>
-                <li><strong>format</strong>: Content format (plain, markdown, html)</li>
-              </ul>
-            </div>
-            
-            <CodeBlock
-              code={`const postId = await sdk.content.createPost({
-  tribeId: 42,
-  content: "Hello tribe members!",
-  metadata: JSON.stringify({
-    title: "My First Post",
-    tags: ["introduction", "hello"],
-    attachments: [],
-    format: "plain"
-  })
-});
-
-console.log(\`Created post with ID: \${postId}\`);`}
-              language="typescript"
-            />
-            
-            {sectionHeading('Getting Posts for a Tribe')}
-            <p className="mb-4">Retrieves posts for a specific tribe with pagination support.</p>
-            
-            <div className="bg-gray-900/40 p-5 rounded-lg border border-gray-800 mb-6">
-              <h4 className="font-semibold text-gray-200 mb-3">Parameters</h4>
-              <ul className="space-y-3">
-                {parameterItem('tribeId', 'Number', 'The ID of the tribe to get posts from')}
-                {parameterItem('offset', 'Number (optional)', 'Pagination offset (default: 0')}
-                {parameterItem('limit', 'Number (optional)', 'Maximum number of posts to return (default: 10')}
-              </ul>
-              
-              <h4 className="font-semibold text-gray-200 mt-6 mb-3">Returns</h4>
-              <p className="flex flex-col gap-1">
-                <span className="bg-green-900/50 text-green-300 px-2 py-0.5 rounded-md font-mono text-sm inline-block w-fit">Promise&lt;{`{ posts: PostData[], total: number }`}&gt;</span>
-                <span className="text-gray-400 text-sm mt-1">Object containing posts array and total count</span>
-              </p>
-            </div>
-            
-            {sectionHeading('Post Interactions')}
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <h4 className="font-semibold text-lg mb-2">Reacting to a Post</h4>
-                <p className="text-sm text-gray-300 mb-4">Add reactions to posts such as likes, hearts, etc.</p>
-                
-                <div className="bg-gray-900/40 p-4 rounded-lg border border-gray-800 mb-4 text-sm">
-                  <p className="mb-2"><strong>Parameters:</strong></p>
-                  <ul className="list-disc pl-5 space-y-1">
-                    {parameterItem('postId', 'Number', 'Post ID')}
-                    {parameterItem('reactionType', 'String', 'Type of reaction')}
-                  </ul>
-                  <p className="mt-2"><strong>Returns:</strong> Promise&lt;string&gt; - Transaction hash</p>
-                </div>
-                
-                <CodeBlock
-                  code={`const tx = await sdk.content.reactToPost(postId, "LIKE");
-console.log(\`Reacted to post! Transaction: \${tx}\`);`}
-                  language="typescript"
-                />
-              </div>
-              
-              <div>
-                <h4 className="font-semibold text-lg mb-2">Commenting on a Post</h4>
-                <p className="text-sm text-gray-300 mb-4">Add comments to existing posts to engage with content.</p>
-                
-                <div className="bg-gray-900/40 p-4 rounded-lg border border-gray-800 mb-4 text-sm">
-                  <p className="mb-2"><strong>Parameters:</strong></p>
-                  <ul className="list-disc pl-5 space-y-1">
-                    {parameterItem('postId', 'Number', 'Post ID')}
-                    {parameterItem('content', 'String', 'Comment content')}
-                  </ul>
-                  <p className="mt-2"><strong>Returns:</strong> Promise&lt;number&gt; - Comment ID</p>
-                </div>
-                
-                <CodeBlock
-                  code={`const commentId = await sdk.content.commentOnPost(
-  postId, 
-  "Great post! Thanks for sharing."
-);
-console.log(\`Added comment with ID: \${commentId}\`);`}
-                  language="typescript"
-                />
-              </div>
-            </div>
-            
-            <div className="bg-gray-900/40 rounded-lg border border-gray-800 p-5 mt-8">
-              <h4 className="font-semibold text-lg mb-3">Advanced Content Management</h4>
-              <p className="text-sm text-gray-300 mb-4">Other content-related functionality available in the SDK:</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div className="bg-gray-800/60 p-3 rounded-lg">
-                  <h5 className="font-medium text-accent-300 mb-1">Get Post Details</h5>
-                  <code className="text-gray-300">sdk.content.getPostDetails(postId)</code>
-                </div>
-                <div className="bg-gray-800/60 p-3 rounded-lg">
-                  <h5 className="font-medium text-accent-300 mb-1">Get Post Comments</h5>
-                  <code className="text-gray-300">sdk.content.getPostComments(postId)</code>
-                </div>
-                <div className="bg-gray-800/60 p-3 rounded-lg">
-                  <h5 className="font-medium text-accent-300 mb-1">Get User Posts</h5>
-                  <code className="text-gray-300">sdk.content.getUserPosts(address)</code>
-                </div>
-                <div className="bg-gray-800/60 p-3 rounded-lg">
-                  <h5 className="font-medium text-accent-300 mb-1">Delete Post</h5>
-                  <code className="text-gray-300">sdk.content.deletePost(postId)</code>
-                </div>
-              </div>
-            </div>
-          </>
-        )
-      },
-      {
-        id: 'modules',
-        title: 'SDK Modules',
-        sections: [
-          {
-            id: 'tribes',
-            title: 'Tribes Module',
-            content: () => (
-              <>
-                <p className="mb-4">
-                The Tribes module provides comprehensive functionality for creating and managing tribes on the platform.
-              </p>
-
-                {sectionHeading('Creating a Tribe')}
-                <p className="mb-4">
-                  Creates a new tribe with the specified name and metadata.
-                </p>
-                <CodeBlock
-                  code={`// Create a tribe with detailed metadata
-const tribeId = await sdk.tribes.createTribe({
-  name: 'My Awesome Tribe',
-  metadata: JSON.stringify({
-    description: 'A tribe for awesome people',
-    logoUrl: 'https://example.com/logo.png',
-    bannerUrl: 'https://example.com/banner.png',
-    tags: ['awesome', 'community']
-  }),
-  joinType: 0, // Public
-  entryFee: 0n // No entry fee
-});
-
-console.log(\`Created tribe with ID: \${tribeId}\`);`}
-                  language="typescript"
-                />
-
-                {sectionHeading('Getting All Tribes')}
-                <p className="mb-4">
-                  Retrieves a list of all tribes on the platform with optional pagination.
-                </p>
-                <CodeBlock
-                  code={`// Get all tribes
-const allTribes = await sdk.tribes.getAllTribes();
-console.log(\`Total tribes: \${allTribes.total}\`);
-console.log(\`Tribe IDs: \${allTribes.tribeIds.join(', ')}\`);
-
-// With pagination
-const page1 = await sdk.tribes.getAllTribes(0, 10); // First 10 tribes
-const page2 = await sdk.tribes.getAllTribes(10, 10); // Next 10 tribes`}
-                  language="typescript"
-                />
-
-                {sectionHeading('Getting Tribe Details')}
-                <p className="mb-4">
-                  Get detailed information about a specific tribe by ID.
-                </p>
-                <div className="bg-yellow-900/30 border border-yellow-800 p-3 rounded-md mb-4">
-                  <strong className="text-yellow-400">Note:</strong> The SDK internally uses a contract method called <code>getTribe</code>, but this method is exposed through the SDK as <code>getTribeDetails</code>. Always use <code>getTribeDetails</code> in your application code.
-                </div>
-                <CodeBlock
-                  code={`const tribeDetails = await sdk.tribes.getTribeDetails(tribeId);
-
-console.log(\`Tribe Name: \${tribeDetails.name}\`);
-console.log(\`Members: \${tribeDetails.memberCount}\`);
-console.log(\`Creator: \${tribeDetails.creator}\`);
-
-// Parse metadata if needed
-const metadata = JSON.parse(tribeDetails.metadata);
-console.log(\`Description: \${metadata.description}\`);`}
-                  language="typescript"
-                />
-
-                {sectionHeading('Joining a Tribe')}
-                <p className="mb-4">
-                  Allows the connected wallet to join a public tribe.
-                </p>
-                <CodeBlock
-                  code={`const tx = await sdk.tribes.joinTribe({ tribeId: 42 });
-console.log(\`Joined tribe! Transaction: \${tx}\`);`}
-                  language="typescript"
-                />
-              </>
-            )
-          },
-          {
-            id: 'tokens',
-            title: 'Tokens Module',
-            content: () => (
-              <>
-                <p className="mb-4">
-                  The Points & Tokens module provides functionality for managing tribe tokens and points systems.
-                </p>
-
-                {sectionHeading('Creating a Tribe Token')}
-                <p className="mb-4">
-                  Creates a new ERC20 token for a tribe that can be used for rewards, access control, or other functionality.
-                </p>
-                <CodeBlock
-                  code={`const tx = await sdk.points.createTribeToken({
-  tribeId: 42,
-  name: "Awesome Tribe Token",
-  symbol: "ATT"
-});
-
-console.log(\`Created tribe token! Transaction: \${tx}\`);`}
-                  language="typescript"
-                />
-
-                {sectionHeading('Getting Tribe Token Address')}
-                <p className="mb-4">
-                  Retrieves the address of a tribe's token.
-                </p>
-                <CodeBlock
-                  code={`const tokenAddress = await sdk.points.getTribeTokenAddress(tribeId);
-console.log(\`Tribe \${tribeId} token address: \${tokenAddress}\`);`}
-                  language="typescript"
-                />
-
-                {sectionHeading('Setting Exchange Rate')}
-                <p className="mb-4">
-                  Sets the exchange rate between tribe tokens and Astrix tokens.
-                </p>
-                <CodeBlock
-                  code={`// 10 tribe tokens for 1 Astrix token
-const tx = await sdk.points.setExchangeRate(tribeId, 10);
-console.log(\`Set exchange rate! Transaction: \${tx}\`);`}
-                  language="typescript"
-                />
-              </>
-            )
-          },
-          {
-            id: 'points',
-            title: 'Points Module',
-            content: () => (
-              <>
-                <p className="mb-4">
-                  The Points module helps you manage action points and rewards for tribe activities.
-                </p>
-                
-                {sectionHeading('Getting User Points')}
-                <p className="mb-4">
-                  Gets the total points a user has earned in a tribe.
-                </p>
-                <CodeBlock
-                  code={`const points = await sdk.points.getPoints(tribeId, userAddress);
-console.log(\`User has earned \${points} points in tribe \${tribeId}\`);`}
-                  language="typescript"
-                />
-                
-                {sectionHeading('Setting Point Values for Actions')}
-                <p className="mb-4">
-                  Sets the number of points earned for performing different actions within a tribe.
-                </p>
-                <CodeBlock
-                  code={`const tx = await sdk.points.setPointsForAction(tribeId, "POST_CREATE", 10);
-console.log(\`Set points for creating posts! Transaction: \${tx}\`);
-
-// Set points for other actions
-await sdk.points.setPointsForAction(tribeId, "COMMENT", 5);
-await sdk.points.setPointsForAction(tribeId, "REACTION", 1);`}
-                  language="typescript"
-                />
-                
-                {sectionHeading('Minting Tokens')}
-                <p className="mb-4">
-                  Mints tokens to a specific address.
-                </p>
-                <CodeBlock
-                  code={`const amount = ethers.parseUnits("100", 18); // 100 tokens with 18 decimals
-const tx = await sdk.points.mintTokens(tribeId, amount, userAddress);
-console.log(\`Minted \${amount} tokens! Transaction: \${tx}\`);`}
-                  language="typescript"
-                />
-              </>
-            )
-          },
-          {
-            id: 'actions',
-            title: 'Actions & Content',
-            content: () => (
-              <>
-                <p className="mb-4">
-                  The Content module provides functionality for creating and managing posts and other content within tribes.
-                </p>
-                
-                {sectionHeading('Creating a Post')}
-                <p className="mb-4">
-                  Creates a new post within a tribe.
-                </p>
-                <CodeBlock
-                  code={`const postId = await sdk.content.createPost({
-  tribeId: 42,
-  content: "Hello tribe members!",
-  metadata: JSON.stringify({
-    title: "My First Post",
-    tags: ["introduction", "hello"],
-    attachments: []
-  })
-});
-
-console.log(\`Created post with ID: \${postId}\`);`}
-                  language="typescript"
-                />
-                
-                {sectionHeading('Getting Posts for a Tribe')}
-                <p className="mb-4">
-                  Gets all posts for a specific tribe.
-                </p>
-                <CodeBlock
-                  code={`const result = await sdk.content.getTribePosts(tribeId, 0, 10);
-console.log(\`Tribe has \${result.total} posts\`);
-result.posts.forEach(post => {
-  console.log(\`Post \${post.id}: \${post.content}\`);
-});`}
-                  language="typescript"
-                />
-                
-                {sectionHeading('Interacting with Posts')}
-                <p className="mb-4">
-                  React to posts and add comments.
-                </p>
-                <CodeBlock
-                  code={`// Add a reaction
-const txReact = await sdk.content.reactToPost(postId, "LIKE");
-console.log(\`Reacted to post! Transaction: \${txReact}\`);
-
-// Add a comment
-const commentId = await sdk.content.commentOnPost(postId, "Great post!");
-console.log(\`Added comment with ID: \${commentId}\`);`}
-                  language="typescript"
-                />
-                
-                {sectionHeading('Recording User Actions')}
-                <p className="mb-4">
-                  Manually record user actions that might trigger point rewards.
-                </p>
-                <CodeBlock
-                  code={`// Listen for user actions
-sdk.events.on('tribeAction', (event) => {
-  console.log('Action performed:', event);
-  // Award points based on action
-});
-
-// Manually record an action
-await sdk.actions.recordAction({
-  tribeId: 42,
-  actionType: "CONTENT_SHARED",
-  userAddress: "0x123..."
-});`}
-                  language="typescript"
-                />
-              </>
-            )
-          }
-        ]
-      },
-      {
-        id: 'advanced',
-        title: 'Advanced Topics',
-        sections: [
-          {
-            id: 'error-handling',
-            title: 'Error Handling',
-            content: () => (
-              <>
-                <p className="mb-4">
-                  Proper error handling is essential for a robust application.
-                  The SDK throws specific error types that you can catch and handle appropriately.
-                </p>
-                <CodeBlock
-                  code={`try {
-  await sdk.tribes.joinTribe({ tribeId: 1 });
-} catch (error) {
-  if (error.code === 'NOT_INITIALIZED') {
-    // SDK not initialized properly
-    console.error('Please connect wallet first');
-  } else if (error.code === 'CONTRACT_ERROR') {
-    // Contract-level error
-    console.error('Blockchain transaction failed:', error.message);
-  } else {
-    // Other errors
-    console.error('Operation failed:', error);
-  }
-}`}
-                  language="typescript"
-                />
-              </>
-            )
-          },
-          {
-            id: 'custom-integration',
-            title: 'Custom Integration',
-            content: () => (
-              <>
-                <p className="mb-4">
-                  For advanced use cases, you may need to interact with the contracts directly or extend the SDK functionality.
-                </p>
-                <CodeBlock
-                  code={`// Access the underlying contract instance
-const tribeController = sdk.getContract('tribeController');
-
-// Call a contract method directly
-const result = await tribeController.someCustomMethod(param1, param2);
-
-// Extend the SDK with custom functionality
-sdk.extend('myCustomModule', {
-  customMethod: async function(param) {
-    // Implementation
-    return result;
-  }
-});
-
-// Use your custom module
-const result = await sdk.myCustomModule.customMethod('param');`}
-                  language="typescript"
-                />
-              </>
-            )
-          }
-        ]
-      }
-    ]
-  },
-  advanced: {
-    title: 'Advanced Topics',
-    sections: [
-      {
-        id: 'error-handling',
-        title: 'Error Handling',
-        content: () => (
-          <>
-            <p className="mb-4">
-              Proper error handling is essential for a robust application.
-              The SDK throws specific error types that you can catch and handle appropriately.
-            </p>
-            <CodeBlock
-              code={`try {
-  await sdk.tribes.joinTribe({ tribeId: 1 });
-} catch (error) {
-  if (error.code === 'NOT_INITIALIZED') {
-    // SDK not initialized properly
-    console.error('Please connect wallet first');
-  } else if (error.code === 'CONTRACT_ERROR') {
-    // Contract-level error
-    console.error('Blockchain transaction failed:', error.message);
-  } else {
-    // Other errors
-    console.error('Operation failed:', error);
-  }
-}`}
-              language="typescript"
-            />
-          </>
-        )
-      },
-      {
-        id: 'custom-integration',
-        title: 'Custom Integration',
-        content: () => (
-          <>
-            <p className="mb-4">
-              For advanced use cases, you may need to interact with the contracts directly or extend the SDK functionality.
-            </p>
-            <CodeBlock
-              code={`// Access the underlying contract instance
-const tribeController = sdk.getContract('tribeController');
-
-// Call a contract method directly
-const result = await tribeController.someCustomMethod(param1, param2);
-
-// Extend the SDK with custom functionality
-sdk.extend('myCustomModule', {
-  customMethod: async function(param) {
-    // Implementation
-    return result;
-  }
-});
-
-// Use your custom module
-const result = await sdk.myCustomModule.customMethod('param');`}
-              language="typescript"
-            />
-          </>
-        )
-      }
-    ]
-  }
-};
-
-// UI Components - Define helper components first to fix linter errors
-const cardWithIcon = (iconSvg: React.ReactNode, title: string, description: string) => (
-  <div className="bg-gray-900/60 p-5 rounded-xl border border-gray-800 hover:border-accent transition-colors">
-    <div className="bg-accent/20 p-3 rounded-lg w-14 h-14 flex items-center justify-center mb-4">
-      <div className="text-accent">{iconSvg}</div>
-    </div>
-    <h4 className="font-bold text-accent mb-2">{title}</h4>
-    <p className="text-sm text-gray-300">{description}</p>
+// Helper components for UI elements
+const cardWithIcon = (icon: React.ReactNode, title: string, description: string) => (
+  <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-lg p-6 hover:bg-gray-900 hover:border-accent transition-colors">
+    <div className="text-accent text-2xl mb-3">{icon}</div>
+    <h3 className="text-white text-lg font-semibold mb-2">{title}</h3>
+    <p className="text-gray-400">{description}</p>
   </div>
 );
 
 const sectionHeading = (title: string) => (
-  <h3 className="text-xl font-bold mt-6 mb-3 flex items-center">
-    <div className="bg-accent w-1.5 h-6 rounded-full mr-2"></div>
-    {title}
-  </h3>
+  <h3 className="text-white text-xl font-semibold mb-4">{title}</h3>
 );
 
-const infoBox = (iconSvg: React.ReactNode, title: string, description: string) => (
-  <div className="bg-accent/10 border border-accent/30 p-5 rounded-md mt-6">
-    <div className="flex items-start">
-      <div className="bg-accent/20 p-2 rounded-md mr-4">
-        <div className="text-accent">{iconSvg}</div>
-      </div>
-      <div>
-        <strong className="text-accent font-semibold">{title}</strong> 
-        <p className="text-gray-300 mt-1">{description}</p>
-      </div>
+const infoBox = (content: string) => (
+  <div className="bg-blue-950/50 border border-blue-800 rounded-lg p-4 mb-6">
+    <div className="flex">
+      <span className="text-blue-400 mr-2">
+        <FaInfoCircle size={18} />
+      </span>
+      <p className="text-blue-100">{content}</p>
     </div>
   </div>
 );
 
-const parameterItem = (name: string, type: string, description: string) => (
-  <li className="flex items-start">
-    <div className="bg-accent/20 text-accent px-2 py-0.5 rounded-md font-mono text-sm mt-0.5 mr-3 whitespace-nowrap">{name}</div>
-    <div>
-      <span className="text-gray-300">{type}</span>
-      <p className="text-sm text-gray-400 mt-0.5">{description}</p>
+const parameterItem = (name: string, type: string, description: string, optional: boolean = false) => (
+  <div className="mb-4 pb-4 border-b border-gray-800 last:border-0">
+    <div className="flex flex-wrap justify-between items-start mb-2">
+      <div className="flex items-center">
+        <span className="font-mono text-white mr-2">{name}</span>
+        {optional && (
+          <span className="text-xs uppercase bg-gray-800 text-gray-400 px-2 py-0.5 rounded">Optional</span>
+        )}
+      </div>
+      <span className="font-mono text-sm bg-gray-800 px-2 py-1 rounded text-accent">{type}</span>
     </div>
-  </li>
+    <p className="text-gray-400">{description}</p>
+  </div>
+);
+
+const renderMethod = (method: MethodDocumentation) => (
+  <div className="mb-12 border border-gray-800 rounded-lg p-6 bg-gray-900/50 backdrop-blur-sm">
+    <h3 className="text-xl font-semibold mb-1 flex items-center group relative">
+      <span className="mr-2 text-accent">{method.name}</span>
+      <button 
+        onClick={() => navigator.clipboard.writeText(method.name)}
+        className="opacity-0 group-hover:opacity-100 transition-opacity"
+        aria-label="Copy method name"
+      >
+        <Copy size={14} className="text-gray-500 hover:text-white" />
+      </button>
+    </h3>
+    <p className="text-gray-300 mb-6">{method.description}</p>
+    
+    {method.parameters && method.parameters.length > 0 && (
+      <>
+        {sectionHeading('Parameters')}
+        <div className="bg-gray-900/80 backdrop-blur-sm rounded-lg p-4 border border-gray-800">
+          {method.parameters.map(param => (
+            <div key={param.name} className="mb-4 pb-4 border-b border-gray-800 last:border-0">
+              <div className="flex flex-wrap justify-between items-start mb-2">
+                <div className="flex items-center">
+                  <span className="font-mono text-white mr-2">{param.name}</span>
+                  {param.optional && (
+                    <span className="text-xs uppercase bg-gray-800 text-gray-400 px-2 py-0.5 rounded">Optional</span>
+                  )}
+                </div>
+                <span className="font-mono text-sm bg-gray-800 px-2 py-1 rounded text-accent">{param.type}</span>
+              </div>
+              <p className="text-gray-400">{param.description}</p>
+            </div>
+          ))}
+        </div>
+      </>
+    )}
+    
+    {sectionHeading('Returns')}
+    <div className="bg-gray-900/80 backdrop-blur-sm rounded-lg p-4 border border-gray-800 mb-6">
+      <div className="flex justify-between items-start mb-2">
+        <span className="font-mono text-accent">{method.returns.type}</span>
+      </div>
+      <p className="text-gray-400">{method.returns.description}</p>
+    </div>
+    
+    {sectionHeading('Example')}
+    <CodeBlock code={method.example} language="typescript" />
+  </div>
+);
+
+const renderErrorCode = (error: ErrorCode) => (
+  <div className="mb-8 border border-gray-800 rounded-lg p-5 bg-gray-900/50 backdrop-blur-sm">
+    <div className="flex justify-between items-start mb-3">
+      <h3 className="text-lg font-semibold text-white">{error.code}</h3>
+      <span className="text-sm text-red-400 font-mono px-2 py-1 bg-red-900/20 border border-red-900/30 rounded">{error.message}</span>
+    </div>
+    <p className="text-gray-300 mb-4">{error.description}</p>
+    <h4 className="text-sm font-semibold uppercase text-gray-400 mb-2">Possible Solutions:</h4>
+    <ul className="list-disc pl-5 space-y-1 text-gray-300">
+      {error.possibleSolutions.map((solution, index) => (
+        <li key={index}>{solution}</li>
+      ))}
+    </ul>
+  </div>
+);
+
+const renderGuide = (guide: Guide) => (
+  <div className="mb-10">
+    <div className="mb-6 flex flex-wrap gap-2 items-center">
+      <span className={`px-3 py-1 rounded-full text-xs font-medium 
+        ${guide.difficulty === 'beginner' ? 'bg-green-900/30 text-green-400 border border-green-900/50' : 
+        guide.difficulty === 'intermediate' ? 'bg-yellow-900/30 text-yellow-400 border border-yellow-900/50' : 
+        'bg-red-900/30 text-red-400 border border-red-900/50'}`}>
+        {guide.difficulty.charAt(0).toUpperCase() + guide.difficulty.slice(1)}
+      </span>
+      <span className="px-3 py-1 rounded-full bg-gray-800 text-gray-300 text-xs">
+        {guide.estimated_time}
+      </span>
+      {guide.tags.map(tag => (
+        <span key={tag} className="px-3 py-1 rounded-full bg-gray-900 border border-gray-800 text-gray-400 text-xs">
+          #{tag}
+        </span>
+      ))}
+    </div>
+    
+    <p className="text-gray-300 mb-8">{guide.description}</p>
+    
+    <div className="space-y-8">
+      {guide.steps.map((step, index) => (
+        <div key={index} className="border border-gray-800 rounded-lg p-6 bg-gray-900/50 backdrop-blur-sm">
+          <div className="flex items-center mb-3">
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-accent text-black font-semibold mr-3">
+              {index + 1}
+            </div>
+            <h3 className="text-lg font-semibold">{step.title}</h3>
+          </div>
+          <p className="text-gray-300 mb-4">{step.description}</p>
+          {step.code && (
+            <CodeBlock code={step.code} language={step.codeLanguage || 'typescript'} />
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
 );
 
 interface NavItemProps {
@@ -1057,16 +189,17 @@ interface NavItemProps {
 
 function NavItem({ id, title, active, onClick }: NavItemProps) {
   return (
-    <div
-      className={`px-3 py-2 cursor-pointer rounded-lg transition-all duration-200 text-sm ${
-        active
-          ? 'bg-accent/30 text-black shadow-sm shadow-accent/30'
-          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-      }`}
+    <button
       onClick={() => onClick(id)}
+      className={`w-full text-left px-4 py-3 rounded-md text-sm mb-1 transition-all hover:bg-accent/10 flex items-center ${
+        active ? 'bg-accent/20 text-accent font-medium' : 'text-gray-400 hover:text-white'
+      }`}
     >
-      {title}
-    </div>
+      {active && (
+        <div className="w-1 h-4 bg-accent rounded-sm mr-2"></div>
+      )}
+      <span className={active ? 'pl-0' : 'pl-3'}>{title}</span>
+    </button>
   );
 }
 
@@ -1079,35 +212,32 @@ interface CategoryProps {
   onSectionChange: (id: string) => void;
 }
 
-// Category component with expandable sections
 const Category = ({ title, sections, activeSection, expanded, onToggle, onSectionChange }: CategoryProps) => {
+  const hasActiveSectionInCategory = sections.some(section => section.id === activeSection);
+  
   return (
-    <div className="mb-3">
+    <div className="mb-4">
       <button
         onClick={onToggle}
-        className="flex items-center justify-between w-full text-left p-2.5 rounded-lg hover:bg-gray-800/80 transition-colors group"
+        className={`w-full flex items-center justify-between p-3 text-left font-medium rounded-md transition-all ${
+          hasActiveSectionInCategory ? 'text-accent bg-accent/5' : 'text-gray-300 hover:text-white'
+        }`}
       >
-        <span className="font-medium group-hover:text-accent transition-colors">{title}</span>
-        <div className={`p-1 rounded-md transition-colors ${expanded ? 'bg-accent/30' : 'bg-gray-800/50 group-hover:bg-accent/20'}`}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={`transition-transform ${expanded ? 'rotate-180 text-accent' : 'text-gray-400 group-hover:text-accent'}`}
-          >
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-        </div>
+        <span>{title}</span>
+        <svg
+          className={`transform transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
       </button>
       
       {expanded && (
-        <div className="ml-3 mt-1 space-y-1 pl-2 border-l border-gray-800">
+        <div className="mt-1 pl-2">
           {sections.map(section => (
             <NavItem
               key={section.id}
@@ -1133,9 +263,21 @@ const CodeBlock = ({ language, code }: CodeBlockProps) => {
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    // Use the clipboard API directly
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = code;
+      textArea.style.position = 'fixed';  // Avoid scrolling to bottom
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
   };
 
   return (
@@ -1149,9 +291,7 @@ const CodeBlock = ({ language, code }: CodeBlockProps) => {
         >
           {copied ? (
             <div className="flex items-center">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-green-400 mr-1.5">
-                <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <Check size={16} className="text-green-400 mr-1.5" />
               <span className="text-green-400 text-sm">Copied</span>
             </div>
           ) : (
@@ -1167,145 +307,488 @@ const CodeBlock = ({ language, code }: CodeBlockProps) => {
   );
 };
 
-export default function DocsPage() {
-  const [activeCategory, setActiveCategory] = useState('gettingStarted');
-  const [expandedCategory, setExpandedCategory] = useState('gettingStarted');
-  const [activeSection, setActiveSection] = useState<string>(
-    DOCS_STRUCTURE.gettingStarted.sections[0].id
-  );
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  
-  // Get all sections from all categories
-  const flattenDocs = () => {
-    const flatDocs: DocSection[] = [];
-    Object.keys(DOCS_STRUCTURE).forEach(catKey => {
-      DOCS_STRUCTURE[catKey].sections.forEach(section => {
-        flatDocs.push(section);
-      });
-    });
-    return flatDocs;
-  };
+// Render content based on the activeSection from docsContent
+const renderSectionContent = (sectionId: string) => {
+  const section = docsContent[sectionId];
+  if (!section) return null;
 
-  // Find current category by active section
+  const content = section.content();
+
+  // Introduction section
+  if (sectionId === 'introduction') {
+    return (
+      <>
+        <p className="mb-4 text-lg leading-relaxed">{content.description}</p>
+        <p className="text-gray-300 leading-relaxed">{content.overview}</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
+          {cardWithIcon(
+            <div className="text-accent">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-accent">
+                <path d="M21 6H19V15H21V6Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M11 6H9V15H11V6Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16 15V18H14H10H6H5H3V9M3 6V3H5H6H10H14H16V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>,
+            'Create Tribes',
+            'Build communities with customizable settings including access controls and membership requirements.'
+          )}
+          {cardWithIcon(
+            <div className="text-accent">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-accent">
+                <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3.41 22C3.41 18.13 7.26 15 12 15C12.96 15 13.89 15.13 14.76 15.37" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M22 18C22 18.75 21.79 19.46 21.42 20.06C21.21 20.42 20.94 20.74 20.63 21C19.93 21.63 19.01 22 18 22C16.54 22 15.27 21.22 14.58 20.06C14.21 19.46 14 18.75 14 18C14 16.74 14.58 15.61 15.5 14.88C16.19 14.33 17.06 14 18 14C20.21 14 22 15.79 22 18Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16.44 18L17.5 19.06L19.56 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>,
+            'Manage Tokens',
+            'Create and distribute community tokens that power your tribe\'s economy and incentives.'
+          )}
+          {cardWithIcon(
+            <div className="text-accent">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-accent">
+                <path d="M8.5 14.5L5 18M15.5 14.5L19 18M7 10.5H17M7 6.5H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>,
+            'Reward Activities',
+            'Set up reward systems to encourage engagement and active participation in your community.'
+          )}
+        </div>
+      </>
+    );
+  }
+
+  // Installation section
+  if (sectionId === 'installation') {
+    return (
+      <>
+        <p className="mb-4">Install the SDK using npm:</p>
+        <CodeBlock code={content.npm} language="bash" />
+        <p className="mt-4">Or using yarn:</p>
+        <CodeBlock code={content.yarn} language="bash" />
+        <p className="mt-4">The SDK requires ethers.js v6 as a peer dependency.</p>
+      </>
+    );
+  }
+
+  // Configuration section
+  if (sectionId === 'configuration') {
+    return (
+      <>
+        <p className="mb-4">Initialize the SDK with your provider and contract addresses:</p>
+        
+        {sectionHeading('Basic Setup')}
+        <CodeBlock
+          code={content.basicSetup}
+          language="typescript"
+        />
+        
+        {sectionHeading('Connecting a Wallet')}
+        <p className="mb-4">
+          For read-only operations, the SDK can be used immediately after initialization. For write operations (creating tribes, joining tribes, etc.), you need to connect a signer:
+        </p>
+        <CodeBlock
+          code={content.connectingWallet}
+          language="typescript"
+        />
+        
+        {infoBox(
+          'For the development environment, you can find the default contract addresses for Linea Sepolia testnet in the SDK documentation or use the development network provided by Astrix.'
+        )}
+      </>
+    );
+  }
+
+  // SDK Overview section
+  if (sectionId === 'sdk') {
+    return (
+      <>
+        <p className="mb-4">{content.description}</p>
+        
+        {sectionHeading('Features')}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          {content.features.map((feature: {name: string, description: string}, index: number) => (
+            <div key={index} className="bg-gray-900/50 backdrop-blur-sm rounded-lg p-4 border border-gray-800">
+              <h3 className="font-semibold text-accent mb-2">{feature.name}</h3>
+              <p className="text-gray-300">{feature.description}</p>
+            </div>
+          ))}
+        </div>
+        
+        {sectionHeading('Installation')}
+        <CodeBlock code={content.installation.npm} language="bash" />
+        
+        {sectionHeading('Quick Setup')}
+        <CodeBlock code={content.setup} language="typescript" />
+      </>
+    );
+  }
+
+  // Tribe Management section
+  if (sectionId === 'tribe-management') {
+    return (
+      <>
+        <p className="mb-8">{content.description}</p>
+        {content.methods.map((method: MethodDocumentation) => renderMethod(method))}
+      </>
+    );
+  }
+
+  // Points & Tokens section
+  if (sectionId === 'points-tokens') {
+    return (
+      <>
+        <p className="mb-8">{content.description}</p>
+        {content.methods.map((method: MethodDocumentation) => renderMethod(method))}
+      </>
+    );
+  }
+
+  // Content Management section
+  if (sectionId === 'content-management') {
+    return (
+      <>
+        <p className="mb-8">{content.description}</p>
+        {content.methods.map((method: MethodDocumentation) => renderMethod(method))}
+      </>
+    );
+  }
+
+  // Collectibles section
+  if (sectionId === 'collectibles') {
+    return (
+      <>
+        <p className="mb-8">{content.description}</p>
+        {content.methods.map((method: MethodDocumentation) => renderMethod(method))}
+      </>
+    );
+  }
+
+  // Error Codes section
+  if (sectionId === 'error-codes') {
+    return (
+      <>
+        <p className="mb-8">{content.description}</p>
+        
+        <div className="grid grid-cols-1 gap-6">
+          {content.errors.map((error: ErrorCode) => renderErrorCode(error))}
+        </div>
+      </>
+    );
+  }
+
+  // Contract sections
+  if (sectionId === 'contracts-overview') {
+    return (
+      <>
+        <p className="mb-6">{content.description}</p>
+        <div className="space-y-4">
+          {content.contractList.map((contract: {name: string, description: string}, index: number) => (
+            <div key={index} className="bg-gray-900/50 backdrop-blur-sm rounded-lg p-5 border border-gray-800">
+              <h3 className="text-lg font-semibold mb-2 text-accent">{contract.name}</h3>
+              <p className="text-gray-300">{contract.description}</p>
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  }
+
+  // Individual contract pages
+  if (sectionId.includes('controller') || sectionId.includes('system') || sectionId.includes('manager') || sectionId === 'role-manager') {
+    return (
+      <>
+        <p className="mb-6">{content.description}</p>
+        
+        {sectionHeading('Main Functions')}
+        <div className="space-y-8">
+          {content.mainFunctions.map((func: any, index: number) => (
+            <div key={index} className="bg-gray-900/50 backdrop-blur-sm rounded-lg p-6 border border-gray-800">
+              <h3 className="text-lg font-semibold mb-3 text-accent">{func.name}</h3>
+              <p className="text-gray-300 mb-4">{func.description}</p>
+              
+              {func.parameters && func.parameters.length > 0 && (
+                <>
+                  <h4 className="font-semibold mb-2">Parameters:</h4>
+                  <div className="bg-gray-900/80 backdrop-blur-sm rounded-lg p-4 border border-gray-800 mb-4">
+                    {func.parameters.map((param: any, pIndex: number) => (
+                      <div key={pIndex} className="mb-3 last:mb-0">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-white">{param.name}</span>
+                          <span className="font-mono text-sm bg-gray-800 px-2 py-1 rounded text-accent">{param.type}</span>
+                        </div>
+                        <p className="text-gray-400 text-sm mt-1">{param.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+              
+              {func.returns && (
+                <>
+                  <h4 className="font-semibold mb-2">Returns:</h4>
+                  <div className="bg-gray-900/80 backdrop-blur-sm rounded-lg p-4 border border-gray-800">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-white">Type</span>
+                      <span className="font-mono text-sm bg-gray-800 px-2 py-1 rounded text-accent">{func.returns.type}</span>
+                    </div>
+                    <p className="text-gray-400 text-sm mt-1">{func.returns.description}</p>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  }
+
+  // Guide pages
+  if (content.steps) {
+    return renderGuide(content as Guide);
+  }
+
+  return null;
+};
+
+// Enhanced CardLink component with icon and clear visual hierarchy
+const CardLink = ({ title, description, href, icon }: { title: string; description: string; href: string; icon: React.ReactNode }) => (
+  <a href={href} className="block bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-lg p-6 hover:bg-gray-900 hover:border-accent transition-colors group">
+    <div className="text-accent text-2xl mb-3 group-hover:scale-110 transition-transform">{icon}</div>
+    <h3 className="text-white text-lg font-semibold mb-2">{title}</h3>
+    <p className="text-gray-400">{description}</p>
+    <div className="mt-4 text-accent opacity-0 group-hover:opacity-100 transition-opacity flex items-center">
+      <span>Explore</span>
+      <svg xmlns="http://www.w3.org/2000/svg" className="ml-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+      </svg>
+    </div>
+  </a>
+);
+
+
+
+export default function DocsPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('introduction');
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
+    'gettingStarted': true,
+    'sdk': true,
+    'platform': false,
+    'contracts': false,
+    'guides': false
+  });
+  const [flattenedSections, setFlattenedSections] = useState<DocSection[]>([]);
+  const [activeSectionIndex, setActiveSectionIndex] = useState(0);
+
+  // Use the user's current URL path to determine if we should show the homepage or a specific section
+  const [isHomepage, setIsHomepage] = useState(true);
+  
   useEffect(() => {
-    for (const catKey of Object.keys(DOCS_STRUCTURE)) {
-      if (DOCS_STRUCTURE[catKey].sections.some(s => s.id === activeSection)) {
-        setActiveCategory(catKey);
-        setExpandedCategory(catKey); // Also expand the category containing the active section
-        break;
+    // Check if the URL has a hash
+    const hash = window.location.hash;
+    if (hash) {
+      const sectionId = hash.substring(1); // remove the # character
+      if (docsContent[sectionId]) {
+        setActiveSection(sectionId);
+        setIsHomepage(false);
       }
+    }
+    
+    // Flatten the docs structure for easier navigation
+    const flattened = flattenDocs();
+    setFlattenedSections(flattened);
+    
+    // Find the index of the active section in the flattened array
+    const index = flattened.findIndex(section => section.id === activeSection);
+    if (index !== -1) {
+      setActiveSectionIndex(index);
     }
   }, [activeSection]);
 
-  // Find active doc
-  const activeDoc = flattenDocs().find(doc => doc.id === activeSection);
-  
-  // Navigation between docs
-  const allDocs = flattenDocs();
-  const currentIndex = allDocs.findIndex(doc => doc.id === activeSection);
-  const prevDoc = currentIndex > 0 ? allDocs[currentIndex - 1] : null;
-  const nextDoc = currentIndex < allDocs.length - 1 ? allDocs[currentIndex + 1] : null;
-
-  // Handle category expansion
-  const toggleCategory = (categoryKey: string) => {
-    setExpandedCategory(expandedCategory === categoryKey ? '' : categoryKey);
+  const flattenDocs = () => {
+    const flattened: DocSection[] = [];
+    
+    Object.keys(docsSections).forEach(categoryKey => {
+      const category = docsSections[categoryKey as keyof typeof docsSections];
+      category.sections.forEach(section => {
+        flattened.push(section);
+      });
+    });
+    
+    return flattened;
   };
 
+  const handleSectionChange = (sectionId: string) => {
+    setActiveSection(sectionId);
+    setIsHomepage(false);
+    
+    // Update the URL with the section ID without causing a page reload
+    window.history.pushState(null, '', `#${sectionId}`);
+    
+    // Find the index of the new section
+    const index = flattenedSections.findIndex(section => section.id === sectionId);
+    if (index !== -1) {
+      setActiveSectionIndex(index);
+    }
+    
+    // On mobile, close the menu after selection
+    if (mobileMenuOpen) {
+      setMobileMenuOpen(false);
+    }
+  };
+
+  const toggleCategory = (categoryKey: string) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [categoryKey]: !prev[categoryKey]
+    }));
+  };
+
+  const navigatePrevious = () => {
+    if (activeSectionIndex > 0) {
+      const prevSection = flattenedSections[activeSectionIndex - 1];
+      handleSectionChange(prevSection.id);
+    }
+  };
+
+  const navigateNext = () => {
+    if (activeSectionIndex < flattenedSections.length - 1) {
+      const nextSection = flattenedSections[activeSectionIndex + 1];
+      handleSectionChange(nextSection.id);
+    }
+  };
+
+  const goToHomepage = () => {
+    setIsHomepage(true);
+    window.history.pushState(null, '', window.location.pathname);
+  };
+
+  // Check if we have content for the active section
+  const hasContent = docsContent[activeSection] !== undefined;
+
   return (
-    <PageContainer className="max-w-7xl">
-      {/* Mobile sidebar toggle */}
-      <div className="lg:hidden fixed top-20 left-24 z-20">
-        <button 
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2.5 rounded-lg bg-gray-800/90 backdrop-blur-sm text-white border border-gray-700 shadow-lg hover:bg-gray-700 transition-all"
-          aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
-        >
-          {sidebarOpen ? (
-            <X size={20} />
-          ) : (
-            <Menu size={20} />
+    <PageContainer>
+      <div className="flex flex-col min-h-screen">
+        {/* Mobile Header with menu toggle */}
+        <div className="md:hidden bg-gray-900/80 backdrop-blur-md p-4 border-b border-gray-800 sticky top-0 z-30">
+          <div className="flex justify-between items-center">
+            <button 
+              className="text-gray-300 hover:text-white"
+              onClick={goToHomepage}
+            >
+              <span className="text-lg font-semibold">Tribes Docs</span>
+            </button>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-800"
+            >
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+          
+          {/* Mobile section title - only show if not homepage */}
+          {!isHomepage && hasContent && (
+            <div className="mt-2 flex items-center">
+              <span className="text-white">{docsContent[activeSection].title}</span>
+            </div>
           )}
-        </button>
-      </div>
+        </div>
 
-      <div className="flex flex-col lg:flex-row relative pt-4">
-        {/* Sidebar */}
-        <aside className={`
-          lg:sticky lg:top-[calc(var(--navbar-height)+1rem)] lg:self-start
-          w-80 bg-gray-900/95 backdrop-blur-sm overflow-y-auto
-          border border-gray-800 rounded-lg shadow-xl
-          mb-6 lg:mb-0 h-[calc(100vh-var(--navbar-height)-4rem)] 
-          transform transition-transform duration-200 ease-in-out
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          fixed top-[calc(var(--navbar-height)+1rem)] left-24 z-10 lg:static lg:z-0
-        `}>
-          <div className="sticky top-0 bg-gray-900/95 backdrop-blur-sm z-10 border-b border-gray-800 p-4">
-            <h1 className="text-xl font-bold flex items-center">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-accent mr-2">
-                <path d="M16 4H18C19.1046 4 20 4.89543 20 6V20C20 21.1046 19.1046 22 18 22H6C4.89543 22 4 21.1046 4 20V6C4 4.89543 4.89543 4 6 4H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 16V11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M9 13L12 16L15 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M15 8H9C7.89543 8 7 7.10457 7 6V4C7 2.89543 7.89543 2 9 2H15C16.1046 2 17 2.89543 17 4V6C17 7.10457 16.1046 8 15 8Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <span>Tribes SDK Docs</span>
-            </h1>
-          </div>
-
-          <div className="p-4 pb-16 overflow-y-auto" style={{ height: 'calc(100% - 60px)' }}>
-            {Object.keys(DOCS_STRUCTURE).map(catKey => (
-              <Category
-                key={catKey}
-                title={DOCS_STRUCTURE[catKey].title}
-                sections={DOCS_STRUCTURE[catKey].sections}
-                activeSection={activeSection}
-                expanded={expandedCategory === catKey}
-                onToggle={() => toggleCategory(catKey)}
-                onSectionChange={setActiveSection}
-              />
-            ))}
-          </div>
-        </aside>
-
-        {/* Main content */}
-        <div className="flex-1 overflow-auto pl-0 lg:pl-10">
-          <div className="max-w-full pr-6">
-            {activeDoc && (
-              <>
-                <div className="bg-gradient-to-br from-gray-900/80 via-gray-900/90 to-gray-800/50 backdrop-blur-sm rounded-xl p-8 mb-10 border border-gray-800 shadow-lg">
-                  <h1 className="text-2xl md:text-3xl font-bold mb-3 flex items-center">
-                    {activeDoc.title}
-                  </h1>
-                  <div className="h-1 w-20 bg-gradient-to-r from-accent to-accent/70 rounded-full"></div>
-                </div>
+        <div className="flex flex-1 relative">
+          {/* Sidebar - Hidden on mobile unless menu is open */}
+          <div className={`fixed inset-0 z-20 transform ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 md:w-64 lg:w-72 md:sticky md:top-0 md:h-screen md:max-h-screen bg-gray-900/80 backdrop-blur-md md:border-r border-gray-800 flex flex-col rounded-lg overflow-hidden`}>
+            <div className="p-4 md:p-6 bg-gray-900/90 backdrop-blur-md z-10 border-b border-gray-800 flex-shrink-0">
+              <div className="flex justify-between items-center mb-6">
                 
-                <div className="prose prose-invert max-w-4xl prose-headings:font-medium prose-h3:text-xl prose-h3:mt-10 prose-h3:mb-4 prose-p:text-gray-300">
-                  {activeDoc.content && activeDoc.content()}
-                </div>
+                {/* Only show close button on mobile */}
+                <button 
+                  className="md:hidden p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-800"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
 
-                {/* Navigation between pages */}
-                <div className="mt-16 flex justify-between items-center border-t border-gray-800/50 pt-6 max-w-4xl">
-                  {prevDoc ? (
-                    <button 
-                      onClick={() => setActiveSection(prevDoc.id)}
-                      className="flex items-center text-accent hover:text-accent/80 transition-all bg-gray-900/60 hover:bg-gray-900/90 backdrop-blur-sm py-3 px-5 rounded-lg border border-gray-800/50 hover:border-accent/50 shadow-md"
+            <div className="flex-1 overflow-y-auto hide-scrollbar p-4">
+              <nav>
+                {/* Navigation categories */}
+                {Object.keys(docsSections).map(categoryKey => {
+                  const category = docsSections[categoryKey as keyof typeof docsSections];
+                  return (
+                    <Category
+                      key={categoryKey}
+                      title={category.title}
+                      sections={category.sections}
+                      activeSection={activeSection}
+                      expanded={expandedCategories[categoryKey]}
+                      onToggle={() => toggleCategory(categoryKey)}
+                      onSectionChange={handleSectionChange}
+                    />
+                  );
+                })}
+              </nav>
+            </div>
+          </div>
+
+          {/* Mobile overlay to close menu when clicking outside */}
+          {mobileMenuOpen && (
+            <div 
+              className="fixed inset-0 bg-black/50 z-10 md:hidden"
+              onClick={() => setMobileMenuOpen(false)}
+            ></div>
+          )}
+
+          {/* Main content area */}
+          <div className="flex-1 max-w-full">
+            <div className="p-4 md:p-8 lg:p-12 max-w-4xl mx-auto">
+                <>
+                  {/* Desktop section title */}
+                  <div className="hidden md:block mb-6">
+                    <h1 className="text-3xl font-bold text-white">{hasContent ? docsContent[activeSection].title : 'Section Not Found'}</h1>
+                    <div className="h-1 w-20 bg-gradient-to-r from-accent to-accent/70 rounded-full mt-3"></div>
+                  </div>
+
+                  {/* Content */}
+                  {hasContent ? (
+                    <div className="prose prose-invert max-w-none">
+                      {renderSectionContent(activeSection)}
+                    </div>
+                  ) : (
+                    <div className="bg-red-900/20 border border-red-900/40 rounded-lg p-6 text-red-300">
+                      <p>The requested section was not found. Please select another section from the navigation menu.</p>
+                    </div>
+                  )}
+
+                  {/* Navigation buttons for next/previous */}
+                  <div className="mt-12 flex justify-between border-t border-gray-800 pt-6">
+                    <button
+                      onClick={navigatePrevious}
+                      disabled={activeSectionIndex === 0}
+                      className={`flex items-center ${activeSectionIndex === 0 ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-white'}`}
                     >
                       <ArrowLeft size={16} className="mr-2" />
-                      <span>Previous: {prevDoc.title}</span>
+                      {activeSectionIndex > 0 && (
+                        <span>Previous: {flattenedSections[activeSectionIndex - 1].title}</span>
+                      )}
                     </button>
-                  ) : <div></div>}
-                  
-                  {nextDoc && (
-                    <button 
-                      onClick={() => setActiveSection(nextDoc.id)}
-                      className="flex items-center text-accent hover:text-accent/80 transition-all bg-gray-900/60 hover:bg-gray-900/90 backdrop-blur-sm py-3 px-5 rounded-lg border border-gray-800/50 hover:border-accent/50 shadow-md"
+                    
+                    <button
+                      onClick={navigateNext}
+                      disabled={activeSectionIndex === flattenedSections.length - 1}
+                      className={`flex items-center ${activeSectionIndex === flattenedSections.length - 1 ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-white'}`}
                     >
-                      <span>Next: {nextDoc.title}</span>
+                      {activeSectionIndex < flattenedSections.length - 1 && (
+                        <span>Next: {flattenedSections[activeSectionIndex + 1].title}</span>
+                      )}
                       <ArrowRight size={16} className="ml-2" />
                     </button>
-                  )}
-                </div>
-              </>
-            )}
+                  </div>
+                </>
+            </div>
           </div>
         </div>
       </div>
