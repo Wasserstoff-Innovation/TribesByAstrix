@@ -167,7 +167,7 @@ export function SidebarItem({
       {/* Child items */}
       {!collapsed && hasChildren && expanded && (
         <div className="mt-1 mb-1">
-          {item.items.map((subItem, idx) => (
+          {item.items?.map((subItem, idx) => (
             <SidebarItem 
               key={idx} 
               item={subItem} 

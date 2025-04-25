@@ -140,7 +140,7 @@ export default function SDKDebugPage() {
           // Test tribes module
           addLog('Testing tribes module...');
           const tribes = await tribesSDK.tribes.getAllTribes();
-          addLog(`Retrieved ${tribes.length} tribes`);
+          addLog(`Retrieved ${tribes.tribeIds.length} tribes`);
           return;
         } catch (error1) {
           addLog(`Approach 1 failed: ${error1 instanceof Error ? error1.message : String(error1)}`);
@@ -168,7 +168,7 @@ export default function SDKDebugPage() {
           // Test tribes module
           addLog('Testing tribes module...');
           const tribes = await tribesSDK.tribes.getAllTribes();
-          addLog(`Retrieved ${tribes.length} tribes`);
+          addLog(`Retrieved ${tribes.tribeIds.length} tribes`);
           return;
         } catch (error2) {
           addLog(`Approach 2 failed: ${error2 instanceof Error ? error2.message : String(error2)}`);
@@ -197,7 +197,7 @@ export default function SDKDebugPage() {
           // Test tribes module
           addLog('Testing tribes module...');
           const tribes = await tribesSDK.tribes.getAllTribes();
-          addLog(`Retrieved ${tribes.length} tribes`);
+          addLog(`Retrieved ${tribes.tribeIds.length} tribes`);
           return;
         } catch (error3) {
           addLog(`Approach 3 failed: ${error3 instanceof Error ? error3.message : String(error3)}`);
@@ -227,7 +227,7 @@ export default function SDKDebugPage() {
           // Test tribes module
           addLog('Testing tribes module...');
           const tribes = await tribesSDK.tribes.getAllTribes();
-          addLog(`Retrieved ${tribes.length} tribes`);
+          addLog(`Retrieved ${tribes.tribeIds.length} tribes`);
           return;
         } catch (error4) {
           addLog(`Approach 4 failed: ${error4 instanceof Error ? error4.message : String(error4)}`);

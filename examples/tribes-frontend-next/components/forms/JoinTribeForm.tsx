@@ -64,9 +64,9 @@ const JoinTribeForm: React.FC<JoinTribeFormProps> = ({
       setLoading(true);
       setError(null);
       
-      await sdk.tribes.leaveTribe({
-        tribeId: tribe.id
-      });
+      // await sdk.tribes.leaveTribe({
+      //   tribeId: tribe.id
+      // });
       
       // Callback to refresh membership status
       onLeave();

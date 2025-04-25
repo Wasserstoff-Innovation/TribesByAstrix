@@ -1,13 +1,73 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { userFlows } from '../data/user-flows';
 import { PageContainer } from '../../../../components/ui';
 
+// Loading component
+function LoadingState() {
+  return (
+    <PageContainer className="max-w-7xl px-4 py-8">
+      <div className="space-y-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-3 text-white">User Flows</h1>
+          <div className="h-1 w-20 bg-gradient-to-r from-accent to-accent/70 rounded-full mb-4"></div>
+          <div className="h-4 w-3/4 bg-gray-800 rounded animate-pulse"></div>
+        </div>
+        <div className="w-full h-[300px] bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-xl flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
+        </div>
+      </div>
+    </PageContainer>
+  );
+}
+
+// Safe version of the IntegrationCard that doesn't use document directly
+const IntegrationCard = ({ 
+  title, 
+  description, 
+  difficulty, 
+  flowId,
+  onViewFlow
+}: { 
+  title: string;
+  description: string;
+  difficulty: string;
+  flowId: string;
+  onViewFlow: (id: string) => void;
+}) => {
+  const difficultyColor = 
+    difficulty === 'Simple' ? 'text-green-400 border-green-500/30 bg-green-500/10' : 
+    difficulty === 'Moderate' ? 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10' : 
+    'text-red-400 border-red-500/30 bg-red-500/10';
+    
+  return (
+    <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-800 rounded-lg p-5 hover:bg-gray-900/80 transition group">
+      <div className="flex justify-between items-start mb-3">
+        <h3 className="text-lg font-semibold text-white">{title}</h3>
+        <span className={`text-xs px-2 py-1 rounded-full border ${difficultyColor}`}>
+          {difficulty}
+        </span>
+      </div>
+      <p className="text-gray-300 text-sm mb-4 line-clamp-2">{description}</p>
+      <button
+        onClick={() => onViewFlow(flowId)}
+        className="text-accent text-sm hover:text-accent/80 flex items-center group-hover:translate-x-1 transition-transform"
+      >
+        View Flow
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+        </svg>
+      </button>
+    </div>
+  );
+};
+
 // Main User Flows Page Component
 export default function UserFlowsPage() {
   const [activeTab, setActiveTab] = useState('onboarding');
+  const [isClient, setIsClient] = useState(false);
   
   // Flow type definitions
   const flowTypes = [
@@ -19,6 +79,25 @@ export default function UserFlowsPage() {
   
   const categories = userFlows.map(flow => flow.category);
   const uniqueCategories = Array.from(new Set(categories));
+
+  // Set client-side state
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Safe scrolling function that only runs client-side
+  const scrollToElement = (id: string) => {
+    if (typeof document !== 'undefined') {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  if (!isClient) {
+    return <LoadingState />;
+  }
 
   return (
     <PageContainer className="max-w-7xl px-4 py-8">
@@ -86,6 +165,7 @@ export default function UserFlowsPage() {
                   description={sampleFlow.description}
                   difficulty={sampleFlow.complexity}
                   flowId={sampleFlow.id}
+                  onViewFlow={scrollToElement}
                 />
               );
             })}
@@ -95,50 +175,6 @@ export default function UserFlowsPage() {
     </PageContainer>
   );
 }
-
-// Integration Card Component
-const IntegrationCard = ({ 
-  title, 
-  description, 
-  difficulty, 
-  flowId 
-}: { 
-  title: string;
-  description: string;
-  difficulty: string;
-  flowId: string;
-}) => {
-  const difficultyColor = 
-    difficulty === 'Simple' ? 'text-green-400 border-green-500/30 bg-green-500/10' : 
-    difficulty === 'Moderate' ? 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10' : 
-    'text-red-400 border-red-500/30 bg-red-500/10';
-    
-  return (
-    <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-800 rounded-lg p-5 hover:bg-gray-900/80 transition group">
-      <div className="flex justify-between items-start mb-3">
-        <h3 className="text-lg font-semibold text-white">{title}</h3>
-        <span className={`text-xs px-2 py-1 rounded-full border ${difficultyColor}`}>
-          {difficulty}
-        </span>
-      </div>
-      <p className="text-gray-300 text-sm mb-4 line-clamp-2">{description}</p>
-      <button
-        onClick={() => {
-          const element = document.getElementById(flowId);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
-          }
-        }}
-        className="text-accent text-sm hover:text-accent/80 flex items-center group-hover:translate-x-1 transition-transform"
-      >
-        View Flow
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-        </svg>
-      </button>
-    </div>
-  );
-};
 
 // Onboarding Flow Content Component
 const OnboardingContent = () => (

@@ -22,35 +22,48 @@ export function ThemeProvider({
   defaultTheme = 'dark', // Default to dark based on visuals
   storageKey = 'vite-ui-theme' 
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window === 'undefined') return defaultTheme;
+  const [theme, setTheme] = useState<Theme>(defaultTheme);
+  
+  // Only run on client side
+  const [mounted, setMounted] = useState(false);
+  
+  // Initialize theme from localStorage when component mounts (client-side only)
+  useEffect(() => {
+    setMounted(true);
     try {
-      const storedTheme = window.localStorage.getItem(storageKey) as Theme | null;
-      return storedTheme || defaultTheme;
+      const storedTheme = localStorage.getItem(storageKey) as Theme | null;
+      if (storedTheme) {
+        setTheme(storedTheme);
+      }
     } catch (error) {
       console.error('Error reading localStorage key "', storageKey, '":', error);
-      return defaultTheme;
     }
-  });
+  }, [storageKey]);
 
+  // Apply theme to document and store in localStorage
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const root = window.document.documentElement;
-
+    if (!mounted) return;
+    
+    const root = document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
 
     try {
-      window.localStorage.setItem(storageKey, theme);
+      localStorage.setItem(storageKey, theme);
     } catch (error) {
       console.error('Error setting localStorage key "', storageKey, '":', error);
     }
-  }, [theme, storageKey]);
+  }, [theme, storageKey, mounted]);
 
   const toggleTheme = () => {
     setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
   };
 
+  // Prevent flash by only rendering children when mounted
+  if (!mounted) {
+    return <>{children}</>;
+  }
+  
   const value = { theme, toggleTheme };
 
   return (

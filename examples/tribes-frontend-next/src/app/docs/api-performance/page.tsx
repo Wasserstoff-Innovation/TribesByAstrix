@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageContainer } from '../../../../components/ui';
 
 // Simulated API performance data
@@ -70,9 +70,40 @@ const apiPerformanceData = {
   ]
 };
 
+// Loader component
+function LoadingState() {
+  return (
+    <PageContainer className="max-w-7xl px-4 py-8">
+      <div className="space-y-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-3 text-white">API Performance</h1>
+          <div className="h-1 w-20 bg-gradient-to-r from-accent to-accent/70 rounded-full mb-4"></div>
+          <div className="h-4 w-3/4 bg-gray-800 rounded animate-pulse"></div>
+        </div>
+        <div className="w-full h-[300px] bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-xl flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
+        </div>
+      </div>
+    </PageContainer>
+  );
+}
+
+// Main component
 export default function ApiPerformancePage() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [isClient, setIsClient] = useState(false);
   
+  // This effect ensures we only render the full content on the client side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
+  // Return loading state during SSR or initial client render
+  if (!isClient) {
+    return <LoadingState />;
+  }
+  
+  // Rest of the component only renders on the client side
   return (
     <PageContainer className="max-w-7xl px-4 py-8">
       <div className="space-y-6">

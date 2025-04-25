@@ -72,7 +72,9 @@ export function Feed({ items, onItemClick }: FeedProps) {
         onClick={handleClick}
         className="p-4 bg-card-dark rounded-lg cursor-pointer hover:bg-input-dark transition-colors"
       >
-        <div className="font-medium text-foreground-dark capitalize">{item.type}</div>
+        <div className="font-medium text-foreground-dark capitalize">
+          {('type' in item) ? item.type : 'Post'}
+        </div>
         <div className="mt-2 text-sm text-muted-foreground">
           {new Date(item.createdAt).toLocaleDateString()}
         </div>

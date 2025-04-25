@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageContainer } from '../../../../components/ui';
 import Link from 'next/link';
 import { contentModule } from '../data/sdk/content';
@@ -8,6 +8,7 @@ import { tribesModule } from '../data/sdk/tribes';
 import { pointsModule } from '../data/sdk/points';
 import { collectiblesModule } from '../data/sdk/collectibles';
 import { sdkOverview } from '../data/sdk/index';
+import SDKTester from '../../../../components/SDKTester';
 
 // Tab component for switching between different views
 const TabButton = ({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) => (
@@ -336,6 +337,12 @@ export default function SDKDocs() {
           >
             SDK Reference
           </TabButton>
+          <TabButton 
+            active={activeTab === 'tester'} 
+            onClick={() => setActiveTab('tester')}
+          >
+            SDK Tester
+          </TabButton>
           <Link href="/docs/user-flows" className="bg-gray-800 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md transition">
             User Flows
           </Link>
@@ -344,41 +351,43 @@ export default function SDKDocs() {
           </Link>
         </div>
         
-        {/* Quick Navigation */}
-        <QuickNav />
-        
-        {/* Installation & Setup */}
-        <InstallationSection installation={sdkOverview.installation} />
-        
-        {/* SDK Overview */}
-        <div className="mb-12">
-          <SectionHeader id="overview" title="SDK Overview" />
-          <div className="h-1 w-20 bg-gradient-to-r from-accent to-accent/70 rounded-full mb-8"></div>
-          
-          <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-xl p-6 shadow-lg mb-8">
-            <p className="text-gray-300 mb-6">
-              {sdkOverview.description}
-            </p>
+        {activeTab === 'reference' && (
+          <>
+            {/* Quick Navigation */}
+            <QuickNav />
             
-            <h3 className="text-lg font-medium mb-4 text-white">Key Features</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              {sdkOverview.features.map((feature: any, i: number) => (
-                <div key={i} className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4">
-                  <h4 className="font-medium text-accent mb-1">{feature.name}</h4>
-                  <p className="text-sm text-gray-300">{feature.description}</p>
+            {/* Installation & Setup */}
+            <InstallationSection installation={sdkOverview.installation} />
+            
+            {/* SDK Overview */}
+            <div className="mb-12">
+              <SectionHeader id="overview" title="SDK Overview" />
+              <div className="h-1 w-20 bg-gradient-to-r from-accent to-accent/70 rounded-full mb-8"></div>
+              
+              <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-xl p-6 shadow-lg mb-8">
+                <p className="text-gray-300 mb-6">
+                  {sdkOverview.description}
+                </p>
+                
+                <h3 className="text-lg font-medium mb-4 text-white">Key Features</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  {sdkOverview.features.map((feature: any, i: number) => (
+                    <div key={i} className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4">
+                      <h4 className="font-medium text-accent mb-1">{feature.name}</h4>
+                      <p className="text-sm text-gray-300">{feature.description}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            
-            {/* SDK Modules with correct list */}
-            <SDKModulesSection />
-          </div>
-          
-          {/* SDK Flow Diagram */}
-          <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-xl p-6 shadow-lg">
-            <h3 className="text-xl font-semibold mb-4 text-white">Typical SDK Flow</h3>
-            <div className="bg-gray-950 p-6 rounded-lg border border-gray-800 overflow-auto">
-              <pre className="text-sm text-gray-300 whitespace-pre">
+                
+                {/* SDK Modules with correct list */}
+                <SDKModulesSection />
+              </div>
+              
+              {/* SDK Flow Diagram */}
+              <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-xl p-6 shadow-lg">
+                <h3 className="text-xl font-semibold mb-4 text-white">Typical SDK Flow</h3>
+                <div className="bg-gray-950 p-6 rounded-lg border border-gray-800 overflow-auto">
+                  <pre className="text-sm text-gray-300 whitespace-pre">
 {`sequenceDiagram
     actor User
     participant App as Web App
@@ -415,68 +424,97 @@ export default function SDKDocs() {
     Contracts-->>SDK: Return Points Data
     SDK-->>App: Format Points Data
     App-->>User: Display User Points`}
-              </pre>
+                  </pre>
+                </div>
+                <div className="mt-4 flex justify-center">
+                  <Link href="/docs/user-flows" className="text-accent hover:text-accent/80 inline-flex items-center">
+                    View Detailed User Flows
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </Link>
+                </div>
+              </div>
+              
+              {/* Test Coverage Summary */}
+              <div className="mt-8 bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                <h3 className="text-lg font-semibold text-white mb-3">SDK Test Coverage</h3>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-gray-900/50 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-green-400 mb-1">94%</div>
+                    <div className="text-sm text-gray-400">Unit Test Coverage</div>
+                  </div>
+                  
+                  <div className="bg-gray-900/50 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-green-400 mb-1">87%</div>
+                    <div className="text-sm text-gray-400">Integration Tests</div>
+                  </div>
+                  
+                  <div className="bg-gray-900/50 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-yellow-400 mb-1">79%</div>
+                    <div className="text-sm text-gray-400">End-to-End Tests</div>
+                  </div>
+                  
+                  <div className="bg-gray-900/50 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-green-400 mb-1">92%</div>
+                    <div className="text-sm text-gray-400">Overall Coverage</div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 text-sm text-gray-400">
+                  Last test run: <span className="text-white">4 hours ago</span>
+                </div>
+              </div>
             </div>
-            <div className="mt-4 flex justify-center">
-              <Link href="/docs/user-flows" className="text-accent hover:text-accent/80 inline-flex items-center">
-                View Detailed User Flows
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+            
+            {/* Module Reference Sections */}
+            <ModuleSection module={tribesModule} id="tribes-module" />
+            <ModuleSection module={contentModule} id="content-module" />
+            <ModuleSection module={pointsModule} id="points-module" />
+            <ModuleSection module={collectiblesModule} id="collectibles-module" />
+            
+            {/* Back to top button */}
+            <div className="flex justify-center mt-8">
+              <a 
+                href="#" 
+                className="bg-accent/20 hover:bg-accent/30 text-accent px-4 py-2 rounded-full inline-flex items-center transition"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
                 </svg>
-              </Link>
+                Back to Top
+              </a>
             </div>
-          </div>
-          
-          {/* Test Coverage Summary */}
-          <div className="mt-8 bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-            <h3 className="text-lg font-semibold text-white mb-3">SDK Test Coverage</h3>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-900/50 rounded-lg p-3">
-                <div className="text-2xl font-bold text-green-400 mb-1">94%</div>
-                <div className="text-sm text-gray-400">Unit Test Coverage</div>
-              </div>
-              
-              <div className="bg-gray-900/50 rounded-lg p-3">
-                <div className="text-2xl font-bold text-green-400 mb-1">87%</div>
-                <div className="text-sm text-gray-400">Integration Tests</div>
-              </div>
-              
-              <div className="bg-gray-900/50 rounded-lg p-3">
-                <div className="text-2xl font-bold text-yellow-400 mb-1">79%</div>
-                <div className="text-sm text-gray-400">End-to-End Tests</div>
-              </div>
-              
-              <div className="bg-gray-900/50 rounded-lg p-3">
-                <div className="text-2xl font-bold text-green-400 mb-1">92%</div>
-                <div className="text-sm text-gray-400">Overall Coverage</div>
-              </div>
+          </>
+        )}
+
+        {activeTab === 'tester' && (
+          <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-xl p-6 shadow-lg">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-white">Interactive SDK Tester</h2>
+              <p className="text-gray-300 mt-2">
+                Test the Tribes SDK methods in real-time by connecting your wallet and executing methods directly from this page.
+                The results will be displayed immediately, allowing you to verify functionality and explore the API.
+              </p>
             </div>
             
-            <div className="mt-4 text-sm text-gray-400">
-              Last test run: <span className="text-white">4 hours ago</span>
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl">
+              <SDKTester />
+            </div>
+            
+            <div className="mt-6 p-4 bg-accent/10 border border-accent/20 rounded-lg">
+              <h3 className="text-lg font-medium text-accent mb-2">Testing Tips</h3>
+              <ul className="list-disc list-inside text-gray-300 space-y-2">
+                <li>Connect your wallet to begin testing SDK methods</li>
+                <li>Read methods don't require blockchain transactions and return data immediately</li>
+                <li>Write methods require transactions and may take time to confirm</li>
+                <li>Try creating a tribe first before testing other tribe-specific methods</li>
+                <li>Refer to the SDK Reference tab for detailed method documentation</li>
+              </ul>
             </div>
           </div>
-        </div>
-        
-        {/* Module Reference Sections */}
-        <ModuleSection module={tribesModule} id="tribes-module" />
-        <ModuleSection module={contentModule} id="content-module" />
-        <ModuleSection module={pointsModule} id="points-module" />
-        <ModuleSection module={collectiblesModule} id="collectibles-module" />
-        
-        {/* Back to top button */}
-        <div className="flex justify-center mt-8">
-          <a 
-            href="#" 
-            className="bg-accent/20 hover:bg-accent/30 text-accent px-4 py-2 rounded-full inline-flex items-center transition"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
-            </svg>
-            Back to Top
-          </a>
-        </div>
+        )}
       </div>
     </PageContainer>
   );

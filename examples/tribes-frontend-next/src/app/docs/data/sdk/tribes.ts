@@ -1,12 +1,12 @@
 export interface MethodDocumentation {
   name: string;
   description: string;
-  parameters?: Array<{
+  parameters?: {
     name: string;
     type: string;
     description: string;
     optional?: boolean;
-  }>;
+  }[];
   returns: {
     type: string;
     description: string;
@@ -15,179 +15,220 @@ export interface MethodDocumentation {
 }
 
 export const tribesModule = {
-  title: 'Tribes Module',
-  description: 'The Tribes module provides comprehensive functionality for creating and managing tribes on the platform.',
+  title: "Tribes Module",
+  description: "The Tribes module provides methods for creating, managing, and interacting with tribes. A tribe is a community governed by its members with customizable settings and features.",
   methods: [
     {
-      name: 'createTribe',
-      description: 'Creates a new tribe with the specified name and metadata.',
+      name: "createTribe",
+      description: "Creates a new tribe with specified settings.",
       parameters: [
-        { name: 'name', type: 'string', description: 'The name of the tribe' },
-        { name: 'metadata', type: 'string', description: 'JSON string with tribe metadata (description, logo, banner, etc.)' },
-        { name: 'admins', type: 'Array<string>', description: 'List of additional admin addresses', optional: true },
-        { name: 'joinType', type: 'number', description: 'Type of tribe (0=Public, 1=Private, 2=Invite)', optional: true },
-        { name: 'entryFee', type: 'BigInt', description: 'Fee to join the tribe in wei', optional: true },
-        { name: 'nftRequirements', type: 'Array', description: 'NFT requirements for joining', optional: true }
+        {
+          name: "tribeData",
+          type: "TribeCreationData",
+          description: "Object containing the tribe configuration details",
+          optional: false
+        }
       ],
       returns: {
-        type: 'Promise<number>',
-        description: 'The ID of the newly created tribe'
+        type: "Promise<{ tribeId: string; txHash: string }>",
+        description: "A promise that resolves to the created tribe ID and transaction hash"
       },
-      example: `const tribeId = await sdk.tribes.createTribe({
-  name: 'My Awesome Tribe',
-  metadata: JSON.stringify({
-    description: 'A tribe for awesome people',
-    logoUrl: 'https://example.com/logo.png',
-    bannerUrl: 'https://example.com/banner.png',
-    tags: ['awesome', 'community']
-  }),
-  joinType: 0, // Public
-  entryFee: 0n // No entry fee
-});
+      example: `import { tribes } from '@astrix/tribes-sdk';
 
-console.log(\`Created tribe with ID: \${tribeId}\`);`
-    },
-    {
-      name: 'getAllTribes',
-      description: 'Retrieves a list of all tribes on the platform with optional pagination.',
-      parameters: [
-        { name: 'offset', type: 'number', description: 'Pagination offset (default: 0)', optional: true },
-        { name: 'limit', type: 'number', description: 'Maximum number of tribes to return (default: 100)', optional: true }
-      ],
-      returns: {
-        type: 'Promise<{ tribeIds: number[], total: number }>',
-        description: 'Object containing tribe IDs and total count'
-      },
-      example: `// Get all tribes
-const allTribes = await sdk.tribes.getAllTribes();
-console.log(\`Total tribes: \${allTribes.total}\`);
-console.log(\`Tribe IDs: \${allTribes.tribeIds.join(', ')}\`);
+// Create a new tribe
+const tribeData = {
+  name: "Web3 Enthusiasts",
+  description: "A community for web3 developers and enthusiasts",
+  imageUrl: "https://example.com/tribe-image.jpg",
+  bannerUrl: "https://example.com/tribe-banner.jpg",
+  isPrivate: false,
+  membershipType: "open"
+};
 
-// With pagination
-const page1 = await sdk.tribes.getAllTribes(0, 10); // First 10 tribes
-const page2 = await sdk.tribes.getAllTribes(10, 10); // Next 10 tribes`
+const { tribeId, txHash } = await tribes.tribes.createTribe(tribeData);
+console.log("Tribe created with ID:", tribeId);`
     },
     {
-      name: 'getTribeDetails',
-      description: 'Get detailed information about a specific tribe by ID.',
+      name: "getTribeInfo",
+      description: "Retrieves information about a specific tribe.",
       parameters: [
-        { name: 'tribeId', type: 'number', description: 'The ID of the tribe to retrieve' }
+        {
+          name: "tribeId",
+          type: "string",
+          description: "The ID of the tribe to retrieve",
+          optional: false
+        }
       ],
       returns: {
-        type: 'Promise<TribeDetails>',
-        description: 'Object containing tribe details'
+        type: "Promise<TribeInfo>",
+        description: "A promise that resolves to the tribe information"
       },
-      example: `const tribeDetails = await sdk.tribes.getTribeDetails(tribeId);
+      example: `import { tribes } from '@astrix/tribes-sdk';
 
-console.log(\`Tribe Name: \${tribeDetails.name}\`);
-console.log(\`Members: \${tribeDetails.memberCount}\`);
-console.log(\`Creator: \${tribeDetails.creator}\`);
+// Get tribe information
+const tribeId = "123";
+const tribeInfo = await tribes.tribes.getTribeInfo(tribeId);
+console.log("Tribe info:", tribeInfo);`
+    },
+    {
+      name: "updateTribeInfo",
+      description: "Updates the information and settings of a tribe.",
+      parameters: [
+        {
+          name: "tribeId",
+          type: "string",
+          description: "The ID of the tribe to update",
+          optional: false
+        },
+        {
+          name: "updateData",
+          type: "TribeUpdateData",
+          description: "Object containing the fields to update",
+          optional: false
+        }
+      ],
+      returns: {
+        type: "Promise<{ success: boolean; txHash: string }>",
+        description: "A promise that resolves to a success status and transaction hash"
+      },
+      example: `import { tribes } from '@astrix/tribes-sdk';
 
-// Parse metadata if needed
-const metadata = JSON.parse(tribeDetails.metadata);
-console.log(\`Description: \${metadata.description}\`);`
-    },
-    {
-      name: 'getMembers',
-      description: 'Retrieves a list of all members in a specific tribe.',
-      parameters: [
-        { name: 'tribeId', type: 'number', description: 'The ID of the tribe' }
-      ],
-      returns: {
-        type: 'Promise<string[]>',
-        description: 'Array of member addresses'
-      },
-      example: `const members = await sdk.tribes.getMembers(tribeId);
-console.log(\`Tribe has \${members.length} members\`);
-console.log(\`Members: \${members.join(', ')}\`);`
-    },
-    {
-      name: 'joinTribe',
-      description: 'Allows the connected wallet to join a public tribe.',
-      parameters: [
-        { name: 'tribeId', type: 'number', description: 'The ID of the tribe to join' }
-      ],
-      returns: {
-        type: 'Promise<string>',
-        description: 'Transaction hash'
-      },
-      example: `const tx = await sdk.tribes.joinTribe({ tribeId: 42 });
-console.log(\`Joined tribe! Transaction: \${tx}\`);`
-    },
-    {
-      name: 'requestToJoinTribe',
-      description: 'Requests to join a private tribe, potentially with an entry fee.',
-      parameters: [
-        { name: 'tribeId', type: 'number', description: 'The ID of the tribe' },
-        { name: 'entryFee', type: 'BigInt', description: 'Entry fee to include with the request', optional: true }
-      ],
-      returns: {
-        type: 'Promise<string>',
-        description: 'Transaction hash'
-      },
-      example: `// Request with entry fee
-const tx = await sdk.tribes.requestToJoinTribe({
-  tribeId: 42,
-  entryFee: ethers.parseEther("0.01")
-});
-console.log(\`Request submitted! Transaction: \${tx}\`);`
-    },
-    {
-      name: 'joinTribeWithCode',
-      description: 'Joins a tribe using an invite code.',
-      parameters: [
-        { name: 'tribeId', type: 'number', description: 'The ID of the tribe' },
-        { name: 'inviteCode', type: 'string', description: 'The invite code' }
-      ],
-      returns: {
-        type: 'Promise<string>',
-        description: 'Transaction hash'
-      },
-      example: `const tx = await sdk.tribes.joinTribeWithCode({
-  tribeId: 42,
-  inviteCode: "ABC123XYZ"
-});
-console.log(\`Joined tribe with invite code! Transaction: \${tx}\`);`
-    },
-    {
-      name: 'getUserTribes',
-      description: "Get a list of tribe IDs that a specific address is a member of.",
-      parameters: [
-        { name: 'address', type: 'string', description: 'Address to check memberships for' }
-      ],
-      returns: {
-        type: 'Promise<number[]>',
-        description: 'Array of tribe IDs'
-      },
-      example: `// Get tribes for a specific address
-const userTribes = await sdk.tribes.getUserTribes("0x1234...");
-console.log(\`User is a member of tribes: \${userTribes.join(', ')}\`);
+// Update tribe information
+const tribeId = "123";
+const updateData = {
+  description: "Updated description for our community",
+  bannerUrl: "https://example.com/new-banner.jpg",
+  isPrivate: true
+};
 
-// Get tribes for connected wallet
-const myTribes = await sdk.tribes.getUserTribes(await signer.getAddress());
-console.log(\`You are a member of \${myTribes.length} tribes\`);`
+const { success, txHash } = await tribes.tribes.updateTribeInfo(tribeId, updateData);
+if (success) {
+  console.log("Tribe updated successfully");
+}`
     },
     {
-      name: 'getMemberStatus',
-      description: 'Checks the membership status of an address in a tribe.',
+      name: "joinTribe",
+      description: "Joins a tribe as the connected user.",
       parameters: [
-        { name: 'tribeId', type: 'number', description: 'The ID of the tribe' },
-        { name: 'address', type: 'string', description: 'The address to check' }
+        {
+          name: "tribeId",
+          type: "string",
+          description: "The ID of the tribe to join",
+          optional: false
+        }
       ],
       returns: {
-        type: 'Promise<MemberStatus>',
-        description: 'Member status enum (0=NotMember, 1=Pending, 2=Member, 3=Admin)'
+        type: "Promise<{ success: boolean; txHash: string }>",
+        description: "A promise that resolves to a success status and transaction hash"
       },
-      example: `const status = await sdk.tribes.getMemberStatus(tribeId, "0x1234...");
+      example: `import { tribes } from '@astrix/tribes-sdk';
 
-if (status === 2) {
-  console.log("User is a member");
-} else if (status === 3) {
-  console.log("User is an admin");
-} else if (status === 1) {
-  console.log("User has a pending request");
-} else {
-  console.log("User is not a member");
+// Join a tribe
+const tribeId = "123";
+const { success, txHash } = await tribes.tribes.joinTribe(tribeId);
+if (success) {
+  console.log("Joined tribe successfully");
+}`
+    },
+    {
+      name: "leaveTribe",
+      description: "Leaves a tribe as the connected user.",
+      parameters: [
+        {
+          name: "tribeId",
+          type: "string",
+          description: "The ID of the tribe to leave",
+          optional: false
+        }
+      ],
+      returns: {
+        type: "Promise<{ success: boolean; txHash: string }>",
+        description: "A promise that resolves to a success status and transaction hash"
+      },
+      example: `import { tribes } from '@astrix/tribes-sdk';
+
+// Leave a tribe
+const tribeId = "123";
+const { success, txHash } = await tribes.tribes.leaveTribe(tribeId);
+if (success) {
+  console.log("Left tribe successfully");
+}`
+    },
+    {
+      name: "getMembers",
+      description: "Gets the members of a tribe.",
+      parameters: [
+        {
+          name: "tribeId",
+          type: "string",
+          description: "The ID of the tribe",
+          optional: false
+        },
+        {
+          name: "options",
+          type: "{ limit?: number; offset?: number; role?: string }",
+          description: "Optional parameters for pagination and filtering",
+          optional: true
+        }
+      ],
+      returns: {
+        type: "Promise<{ members: TribeMember[]; total: number }>",
+        description: "A promise that resolves to an array of tribe members and the total count"
+      },
+      example: `import { tribes } from '@astrix/tribes-sdk';
+
+// Get all members of a tribe
+const tribeId = "123";
+const allMembers = await tribes.tribes.getMembers(tribeId);
+console.log("Total members:", allMembers.total);
+console.log("Members:", allMembers.members);
+
+// Get only admins with pagination
+const options = {
+  limit: 10,
+  offset: 0,
+  role: "admin"
+};
+const adminMembers = await tribes.tribes.getMembers(tribeId, options);
+console.log("Admin members:", adminMembers.members);`
+    },
+    {
+      name: "assignRole",
+      description: "Assigns a role to a tribe member.",
+      parameters: [
+        {
+          name: "tribeId",
+          type: "string",
+          description: "The ID of the tribe",
+          optional: false
+        },
+        {
+          name: "memberAddress",
+          type: "string",
+          description: "The wallet address of the member",
+          optional: false
+        },
+        {
+          name: "role",
+          type: "string",
+          description: "The role to assign (e.g., 'admin', 'moderator', 'member')",
+          optional: false
+        }
+      ],
+      returns: {
+        type: "Promise<{ success: boolean; txHash: string }>",
+        description: "A promise that resolves to a success status and transaction hash"
+      },
+      example: `import { tribes } from '@astrix/tribes-sdk';
+
+// Assign a moderator role to a member
+const tribeId = "123";
+const memberAddress = "0x1234567890abcdef1234567890abcdef12345678";
+const role = "moderator";
+
+const { success, txHash } = await tribes.tribes.assignRole(tribeId, memberAddress, role);
+if (success) {
+  console.log("Role assigned successfully");
 }`
     }
   ]

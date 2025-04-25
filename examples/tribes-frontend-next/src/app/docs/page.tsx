@@ -263,7 +263,23 @@ const CodeBlock = ({ language, code }: CodeBlockProps) => {
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = () => {
-    // Use the clipboard API directly
+    // Only run in browser environment
+    if (typeof navigator === 'undefined') return;
+    
+    // Modern clipboard API approach
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        })
+        .catch(err => {
+          console.error('Failed to copy text: ', err);
+        });
+      return;
+    }
+    
+    // Fallback for older browsers - only used client-side
     try {
       const textArea = document.createElement('textarea');
       textArea.value = code;
@@ -568,8 +584,42 @@ const CardLink = ({ title, description, href, icon }: { title: string; descripti
   </a>
 );
 
+// Loading component
+function LoadingState() {
+  return (
+    <PageContainer>
+      <div className="flex flex-col min-h-screen p-8">
+        <div className="md:hidden bg-gray-900/80 backdrop-blur-md p-4 border-b border-gray-800 sticky top-0 z-30">
+          <div className="flex justify-between items-center">
+            <div className="text-lg font-semibold text-white">Tribes Docs</div>
+            <div className="p-2 rounded-md text-gray-400 bg-gray-800 h-10 w-10 animate-pulse"></div>
+          </div>
+        </div>
+        
+        <div className="flex flex-1 relative mt-8">
+          <div className="hidden md:block md:w-64 lg:w-72 md:sticky md:top-0 md:h-screen md:max-h-screen bg-gray-900/80 backdrop-blur-md md:border-r border-gray-800 flex-shrink-0">
+            <div className="h-full bg-gray-800/50 animate-pulse rounded-lg"></div>
+          </div>
+          
+          <div className="flex-1 max-w-full">
+            <div className="p-4 md:p-8 lg:p-12 max-w-4xl mx-auto space-y-4">
+              <div className="h-8 w-1/2 bg-gray-800 rounded animate-pulse"></div>
+              <div className="h-1 w-20 bg-accent rounded-full"></div>
+              <div className="h-4 w-3/4 bg-gray-800 rounded animate-pulse mt-4"></div>
+              <div className="h-4 w-2/3 bg-gray-800 rounded animate-pulse mt-2"></div>
+              
+              <div className="h-64 bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-xl mt-8 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </PageContainer>
+  );
+}
 
-
+// Updated DocsPage component with client-side detection
 export default function DocsPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('introduction');
@@ -582,18 +632,23 @@ export default function DocsPage() {
   });
   const [flattenedSections, setFlattenedSections] = useState<DocSection[]>([]);
   const [activeSectionIndex, setActiveSectionIndex] = useState(0);
-
-  // Use the user's current URL path to determine if we should show the homepage or a specific section
   const [isHomepage, setIsHomepage] = useState(true);
+  // Add client-side detection
+  const [isClient, setIsClient] = useState(false);
   
   useEffect(() => {
+    // Only run in browser and set mounted state
+    setIsClient(true);
+    
     // Check if the URL has a hash
-    const hash = window.location.hash;
-    if (hash) {
-      const sectionId = hash.substring(1); // remove the # character
-      if (docsContent[sectionId]) {
-        setActiveSection(sectionId);
-        setIsHomepage(false);
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash;
+      if (hash) {
+        const sectionId = hash.substring(1); // remove the # character
+        if (docsContent[sectionId]) {
+          setActiveSection(sectionId);
+          setIsHomepage(false);
+        }
       }
     }
     
@@ -608,6 +663,11 @@ export default function DocsPage() {
     }
   }, [activeSection]);
 
+  // If not mounted, return loading placeholder
+  if (!isClient) {
+    return <LoadingState />;
+  }
+  
   const flattenDocs = () => {
     const flattened: DocSection[] = [];
     
@@ -626,7 +686,9 @@ export default function DocsPage() {
     setIsHomepage(false);
     
     // Update the URL with the section ID without causing a page reload
-    window.history.pushState(null, '', `#${sectionId}`);
+    if (typeof window !== 'undefined') {
+      window.history.pushState(null, '', `#${sectionId}`);
+    }
     
     // Find the index of the new section
     const index = flattenedSections.findIndex(section => section.id === sectionId);
@@ -663,7 +725,9 @@ export default function DocsPage() {
 
   const goToHomepage = () => {
     setIsHomepage(true);
-    window.history.pushState(null, '', window.location.pathname);
+    if (typeof window !== 'undefined') {
+      window.history.pushState(null, '', window.location.pathname);
+    }
   };
 
   // Check if we have content for the active section
@@ -688,7 +752,7 @@ export default function DocsPage() {
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
-          
+
           {/* Mobile section title - only show if not homepage */}
           {!isHomepage && hasContent && (
             <div className="mt-2 flex items-center">
@@ -745,49 +809,49 @@ export default function DocsPage() {
           {/* Main content area */}
           <div className="flex-1 max-w-full">
             <div className="p-4 md:p-8 lg:p-12 max-w-4xl mx-auto">
-                <>
-                  {/* Desktop section title */}
-                  <div className="hidden md:block mb-6">
-                    <h1 className="text-3xl font-bold text-white">{hasContent ? docsContent[activeSection].title : 'Section Not Found'}</h1>
-                    <div className="h-1 w-20 bg-gradient-to-r from-accent to-accent/70 rounded-full mt-3"></div>
+              <>
+                {/* Desktop section title */}
+                <div className="hidden md:block mb-6">
+                  <h1 className="text-3xl font-bold text-white">{hasContent ? docsContent[activeSection].title : 'Section Not Found'}</h1>
+                  <div className="h-1 w-20 bg-gradient-to-r from-accent to-accent/70 rounded-full mt-3"></div>
+                </div>
+                
+                {/* Content */}
+                {hasContent ? (
+                  <div className="prose prose-invert max-w-none">
+                    {renderSectionContent(activeSection)}
                   </div>
-
-                  {/* Content */}
-                  {hasContent ? (
-                    <div className="prose prose-invert max-w-none">
-                      {renderSectionContent(activeSection)}
-                    </div>
-                  ) : (
-                    <div className="bg-red-900/20 border border-red-900/40 rounded-lg p-6 text-red-300">
-                      <p>The requested section was not found. Please select another section from the navigation menu.</p>
-                    </div>
-                  )}
-
-                  {/* Navigation buttons for next/previous */}
-                  <div className="mt-12 flex justify-between border-t border-gray-800 pt-6">
-                    <button
-                      onClick={navigatePrevious}
-                      disabled={activeSectionIndex === 0}
-                      className={`flex items-center ${activeSectionIndex === 0 ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-white'}`}
-                    >
-                      <ArrowLeft size={16} className="mr-2" />
-                      {activeSectionIndex > 0 && (
-                        <span>Previous: {flattenedSections[activeSectionIndex - 1].title}</span>
-                      )}
-                    </button>
-                    
-                    <button
-                      onClick={navigateNext}
-                      disabled={activeSectionIndex === flattenedSections.length - 1}
-                      className={`flex items-center ${activeSectionIndex === flattenedSections.length - 1 ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-white'}`}
-                    >
-                      {activeSectionIndex < flattenedSections.length - 1 && (
-                        <span>Next: {flattenedSections[activeSectionIndex + 1].title}</span>
-                      )}
-                      <ArrowRight size={16} className="ml-2" />
-                    </button>
+                ) : (
+                  <div className="bg-red-900/20 border border-red-900/40 rounded-lg p-6 text-red-300">
+                    <p>The requested section was not found. Please select another section from the navigation menu.</p>
                   </div>
-                </>
+                )}
+
+                {/* Navigation buttons for next/previous */}
+                <div className="mt-12 flex justify-between border-t border-gray-800 pt-6">
+                  <button 
+                    onClick={navigatePrevious}
+                    disabled={activeSectionIndex === 0}
+                    className={`flex items-center ${activeSectionIndex === 0 ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-white'}`}
+                  >
+                    <ArrowLeft size={16} className="mr-2" />
+                    {activeSectionIndex > 0 && (
+                      <span>Previous: {flattenedSections[activeSectionIndex - 1].title}</span>
+                    )}
+                  </button>
+                
+                  <button 
+                    onClick={navigateNext}
+                    disabled={activeSectionIndex === flattenedSections.length - 1}
+                    className={`flex items-center ${activeSectionIndex === flattenedSections.length - 1 ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-white'}`}
+                  >
+                    {activeSectionIndex < flattenedSections.length - 1 && (
+                      <span>Next: {flattenedSections[activeSectionIndex + 1].title}</span>
+                    )}
+                    <ArrowRight size={16} className="ml-2" />
+                  </button>
+                </div>
+              </>
             </div>
           </div>
         </div>
