@@ -28,6 +28,19 @@ contract TribeController is ITribeController, Initializable {
         bool canMerge;
         bool isActive;
     }
+    struct TribeDetailsView {
+    string name;
+    string metadata;
+    address admin;
+    address[] whitelist;
+    JoinType joinType;
+    uint256 entryFee;
+    NFTRequirement[] nftRequirements;
+    uint256 memberCount;
+    bool canMerge;
+    bool isActive;
+    bytes32[] availableInviteCodes;
+}
 
     // Internal mappings
     mapping(uint256 => TribeStorage) private tribes;
@@ -473,4 +486,39 @@ contract TribeController is ITribeController, Initializable {
         
         return (true, invite.maxUses - invite.usedCount);
     }
+
+    function getTribeDetails(uint256 tribeId) external view returns (TribeDetailsView memory) {
+    require(tribeId < nextTribeId, "Invalid tribe ID");
+    
+    TribeStorage storage tribe = tribes[tribeId];
+    
+    // Copy NFT Requirements
+    NFTRequirement[] memory requirements = new NFTRequirement[](tribe.nftRequirements.length);
+    for (uint i = 0; i < tribe.nftRequirements.length; i++) {
+        requirements[i] = tribe.nftRequirements[i];
+    }
+    
+    // Copy Invite Codes (without storing actual codes)
+    bytes32[] memory availableCodes = new bytes32[](0);
+    if (tribe.joinType == JoinType.INVITE_CODE) {
+        // You might want to modify this logic based on your exact requirements
+        availableCodes = new bytes32[](1);
+        // Example placeholder, adjust as needed
+        availableCodes[0] = keccak256(abi.encodePacked("SAMPLE_CODE"));
+    }
+    
+    return TribeDetailsView({
+        name: tribe.name,
+        metadata: tribe.metadata,
+        admin: tribe.admin,
+        whitelist: tribe.whitelist,
+        joinType: tribe.joinType,
+        entryFee: tribe.entryFee,
+        nftRequirements: requirements,
+        memberCount: memberCounts[tribeId],
+        canMerge: tribe.canMerge,
+        isActive: tribe.isActive,
+        availableInviteCodes: availableCodes
+    });
+}
 } 

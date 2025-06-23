@@ -112,4 +112,5 @@ interface ITribeController {
 
     // Get all tribes a user is a member of
     function getUserTribes(address user) external view returns (uint256[] memory tribeIds);
+    function getTribeExists(uint256 tribeId) external view returns (bool);
 } 

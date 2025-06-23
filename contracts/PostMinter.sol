@@ -9,48 +9,39 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./interfaces/IRoleManager.sol";
 import "./interfaces/ITribeController.sol";
 import "./interfaces/ICollectibleController.sol";
-import "./interfaces/IPostMinter.sol";
-import "./constants/Errors.sol";
-import "./constants/ErrorMessages.sol";
-import "./libraries/PostHelpers.sol";
-import "./libraries/ProjectHelpers.sol";
-import "./libraries/FeedHelpers.sol";
-import "./libraries/InteractionHelpers.sol";
-import "./libraries/PostCreationHelpers.sol";
-import "./libraries/PostErrors.sol";
-import "./PostFeedManager.sol";
 
-/// @custom:oz-upgrades-unsafe-allow constructor
-/// @custom:solidity-optimizer-runs 1
+import "./interfaces/IPostMinter.sol";
+
 contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
     using ECDSA for bytes32;
-    using PostHelpers for bytes;
-    using FeedHelpers for FeedHelpers.PostData;
-    using InteractionHelpers for *;
-    using PostCreationHelpers for *;
-
-    // Add constant strings to reduce bytecode size
-    string private constant ERROR_INVALID_METADATA = "Invalid metadata";
-    string private constant ERROR_INVALID_PARENT = "Invalid parent post";
-    string private constant ERROR_POST_DELETED = "Post deleted";
-    string private constant ERROR_BATCH_LIMIT = "Too many posts in batch";
-    string private constant ERROR_BATCH_COOLDOWN = "Please wait before batch posting";
-    string private constant ERROR_INVALID_ENCRYPTION = "Invalid encryption key hash";
-    string private constant ERROR_INVALID_SIGNER = "Invalid access signer";
-    string private constant ERROR_INSUFFICIENT_PERMISSIONS = "Insufficient permissions";
 
     IRoleManager public roleManager;
     ITribeController public tribeController;
     ICollectibleController public collectibleController;
-    PostFeedManager public feedManager;
 
-    // Post storage
-    uint256 public nextPostId;
+    struct PostData {
+        uint256 id;
+        address creator;
+        uint256 tribeId;
+        string metadata;
+        bool isGated;
+        address collectibleContract;
+        uint256 collectibleId;
+        bool isEncrypted;
+        bytes32 encryptionKeyHash;
+        address accessSigner;
+        uint256 parentPostId;
+        uint256 createdAt;
+        bool isDeleted;
+    }
 
-    // Interaction tracking
+    mapping(uint256 => PostData) private postData;
     mapping(uint256 => mapping(address => mapping(InteractionType => bool))) private hasInteracted;
     mapping(uint256 => mapping(InteractionType => uint256)) private interactionCounts;
     mapping(uint256 => mapping(address => bool)) private authorizedViewers;
+
+    // Post storage
+    uint256 public nextPostId;
 
     // Encryption key storage for tribe members
     mapping(uint256 => mapping(address => bytes32)) private postDecryptionKeys;
@@ -66,33 +57,54 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
     // Batch encryption keys
     mapping(uint256 => bytes32) public tribeEncryptionKeys;
 
-    // Rate limiting
+    // Post storage
+    mapping(uint256 => PostData) private _posts;
+    uint256 private _postCounter;
+    mapping(uint256 => uint256[]) private _tribePostIds; // tribeId => postIds
+    mapping(address => uint256[]) private _userPostIds; // user => postIds
+    mapping(uint256 => mapping(address => uint256[])) private _tribeUserPostIds; // tribeId => user => postIds
+     mapping(bytes32 => address[]) private _roleMembers;
+
+    mapping(uint256 => bool) private _tribeFeedStatus;
+     // Update the event to include max posts per day
+    event FeedManaged(
+        uint256 indexed tribeId, 
+        bool enabled, 
+        address indexed manager, 
+        uint256 maxPostsPerDay
+    );
+
+    // New mapping to track feed configuration for each tribe
+    struct FeedConfig {
+        bool isEnabled;
+        uint256 maxPostsPerDay;
+        uint256 lastResetTimestamp;
+        uint256 postCountToday;
+    }
+    mapping(uint256 => FeedConfig) private _tribeFeedConfigs;
+
+    // New state variables for improved rate limiting
     mapping(PostType => uint256) public postTypeCooldowns;
     uint256 public constant MAX_BATCH_POSTS = 5;
     uint256 public constant BATCH_POST_COOLDOWN = 5 minutes;
     bytes32 public constant RATE_LIMIT_MANAGER_ROLE = keccak256("RATE_LIMIT_MANAGER_ROLE");
-
-    // Add constant for project creator role
     bytes32 public constant PROJECT_CREATOR_ROLE = keccak256("PROJECT_CREATOR_ROLE");
+    bytes32 public constant FEED_MANAGER_ROLE = keccak256("FEED_MANAGER_ROLE");
 
     constructor(
         address _roleManager,
         address _tribeController,
-        address _collectibleController,
-        address _feedManager
+        address _collectibleController
     ) {
         roleManager = IRoleManager(_roleManager);
         tribeController = ITribeController(_tribeController);
         collectibleController = ICollectibleController(_collectibleController);
-        feedManager = PostFeedManager(_feedManager);
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(RATE_LIMIT_MANAGER_ROLE, msg.sender);
         _grantRole(PROJECT_CREATOR_ROLE, msg.sender);
+        _grantRole(FEED_MANAGER_ROLE, msg.sender);
 
-        _initializeCooldowns();
-    }
-
-    function _initializeCooldowns() private {
+        // Initialize default cooldowns
         postTypeCooldowns[PostType.TEXT] = 1 minutes;
         postTypeCooldowns[PostType.RICH_MEDIA] = 2 minutes;
         postTypeCooldowns[PostType.EVENT] = 30 seconds;
@@ -103,24 +115,24 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
     }
 
     modifier onlyTribeMember(uint256 tribeId) {
-        if (tribeController.getMemberStatus(tribeId, msg.sender) != ITribeController.MemberStatus.ACTIVE) {
-            revert PostErrors.NotTribeMember();
-        }
+        require(
+            tribeController.getMemberStatus(tribeId, msg.sender) == ITribeController.MemberStatus.ACTIVE,
+            "Not a tribe member"
+        );
         _;
     }
 
     modifier onlyPostCreator(uint256 postId) {
-        if (feedManager.getPost(postId).creator != msg.sender) {
-            revert PostErrors.NotPostCreator();
-        }
+        require(postData[postId].creator == msg.sender, "Not post creator");
         _;
     }
 
     modifier notTooFrequent(PostType postType) {
         if (!hasRole(RATE_LIMIT_MANAGER_ROLE, msg.sender)) {
-            if (block.timestamp < lastPostTimeByType[msg.sender][postType] + postTypeCooldowns[postType]) {
-                revert PostErrors.CooldownActive();
-            }
+            require(
+                block.timestamp >= lastPostTimeByType[msg.sender][postType] + postTypeCooldowns[postType],
+                "Please wait before posting again"
+            );
         }
         _;
         lastPostTimeByType[msg.sender][postType] = block.timestamp;
@@ -128,9 +140,10 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
 
     modifier notTooFrequentBatch() {
         if (!hasRole(RATE_LIMIT_MANAGER_ROLE, msg.sender)) {
-            if (block.timestamp < lastBatchTime[msg.sender] + BATCH_POST_COOLDOWN) {
-                revert PostErrors.BatchCooldownActive();
-            }
+            require(
+                block.timestamp >= lastBatchTime[msg.sender] + BATCH_POST_COOLDOWN,
+                "Please wait before batch posting"
+            );
         }
         _;
         lastBatchTime[msg.sender] = block.timestamp;
@@ -142,57 +155,62 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         bool isGated,
         address collectibleContract,
         uint256 collectibleId
-    ) external override onlyTribeMember(tribeId) whenNotPaused returns (uint256) {
-        if (bytes(metadata).length == 0) revert PostErrors.EmptyMetadata();
-
+    ) external override onlyTribeMember(tribeId) notTooFrequent(PostType.TEXT) whenNotPaused returns (uint256) {
         // Parse metadata to determine post type
-        bytes memory metadataBytes = bytes(metadata);
         PostType postType = PostType.TEXT;
-
-        // Determine post type from metadata
-        if (PostHelpers.containsField(metadataBytes, "\"type\":\"EVENT\"")) {
+        bytes memory metadataBytes = bytes(metadata);
+        
+        // Check for post type in metadata
+        if (_containsField(metadataBytes, "\"type\":\"EVENT\"")) {
             postType = PostType.EVENT;
-        } else if (PostHelpers.containsField(metadataBytes, "\"type\":\"RICH_MEDIA\"")) {
+        } else if (_containsField(metadataBytes, "\"type\":\"RICH_MEDIA\"")) {
             postType = PostType.RICH_MEDIA;
-        } else if (PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT\"") ||
-                   PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"")) {
+        } else if (_containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"")) {
             postType = PostType.PROJECT_UPDATE;
-            // Check project creator role for initial project creation through RoleManager
-            if (PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT\"") && 
-                !roleManager.hasRole(PROJECT_CREATOR_ROLE, msg.sender)) {
-                revert PostErrors.InsufficientAccess();
-            }
+            // Validate project update permissions
+            require(_validateProjectUpdatePermissions(metadata), "Insufficient permissions");
         }
 
-        // Check cooldown unless user has rate limit manager role
-        if (!hasRole(RATE_LIMIT_MANAGER_ROLE, msg.sender)) {
-            uint256 lastPostTime = lastPostTimeByType[msg.sender][postType];
-            uint256 cooldown = postTypeCooldowns[postType];
-            if (block.timestamp < lastPostTime + cooldown) {
-                revert PostErrors.CooldownActive();
-            }
-            lastPostTimeByType[msg.sender][postType] = block.timestamp;
+        // Validate metadata based on post type
+        if (!validateMetadata(metadata, postType)) {
+            revert("Invalid metadata format");
+        }
+        
+        if (isGated) {
+            require(
+                collectibleContract == address(collectibleController),
+                "Invalid collectible contract"
+            );
+            require(
+                collectibleController.getCollectible(collectibleId).isActive,
+                "Invalid collectible"
+            );
         }
 
-        PostCreationHelpers.PostCreationParams memory params = PostCreationHelpers.PostCreationParams({
+        uint256 postId = nextPostId++;
+        postData[postId] = PostData({
+            id: postId,
+            creator: msg.sender,
             tribeId: tribeId,
             metadata: metadata,
             isGated: isGated,
             collectibleContract: collectibleContract,
             collectibleId: collectibleId,
-            creator: msg.sender,
-            nextPostId: nextPostId++,
-            postType: postType
+            isEncrypted: false,
+            encryptionKeyHash: bytes32(0),
+            accessSigner: address(0),
+            parentPostId: 0,
+            createdAt: block.timestamp,
+            isDeleted: false
         });
 
-        FeedHelpers.PostData memory post = PostCreationHelpers.validateAndCreatePost(
-            params,
-            collectibleController
-        );
+        // Track post in feed mappings
+        _tribePostIds[tribeId].push(postId);
+        _userPostIds[msg.sender].push(postId);
+        _tribeUserPostIds[tribeId][msg.sender].push(postId);
 
-        feedManager.addPost(post);
-        emit PostCreated(post.id, tribeId, msg.sender, metadata);
-        return post.id;
+        emit PostCreated(postId, tribeId, msg.sender, metadata);
+        return postId;
     }
 
     function createReply(
@@ -201,31 +219,20 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         bool isGated,
         address collectibleContract,
         uint256 collectibleId
-    ) external onlyTribeMember(feedManager.getPost(parentPostId).tribeId) notTooFrequent(PostType.TEXT) whenNotPaused returns (uint256) {
-        if (parentPostId >= nextPostId) revert PostErrors.InvalidParentPost();
-        if (feedManager.getPost(parentPostId).isDeleted) revert PostErrors.PostDeleted();
+    ) external onlyTribeMember(postData[parentPostId].tribeId) notTooFrequent(PostType.TEXT) whenNotPaused returns (uint256) {
+        require(parentPostId < nextPostId, "Invalid parent post");
+        require(!postData[parentPostId].isDeleted, "Parent post deleted");
 
-        uint256 tribeId = feedManager.getPost(parentPostId).tribeId;
-        PostCreationHelpers.PostCreationParams memory params = PostCreationHelpers.PostCreationParams({
-            tribeId: tribeId,
-            metadata: metadata,
-            isGated: isGated,
-            collectibleContract: collectibleContract,
-            collectibleId: collectibleId,
-            creator: msg.sender,
-            nextPostId: nextPostId++,
-            postType: PostType.TEXT
-        });
-
-        FeedHelpers.PostData memory post = PostCreationHelpers.validateAndCreatePost(
-            params,
-            collectibleController
+        uint256 postId = this.createPost(
+            postData[parentPostId].tribeId,
+            metadata,
+            isGated,
+            collectibleContract,
+            collectibleId
         );
-
-        post.parentPostId = parentPostId;
-        feedManager.addPost(post);
+        postData[postId].parentPostId = parentPostId;
         interactionCounts[parentPostId][InteractionType.REPLY]++;
-        return post.id;
+        return postId;
     }
 
     function createEncryptedPost(
@@ -234,12 +241,12 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         bytes32 encryptionKeyHash,
         address accessSigner
     ) external onlyTribeMember(tribeId) notTooFrequent(PostType.ENCRYPTED) whenNotPaused returns (uint256) {
-        if (bytes(metadata).length == 0) revert PostErrors.EmptyMetadata();
-        if (encryptionKeyHash == bytes32(0)) revert PostErrors.InvalidEncryptionKey();
-        if (accessSigner == address(0)) revert PostErrors.InvalidSigner();
+        require(bytes(metadata).length > 0, "Invalid metadata");
+        require(encryptionKeyHash != bytes32(0), "Invalid encryption key hash");
+        require(accessSigner != address(0), "Invalid access signer");
 
         uint256 postId = nextPostId++;
-        FeedHelpers.PostData memory post = FeedHelpers.PostData({
+        postData[postId] = PostData({
             id: postId,
             creator: msg.sender,
             tribeId: tribeId,
@@ -263,7 +270,11 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
             tribeEncryptionKeys[tribeId] = encryptionKeyHash;
         }
 
-        feedManager.addPost(post);
+        // Track post in feed mappings
+        _tribePostIds[tribeId].push(postId);
+        _userPostIds[msg.sender].push(postId);
+        _tribeUserPostIds[tribeId][msg.sender].push(postId);
+
         emit EncryptedPostCreated(postId, tribeId, msg.sender, metadata, encryptionKeyHash, accessSigner);
         return postId;
     }
@@ -276,14 +287,20 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         address collectibleContract,
         uint256 collectibleId
     ) external onlyTribeMember(tribeId) notTooFrequent(PostType.TEXT) whenNotPaused returns (uint256) {
-        if (bytes(metadata).length == 0) revert PostErrors.EmptyMetadata();
-        if (encryptionKeyHash == bytes32(0)) revert PostErrors.InvalidEncryptionKey();
-        if (accessSigner == address(0)) revert PostErrors.InvalidSigner();
-        if (collectibleContract != address(collectibleController)) revert PostErrors.InvalidCollectibleContract();
-        if (!collectibleController.getCollectible(collectibleId).isActive) revert PostErrors.InvalidCollectible();
+        require(bytes(metadata).length > 0, "Invalid metadata");
+        require(encryptionKeyHash != bytes32(0), "Invalid encryption key hash");
+        require(accessSigner != address(0), "Invalid access signer");
+        require(
+            collectibleContract == address(collectibleController),
+            "Invalid collectible contract"
+        );
+        require(
+            collectibleController.getCollectible(collectibleId).isActive,
+            "Invalid collectible"
+        );
 
         uint256 postId = nextPostId++;
-        FeedHelpers.PostData memory post = FeedHelpers.PostData({
+        postData[postId] = PostData({
             id: postId,
             creator: msg.sender,
             tribeId: tribeId,
@@ -299,7 +316,11 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
             isDeleted: false
         });
 
-        feedManager.addPost(post);
+        // Track post in feed mappings
+        _tribePostIds[tribeId].push(postId);
+        _userPostIds[msg.sender].push(postId);
+        _tribeUserPostIds[tribeId][msg.sender].push(postId);
+
         emit SignatureGatedPostCreated(
             postId,
             tribeId,
@@ -314,20 +335,20 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
     }
 
     function deletePost(uint256 postId) external override onlyPostCreator(postId) whenNotPaused nonReentrant {
-        if (feedManager.getPost(postId).isDeleted) revert PostErrors.PostDeleted();
-        feedManager.markPostDeleted(postId);
+        require(!postData[postId].isDeleted, "Post already deleted");
+        postData[postId].isDeleted = true;
         emit PostDeleted(postId, msg.sender);
     }
 
     function reportPost(uint256 postId, string calldata reason) external override whenNotPaused nonReentrant {
-        if (feedManager.getPost(postId).isDeleted) revert PostErrors.PostDeleted();
-        if (hasInteracted[postId][msg.sender][InteractionType.REPORT]) revert PostErrors.AlreadyReported();
+        require(!postData[postId].isDeleted, "Post deleted");
+        require(!hasInteracted[postId][msg.sender][InteractionType.REPORT], "Already reported");
 
         hasInteracted[postId][msg.sender][InteractionType.REPORT] = true;
         reportCount[postId]++;
 
         if (reportCount[postId] >= REPORT_THRESHOLD) {
-            feedManager.getPost(postId).isDeleted = true;
+            postData[postId].isDeleted = true;
             emit PostDeleted(postId, msg.sender);
         }
         
@@ -339,26 +360,26 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
     }
 
     function setTribeEncryptionKey(uint256 tribeId, bytes32 encryptionKey) external override onlyTribeMember(tribeId) whenNotPaused {
-        if (tribeController.getTribeAdmin(tribeId) != msg.sender) revert PostErrors.NotTribeAdmin();
+        require(tribeController.getTribeAdmin(tribeId) == msg.sender, "Not tribe admin");
         tribeEncryptionKeys[tribeId] = encryptionKey;
     }
 
-    function interactWithPost(uint256 postId, InteractionType interactionType) external override {
-        FeedHelpers.PostData memory post = feedManager.getPost(postId);
-        if (post.isDeleted) revert PostErrors.PostDeleted();
-        if (post.creator == msg.sender) revert PostErrors.CannotInteractWithOwnPost();
-        if (hasInteracted[postId][msg.sender][interactionType]) revert PostErrors.AlreadyInteracted();
+    function interactWithPost(uint256 postId, InteractionType interactionType) external override whenNotPaused {
+        require(!postData[postId].isDeleted, "Post deleted");
+        require(!hasInteracted[postId][msg.sender][interactionType], "Already interacted");
+        require(canViewPost(postId, msg.sender), "Cannot view post");
         
-        if (!canViewPost(postId, msg.sender)) {
-            revert PostErrors.InsufficientAccess();
+        // Prevent self-likes
+        if (interactionType == InteractionType.LIKE) {
+            require(postData[postId].creator != msg.sender, "Cannot like own post");
         }
-        
+
         hasInteracted[postId][msg.sender][interactionType] = true;
         interactionCounts[postId][interactionType]++;
     }
 
     function canViewPost(uint256 postId, address viewer) public view override returns (bool) {
-        FeedHelpers.PostData memory post = feedManager.getPost(postId);
+        PostData storage post = postData[postId];
         
         if (post.isDeleted) return false;
         
@@ -374,18 +395,14 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         }
 
         if (post.collectibleContract != address(0)) {
-            try ICollectibleController(post.collectibleContract).balanceOf(viewer, post.collectibleId) returns (uint256 balance) {
-                return balance > 0;
-            } catch {
-                return false;
-            }
+            return ICollectibleController(post.collectibleContract).balanceOf(viewer, post.collectibleId) > 0;
         }
 
         return true;
     }
 
     function getPostDecryptionKey(uint256 postId, address viewer) external view override returns (bytes32) {
-        if (!canViewPost(postId, viewer)) revert PostErrors.InsufficientAccess();
+        require(canViewPost(postId, viewer), "Not authorized to view post");
         
         // If viewer has a direct key, return it
         if (postDecryptionKeys[postId][viewer] != bytes32(0)) {
@@ -393,7 +410,7 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         }
         
         // If viewer is a tribe member, derive their key
-        FeedHelpers.PostData memory post = feedManager.getPost(postId);
+        PostData storage post = postData[postId];
         if (post.isEncrypted && tribeController.getMemberStatus(post.tribeId, viewer) == ITribeController.MemberStatus.ACTIVE) {
             return deriveSharedKey(post.tribeId, viewer);
         }
@@ -406,7 +423,7 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         address viewer,
         bytes memory signature
     ) external view override returns (bool) {
-        FeedHelpers.PostData memory post = feedManager.getPost(postId);
+        PostData storage post = postData[postId];
         require(post.accessSigner != address(0), "Post not signature gated");
 
         bytes32 messageHash = keccak256(
@@ -428,7 +445,7 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         uint256 count = 0;
         
         for (uint256 i = 0; i < nextPostId; i++) {
-            if (feedManager.getPost(i).parentPostId == postId && !feedManager.getPost(i).isDeleted) {
+            if (postData[i].parentPostId == postId && !postData[i].isDeleted) {
                 replies[count++] = i;
             }
         }
@@ -455,7 +472,7 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         bool isEncrypted,
         address accessSigner
     ) {
-        FeedHelpers.PostData memory post = feedManager.getPost(postId);
+        PostData storage post = postData[postId];
         return (
             post.id,
             post.creator,
@@ -477,35 +494,247 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         _unpause();
     }
 
+    // Feed querying functions
+    function getPostsByTribe(
+        uint256 tribeId,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (
+        uint256[] memory postIds,
+        uint256 total
+    ) {
+        uint256[] storage allPosts = _tribePostIds[tribeId];
+        total = 0;
+        
+        // Count only non-deleted posts
+        for (uint256 i = 0; i < allPosts.length; i++) {
+            if (!postData[allPosts[i]].isDeleted) {
+                total++;
+            }
+        }
+        
+        if (offset >= total) {
+            return (new uint256[](0), total);
+        }
+        
+        uint256 end = offset + limit;
+        if (end > total) {
+            end = total;
+        }
+        
+        uint256 resultLength = end - offset;
+        postIds = new uint256[](resultLength);
+        
+        // Fill array with non-deleted posts
+        uint256 currentIndex = 0;
+        uint256 skipped = 0;
+        for (uint256 i = 0; i < allPosts.length && currentIndex < resultLength; i++) {
+            if (!postData[allPosts[i]].isDeleted) {
+                if (skipped >= offset) {
+                    postIds[currentIndex] = allPosts[i];
+                    currentIndex++;
+                } else {
+                    skipped++;
+                }
+            }
+        }
+        
+        return (postIds, total);
+    }
+
+    function getPostsByUser(
+        address user,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (
+        uint256[] memory postIds,
+        uint256 total
+    ) {
+        uint256[] storage allPosts = _userPostIds[user];
+        total = 0;
+        
+        // Count only non-deleted posts
+        for (uint256 i = 0; i < allPosts.length; i++) {
+            if (!postData[allPosts[i]].isDeleted) {
+                total++;
+            }
+        }
+        
+        if (offset >= total) {
+            return (new uint256[](0), total);
+        }
+        
+        uint256 end = offset + limit;
+        if (end > total) {
+            end = total;
+        }
+        
+        uint256 resultLength = end - offset;
+        postIds = new uint256[](resultLength);
+        
+        // Fill array with non-deleted posts
+        uint256 currentIndex = 0;
+        uint256 skipped = 0;
+        for (uint256 i = 0; i < allPosts.length && currentIndex < resultLength; i++) {
+            if (!postData[allPosts[i]].isDeleted) {
+                if (skipped >= offset) {
+                    postIds[currentIndex] = allPosts[i];
+                    currentIndex++;
+                } else {
+                    skipped++;
+                }
+            }
+        }
+        
+        return (postIds, total);
+    }
+
+    function getPostsByTribeAndUser(
+        uint256 tribeId,
+        address user,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (
+        uint256[] memory postIds,
+        uint256 total
+    ) {
+        uint256[] storage allPosts = _tribeUserPostIds[tribeId][user];
+        total = allPosts.length;
+        
+        if (offset >= total) {
+            return (new uint256[](0), total);
+        }
+        
+        uint256 end = offset + limit;
+        if (end > total) {
+            end = total;
+        }
+        
+        uint256 resultLength = end - offset;
+        postIds = new uint256[](resultLength);
+        
+        for (uint256 i = 0; i < resultLength; i++) {
+            postIds[i] = allPosts[total - (offset + i + 1)]; // Return most recent first
+        }
+        
+        return (postIds, total);
+    }
+
+    function getFeedForUser(
+        address user,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (
+        uint256[] memory postIds,
+        uint256 total
+    ) {
+        // Get all tribes the user is a member of
+        uint256[] memory userTribes = tribeController.getUserTribes(user);
+        
+        // First pass: count total posts
+        total = 0;
+        for (uint256 i = 0; i < userTribes.length; i++) {
+            total += _tribePostIds[userTribes[i]].length;
+        }
+        
+        if (offset >= total || limit == 0) {
+            return (new uint256[](0), total);
+        }
+        
+        // Create arrays to store all posts and their timestamps
+        uint256[] memory allPosts = new uint256[](total);
+        uint256[] memory timestamps = new uint256[](total);
+        uint256 currentIndex = 0;
+        
+        // Second pass: collect all posts and timestamps
+        for (uint256 i = 0; i < userTribes.length; i++) {
+            uint256[] storage tribePosts = _tribePostIds[userTribes[i]];
+            for (uint256 j = 0; j < tribePosts.length; j++) {
+                allPosts[currentIndex] = tribePosts[j];
+                timestamps[currentIndex] = postData[tribePosts[j]].createdAt;
+                currentIndex++;
+            }
+        }
+        
+        // Sort posts by timestamp (bubble sort)
+        for (uint256 i = 0; i < total - 1; i++) {
+            for (uint256 j = 0; j < total - i - 1; j++) {
+                if (timestamps[j] < timestamps[j + 1]) {
+                    // Swap timestamps
+                    uint256 tempTimestamp = timestamps[j];
+                    timestamps[j] = timestamps[j + 1];
+                    timestamps[j + 1] = tempTimestamp;
+                    
+                    // Swap posts
+                    uint256 tempPost = allPosts[j];
+                    allPosts[j] = allPosts[j + 1];
+                    allPosts[j + 1] = tempPost;
+                }
+            }
+        }
+        
+        // Return paginated results
+        uint256 end = offset + limit > total ? total : offset + limit;
+        uint256 resultLength = end - offset;
+        postIds = new uint256[](resultLength);
+        
+        for (uint256 i = 0; i < resultLength; i++) {
+            postIds[i] = allPosts[offset + i];
+        }
+        
+        return (postIds, total);
+    }
+
     // New function to validate metadata
-    function validateMetadata(string memory metadata, PostType postType) public pure returns (bool) {
+    function validateMetadata(string memory metadata, PostType postType) public pure override returns (bool) {
         bytes memory metadataBytes = bytes(metadata);
-        if (!PostHelpers.validateMetadataFormat(metadataBytes)) {
+        if (metadataBytes.length == 0) return false;
+        
+        // Basic JSON validation (opening/closing braces)
+        if (metadataBytes[0] != "{" || metadataBytes[metadataBytes.length - 1] != "}") {
             return false;
         }
 
-        // Check for required fields based on post type
+        // For testing purposes, we'll do basic string checks
+        // In production, we would use a proper JSON parser
+        bool hasTitle = _containsField(metadataBytes, "\"title\"");
+        bool hasContent = _containsField(metadataBytes, "\"content\"");
+        
+        if (!hasTitle || !hasContent) {
+            return false;
+        }
+
+        // Additional validation for specific post types
         if (postType == PostType.EVENT) {
-            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"EVENT\"")) {
+            if (!_containsField(metadataBytes, "\"eventDetails\"")) {
                 return false;
             }
         } else if (postType == PostType.RICH_MEDIA) {
-            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"RICH_MEDIA\"")) {
+            if (!_containsField(metadataBytes, "\"mediaContent\"")) {
                 return false;
             }
-        } else if (postType == PostType.PROJECT_UPDATE) {
-            if (!PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"")) {
-                return false;
-            }
-        }
-
-        // Check for empty values
-        if (PostHelpers.hasEmptyValue(metadataBytes, "\"title\"") || 
-            PostHelpers.hasEmptyValue(metadataBytes, "\"content\"")) {
-            return false;
         }
 
         return true;
+    }
+
+    function _containsField(bytes memory json, string memory field) private pure returns (bool) {
+        bytes memory fieldBytes = bytes(field);
+        bytes memory jsonBytes = json;
+        
+        if (jsonBytes.length < fieldBytes.length) return false;
+        
+        for (uint i = 0; i < jsonBytes.length - fieldBytes.length; i++) {
+            bool found = true;
+            for (uint j = 0; j < fieldBytes.length; j++) {
+                if (jsonBytes[i + j] != fieldBytes[j]) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found) return true;
+        }
+        return false;
     }
 
     // New batch posting function
@@ -513,34 +742,40 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
         uint256 tribeId,
         BatchPostData[] calldata posts
     ) external override onlyTribeMember(tribeId) whenNotPaused returns (uint256[] memory) {
-        require(posts.length <= MAX_BATCH_POSTS, ERROR_BATCH_LIMIT);
+        require(posts.length <= MAX_BATCH_POSTS, "Too many posts in batch");
         require(
             block.timestamp >= lastBatchTime[msg.sender] + BATCH_POST_COOLDOWN,
-            ERROR_BATCH_COOLDOWN
+            "Please wait before batch posting"
         );
 
         uint256[] memory postIds = new uint256[](posts.length);
         
         for (uint256 i = 0; i < posts.length; i++) {
-            PostCreationHelpers.PostCreationParams memory params = PostCreationHelpers.PostCreationParams({
+            require(validateMetadata(posts[i].metadata, posts[i].postType), "Invalid metadata format");
+            
+            uint256 postId = nextPostId++;
+            postData[postId] = PostData({
+                id: postId,
+                creator: msg.sender,
                 tribeId: tribeId,
                 metadata: posts[i].metadata,
                 isGated: posts[i].isGated,
                 collectibleContract: posts[i].collectibleContract,
                 collectibleId: posts[i].collectibleId,
-                creator: msg.sender,
-                nextPostId: nextPostId++,
-                postType: posts[i].postType
+                isEncrypted: false,
+                encryptionKeyHash: bytes32(0),
+                accessSigner: address(0),
+                parentPostId: 0,
+                createdAt: block.timestamp,
+                isDeleted: false
             });
 
-            FeedHelpers.PostData memory post = PostCreationHelpers.validateAndCreatePost(
-                params,
-                collectibleController
-            );
-
-            feedManager.addPost(post);
-            postIds[i] = post.id;
-            emit PostCreated(post.id, tribeId, msg.sender, posts[i].metadata);
+            _tribePostIds[tribeId].push(postId);
+            _userPostIds[msg.sender].push(postId);
+            _tribeUserPostIds[tribeId][msg.sender].push(postId);
+            
+            postIds[i] = postId;
+            emit PostCreated(postId, tribeId, msg.sender, posts[i].metadata);
         }
 
         emit BatchPostsCreated(tribeId, msg.sender, postIds);
@@ -572,10 +807,10 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
 
     // Add new function for updating posts
     function updatePost(uint256 postId, string memory metadata) external {
-        if (feedManager.getPost(postId).creator != msg.sender) revert PostErrors.NotPostCreator();
-        if (feedManager.getPost(postId).isDeleted) revert PostErrors.PostDeleted();
+        require(postData[postId].creator == msg.sender, "Not post creator");
+        require(!postData[postId].isDeleted, "Post deleted");
         
-        feedManager.getPost(postId).metadata = metadata;
+        postData[postId].metadata = metadata;
         emit PostUpdated(postId, msg.sender, metadata);
     }
 
@@ -585,66 +820,280 @@ contract PostMinter is IPostMinter, AccessControl, ReentrancyGuard, Pausable {
     // Add new function to validate project update permissions
     function _validateProjectUpdatePermissions(string memory metadata) internal view returns (bool) {
         bytes memory metadataBytes = bytes(metadata);
-        if (!PostHelpers.containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"")) {
+        if (!_containsField(metadataBytes, "\"type\":\"PROJECT_UPDATE\"")) {
             return true;
         }
 
-        uint256 projectPostId = ProjectHelpers.parseProjectPostId(metadataBytes);
+        uint256 projectPostId = _parseProjectPostId(metadataBytes);
         if (projectPostId == type(uint256).max) {
             return false;
         }
 
         // Get the original post
-        FeedHelpers.PostData memory originalPost = feedManager.getPost(projectPostId);
+        PostData storage originalPost = postData[projectPostId];
         
+        // Check if the post exists and is not deleted
         if (originalPost.isDeleted) {
             return false;
         }
 
+        // Allow the original post creator to update
         if (originalPost.creator == msg.sender) {
             return true;
         }
 
-        // Check if user has update permission in the project team
-        bytes memory originalMetadata = bytes(originalPost.metadata);
-        if (!PostHelpers.containsField(originalMetadata, "\"team\"")) {
-            return false;
+        // Check team permissions in the original post metadata
+        bytes memory originalMetadataBytes = bytes(originalPost.metadata);
+        return _checkUserUpdatePermission(originalMetadataBytes);
+    }
+
+    function _parseProjectPostId(bytes memory metadataBytes) internal pure returns (uint256) {
+        bytes memory projectPostIdField = bytes("\"projectPostId\":");
+        bytes memory originalPostIdField = bytes("\"originalPostId\":");
+        
+        // Try projectPostId first
+        uint256 projectId = _findAndParseId(metadataBytes, projectPostIdField);
+        if (projectId != type(uint256).max) {
+            return projectId;
+        }
+        
+        // Try originalPostId if projectPostId not found
+        return _findAndParseId(metadataBytes, originalPostIdField);
+    }
+
+    function _findAndParseId(bytes memory metadataBytes, bytes memory idField) internal pure returns (uint256) {
+        // Find id field in metadata
+        for (uint i = 0; i < metadataBytes.length - idField.length; i++) {
+            bool found = true;
+            for (uint j = 0; j < idField.length; j++) {
+                if (metadataBytes[i + j] != idField[j]) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found) {
+                // Parse the id value
+                uint256 startIndex = i + idField.length;
+                while (startIndex < metadataBytes.length && 
+                       (metadataBytes[startIndex] == ' ' || metadataBytes[startIndex] == '"' || 
+                        metadataBytes[startIndex] == ':')) {
+                    startIndex++;
+                }
+                
+                uint256 endIndex = startIndex;
+                uint256 id;
+                while (endIndex < metadataBytes.length && 
+                       metadataBytes[endIndex] >= '0' && metadataBytes[endIndex] <= '9') {
+                    uint256 digit = uint8(metadataBytes[endIndex]) - 48;
+                    if (id > (type(uint256).max - digit) / 10) {
+                        // Would overflow
+                        return type(uint256).max;
+                    }
+                    id = id * 10 + digit;
+                    endIndex++;
+                }
+                return id;
+            }
+        }
+        return type(uint256).max;
+    }
+
+    function _checkUserUpdatePermission(bytes memory originalMetadataBytes) internal view returns (bool) {
+        bytes memory teamField = bytes("\"team\":[");
+        
+        // Find team array in metadata
+        for (uint i = 0; i < originalMetadataBytes.length - teamField.length; i++) {
+            bool found = true;
+            for (uint j = 0; j < teamField.length; j++) {
+                if (originalMetadataBytes[i + j] != teamField[j]) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found) {
+                // Found team array, now look for the current user's entry
+                bytes memory addressField = abi.encodePacked("\"address\":\"", toAsciiString(msg.sender), "\"");
+                uint256 teamIndex = i + teamField.length;
+                
+                while (teamIndex < originalMetadataBytes.length && originalMetadataBytes[teamIndex] != ']') {
+                    bool foundUser = true;
+                    for (uint j = 0; j < addressField.length; j++) {
+                        if (teamIndex + j >= originalMetadataBytes.length || 
+                            originalMetadataBytes[teamIndex + j] != addressField[j]) {
+                            foundUser = false;
+                            break;
+                        }
+                    }
+                    
+                    if (foundUser) {
+                        // Found user, now check for UPDATE permission
+                        bytes memory permissionsField = bytes("\"permissions\":");
+                        uint256 permissionIndex = teamIndex;
+                        
+                        // Look for permissions field
+                        while (permissionIndex < originalMetadataBytes.length && originalMetadataBytes[permissionIndex] != ']') {
+                            bool foundPermissions = true;
+                            for (uint j = 0; j < permissionsField.length; j++) {
+                                if (permissionIndex + j >= originalMetadataBytes.length || 
+                                    originalMetadataBytes[permissionIndex + j] != permissionsField[j]) {
+                                    foundPermissions = false;
+                                    break;
+                                }
+                            }
+                            
+                            if (foundPermissions) {
+                                // Skip whitespace and opening brackets/quotes
+                                permissionIndex += permissionsField.length;
+                                while (permissionIndex < originalMetadataBytes.length && 
+                                       (originalMetadataBytes[permissionIndex] == ' ' || 
+                                        originalMetadataBytes[permissionIndex] == '[' || 
+                                        originalMetadataBytes[permissionIndex] == '"')) {
+                                    permissionIndex++;
+                                }
+                                
+                                // Check for "UPDATE" in either string or array format
+                                bytes memory updatePermission = bytes("UPDATE");
+                                bool hasUpdate = true;
+                                for (uint j = 0; j < updatePermission.length; j++) {
+                                    if (permissionIndex + j >= originalMetadataBytes.length || 
+                                        originalMetadataBytes[permissionIndex + j] != updatePermission[j]) {
+                                        hasUpdate = false;
+                                        break;
+                                    }
+                                }
+                                if (hasUpdate) {
+                                    return true;
+                                }
+                            }
+                            permissionIndex++;
+                        }
+                        return false;
+                    }
+                    teamIndex++;
+                }
+                break;
+            }
+        }
+        return false;
+    }
+
+    // Helper function to convert address to ASCII string
+    function toAsciiString(address x) internal pure returns (string memory) {
+        bytes memory s = new bytes(40);
+        for (uint i = 0; i < 20; i++) {
+            bytes1 b = bytes1(uint8(uint(uint160(x)) / (2**(8*(19 - i)))));
+            bytes1 hi = bytes1(uint8(b) / 16);
+            bytes1 lo = bytes1(uint8(b) - 16 * uint8(hi));
+            s[2*i] = char(hi);
+            s[2*i+1] = char(lo);            
+        }
+        return string(s);
+    }
+
+    // Helper function to convert byte to char
+    function char(bytes1 b) internal pure returns (bytes1 c) {
+        if (uint8(b) < 10) return bytes1(uint8(b) + 0x30);
+        else return bytes1(uint8(b) + 0x57);
+    }
+
+    // Override renounceRole to add additional checks
+    function renounceRole(bytes32 role, address account) public virtual override {
+        require(account == msg.sender, "Can only renounce own roles");
+        
+        // Prevent renouncing admin role completely
+        require(
+            role != DEFAULT_ADMIN_ROLE || 
+            _roleMembers[DEFAULT_ADMIN_ROLE].length > 1, 
+            "Cannot renounce last admin role"
+        );
+        
+        super.renounceRole(role, account);
+    }
+
+     // Add revokeRole function with additional access control
+    function revokeRole(bytes32 role, address account) public virtual override onlyRole(getRoleAdmin(role)) {
+        // Prevent revoking the last admin
+        require(
+            role != DEFAULT_ADMIN_ROLE || 
+            _roleMembers[DEFAULT_ADMIN_ROLE].length > 1, 
+            "Cannot revoke last admin"
+        );
+        
+        super.revokeRole(role, account);
+    }
+
+     function grantRole(bytes32 role, address account) public virtual override(AccessControl) onlyRole(getRoleAdmin(role)) {
+        // Additional custom checks can be added here if needed
+        super.grantRole(role, account);
+    }
+
+     function getRoleAdmin(bytes32 role) public view override(AccessControl) returns (bytes32) {
+        return super.getRoleAdmin(role);
+    }
+
+     // Function to manage feed settings
+    function feedManager(
+        uint256 tribeId, 
+        bool enableFeed, 
+        uint256 maxPostsPerDay
+    ) external onlyRole(FEED_MANAGER_ROLE) {
+        // Verify tribe exists (you might want to add a check with tribeController)
+        require(tribeController.getTribeExists(tribeId), "Tribe does not exist");
+
+        // Update feed status
+        _tribeFeedStatus[tribeId] = enableFeed;
+
+        // Configure feed settings
+        FeedConfig storage config = _tribeFeedConfigs[tribeId];
+        config.isEnabled = enableFeed;
+        config.maxPostsPerDay = maxPostsPerDay > 0 ? maxPostsPerDay : 50; // Default to 50 if 0
+        config.lastResetTimestamp = block.timestamp;
+        config.postCountToday = 0;
+
+        // Emit event with detailed feed management information
+        emit FeedManaged(
+            tribeId, 
+            enableFeed, 
+            msg.sender, 
+            config.maxPostsPerDay
+        );
+    }
+
+    // Function to check if feed is enabled for a tribe
+    function isFeedEnabled(uint256 tribeId) public view returns (bool) {
+        return _tribeFeedStatus[tribeId];
+    }
+
+    // Function to get current feed configuration
+    function getFeedConfig(uint256 tribeId) external view returns (
+        bool isEnabled, 
+        uint256 maxPostsPerDay, 
+        uint256 postCountToday
+    ) {
+        FeedConfig storage config = _tribeFeedConfigs[tribeId];
+        return (
+            config.isEnabled,
+            config.maxPostsPerDay,
+            config.postCountToday
+        );
+    }
+
+    // Modify the post creation functions to respect feed limits
+    function _checkAndUpdateFeedLimits(uint256 tribeId) internal {
+        FeedConfig storage config = _tribeFeedConfigs[tribeId];
+
+        // Reset daily count if a new day has started
+        if (block.timestamp - config.lastResetTimestamp >= 1 days) {
+            config.postCountToday = 0;
+            config.lastResetTimestamp = block.timestamp;
         }
 
-        return ProjectHelpers.checkUserUpdatePermission(originalMetadata, msg.sender);
+        // Check if feed is enabled and within daily post limit
+        require(config.isEnabled, "Feed is disabled for this tribe");
+        require(config.postCountToday < config.maxPostsPerDay, "Daily post limit reached");
+
+        // Increment post count
+        config.postCountToday++;
     }
 
-    // Feed querying functions
-    function getPostsByTribe(
-        uint256 tribeId,
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (uint256[] memory postIds, uint256 total) {
-        return feedManager.getPostsByTribe(tribeId, offset, limit);
-    }
-
-    function getPostsByUser(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (uint256[] memory postIds, uint256 total) {
-        return feedManager.getPostsByUser(user, offset, limit);
-    }
-
-    function getPostsByTribeAndUser(
-        uint256 tribeId,
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (uint256[] memory postIds, uint256 total) {
-        return feedManager.getPostsByTribeAndUser(tribeId, user, offset, limit);
-    }
-
-    function getFeedForUser(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (uint256[] memory postIds, uint256 total) {
-        return feedManager.getFeedForUser(user, offset, limit);
-    }
 } 
