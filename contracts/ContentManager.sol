@@ -70,6 +70,44 @@ contract ContentManager is AccessControl {
         _;
     }
 
+    modifier onlyPostCreator(uint256 tribeId) {
+        require(
+            tribeController.getTribeAdmin(tribeId) == msg.sender || 
+            roleManager.hasRole(roleManager.POST_CREATOR_ROLE(), msg.sender),
+            "Not authorized to create posts"
+        );
+        _;
+    }
+
+    modifier onlyPollCreator(uint256 tribeId) {
+        require(
+            tribeController.getTribeAdmin(tribeId) == msg.sender || 
+            roleManager.hasRole(roleManager.POLL_CREATOR_ROLE(), msg.sender),
+            "Not authorized to create polls"
+        );
+        _;
+    }
+
+    modifier onlyQuizCreator(uint256 tribeId) {
+        require(
+            tribeController.getTribeAdmin(tribeId) == msg.sender || 
+            roleManager.hasRole(roleManager.QUIZ_CREATOR_ROLE(), msg.sender),
+            "Not authorized to create quizzes"
+        );
+        _;
+    }
+
+    modifier onlyContentManager(uint256 tribeId) {
+        require(
+            tribeController.getTribeAdmin(tribeId) == msg.sender || 
+            roleManager.hasRole(roleManager.POST_CREATOR_ROLE(), msg.sender) ||
+            roleManager.hasRole(roleManager.POLL_CREATOR_ROLE(), msg.sender) ||
+            roleManager.hasRole(roleManager.QUIZ_CREATOR_ROLE(), msg.sender),
+            "Not authorized to manage content"
+        );
+        _;
+    }
+
     function _createPost(
         uint256 tribeId,
         string memory contentURI,
@@ -93,7 +131,7 @@ contract ContentManager is AccessControl {
         uint256 tribeId,
         string memory contentURI,
         PostType postType
-    ) external onlyTribeMember(tribeId) returns (uint256) {
+    ) external onlyPostCreator(tribeId) returns (uint256) {
         return _createPost(tribeId, contentURI, postType);
     }
 
@@ -102,7 +140,7 @@ contract ContentManager is AccessControl {
         string memory contentURI,
         string[] memory options,
         uint256 duration
-    ) external onlyTribeMember(tribeId) returns (uint256) {
+    ) external onlyPollCreator(tribeId) returns (uint256) {
         uint256 postId = _createPost(tribeId, contentURI, PostType.POLL);
         
         Poll storage newPoll = polls[postId];
@@ -120,7 +158,7 @@ contract ContentManager is AccessControl {
         bytes32[] memory answerHashes,
         uint256 pointsPerQuestion,
         uint256 duration
-    ) external onlyTribeMember(tribeId) returns (uint256) {
+    ) external onlyQuizCreator(tribeId) returns (uint256) {
         require(questions.length == answerHashes.length, "Questions and answers mismatch");
         
         uint256 postId = _createPost(tribeId, contentURI, PostType.QUIZ);
@@ -170,8 +208,14 @@ contract ContentManager is AccessControl {
     function deletePost(
         uint256 tribeId,
         uint256 postId
-    ) external onlyTribeAdmin(tribeId) {
+    ) external onlyContentManager(tribeId) {
         require(posts[tribeId][postId].isActive, "Post already deleted");
+        
+        // Only post creator or tribe admin can delete posts
+        if (tribeController.getTribeAdmin(tribeId) != msg.sender) {
+            require(posts[tribeId][postId].author == msg.sender, "Not the post author");
+        }
+        
         posts[tribeId][postId].isActive = false;
         
         if (posts[tribeId][postId].postType == PostType.POLL) {

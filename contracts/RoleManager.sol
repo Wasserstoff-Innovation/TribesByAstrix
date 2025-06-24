@@ -11,6 +11,10 @@ contract RoleManager is AccessControl {
     bytes32 public constant BRAND_ROLE = keccak256("BRAND_ROLE");
     bytes32 public constant MODERATOR_ROLE = keccak256("MODERATOR_ROLE");
     bytes32 public constant FAN_ASSIGNER_ROLE = keccak256("FAN_ASSIGNER_ROLE");
+    bytes32 public constant POST_CREATOR_ROLE = keccak256("POST_CREATOR_ROLE");
+    bytes32 public constant POLL_CREATOR_ROLE = keccak256("POLL_CREATOR_ROLE");
+    bytes32 public constant QUIZ_CREATOR_ROLE = keccak256("QUIZ_CREATOR_ROLE");
+    bytes32 public constant PROPOSAL_CREATOR_ROLE = keccak256("PROPOSAL_CREATOR_ROLE");
 
     // Events
     event RoleAssigned(address indexed user, bytes32 indexed role);
@@ -98,12 +102,16 @@ contract RoleManager is AccessControl {
      * @return roles Array of roles assigned to the user
      */
     function getUserRoles(address user) external view returns (bytes32[] memory) {
-        bytes32[] memory allRoles = new bytes32[](5);
+        bytes32[] memory allRoles = new bytes32[](9);
         allRoles[0] = FAN_ROLE;
         allRoles[1] = ORGANIZER_ROLE;
         allRoles[2] = ARTIST_ROLE;
         allRoles[3] = BRAND_ROLE;
         allRoles[4] = MODERATOR_ROLE;
+        allRoles[5] = POST_CREATOR_ROLE;
+        allRoles[6] = POLL_CREATOR_ROLE;
+        allRoles[7] = QUIZ_CREATOR_ROLE;
+        allRoles[8] = PROPOSAL_CREATOR_ROLE;
 
         uint8 count = 0;
         for (uint i = 0; i < allRoles.length; i++) {
