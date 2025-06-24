@@ -12,4 +12,13 @@ interface IRoleManager {
     function DEFAULT_ADMIN_ROLE() external pure returns (bytes32);
     function CREATOR_ROLE() external pure returns (bytes32);
     function MODERATOR_ROLE() external pure returns (bytes32);
+    function FAN_ROLE() external pure returns (bytes32);
+    function ORGANIZER_ROLE() external pure returns (bytes32);
+    function ARTIST_ROLE() external pure returns (bytes32);
+    function BRAND_ROLE() external pure returns (bytes32);
+    function FAN_ASSIGNER_ROLE() external pure returns (bytes32);
+    function POST_CREATOR_ROLE() external pure returns (bytes32);
+    function POLL_CREATOR_ROLE() external pure returns (bytes32);
+    function QUIZ_CREATOR_ROLE() external pure returns (bytes32);
+    function PROPOSAL_CREATOR_ROLE() external pure returns (bytes32);
 } 

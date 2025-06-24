@@ -447,28 +447,24 @@ contract TribeController is ITribeController, Initializable {
         return memberCounts[tribeId];
     }
 
-    function getUserTribes(address user) external view returns (uint256[] memory tribeIds) {
-        // First, count how many tribes the user is a member of
+    function getUserTribes(address user) external view returns (uint256[] memory) {
         uint256 count = 0;
+        uint256[] memory userTribes = new uint256[](nextTribeId);
+        
         for (uint256 i = 0; i < nextTribeId; i++) {
             if (memberStatuses[i][user] == MemberStatus.ACTIVE) {
+                userTribes[count] = i;
                 count++;
             }
         }
-
-        // Create array of appropriate size
-        tribeIds = new uint256[](count);
         
-        // Fill array with tribe IDs
-        uint256 index = 0;
-        for (uint256 i = 0; i < nextTribeId; i++) {
-            if (memberStatuses[i][user] == MemberStatus.ACTIVE) {
-                tribeIds[index] = i;
-                index++;
-            }
+        // Create a properly sized array with just the tribes the user is in
+        uint256[] memory result = new uint256[](count);
+        for (uint256 i = 0; i < count; i++) {
+            result[i] = userTribes[i];
         }
-
-        return tribeIds;
+        
+        return result;
     }
 
     function getInviteCodeStatus(uint256 tribeId, string calldata code) 
@@ -521,4 +517,9 @@ contract TribeController is ITribeController, Initializable {
         availableInviteCodes: availableCodes
     });
 }
+
+    // Check if a tribe exists and is active
+    function getTribeExists(uint256 tribeId) external view returns (bool) {
+        return tribeId < nextTribeId && tribes[tribeId].isActive;
+    }
 } 
