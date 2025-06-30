@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .test-output {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .error-message {
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .chart-container {
+            position: relative;
+            height: 200px;
+            width: 200px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Test Report</h1>
+            <p id="timestamp" class="text-gray-600"></p>
+        </header>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700">Total Tests</h3>
+                <p id="totalTests" class="text-3xl font-bold text-gray-900"></p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-green-700">Passed</h3>
+                <p id="passedTests" class="text-3xl font-bold text-green-600"></p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-red-700">Failed</h3>
+                <p id="failedTests" class="text-3xl font-bold text-red-600"></p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-blue-700">Duration</h3>
+                <p id="duration" class="text-3xl font-bold text-blue-600"></p>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Test Results</h3>
+                <div class="chart-container">
+                    <canvas id="resultsChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">History</h3>
+                <canvas id="historyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- System Info -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">System Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <h4 class="font-semibold text-gray-600 mb-2">Memory Usage</h4>
+                    <div id="memoryInfo" class="space-y-2"></div>
+                    </div>
+                <div>
+                    <h4 class="font-semibold text-gray-600 mb-2">CPU Usage</h4>
+                    <p id="cpuInfo" class="text-gray-700"></p>
+                    </div>
+                <div>
+                    <h4 class="font-semibold text-gray-600 mb-2">Disk Usage</h4>
+                    <div id="diskInfo" class="space-y-2"></div>
+                </div>
+            </div>
+                        </div>
+
+        <!-- Test Results -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-700">Test Results</h3>
+                <div class="mt-2 flex gap-4">
+                    <button id="showAllBtn" class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">All</button>
+                    <button id="showPassedBtn" class="px-3 py-1 rounded bg-green-200 hover:bg-green-300">Passed Only</button>
+                    <button id="showFailedBtn" class="px-3 py-1 rounded bg-red-200 hover:bg-red-300">Failed Only</button>
+                        </div>
+                    </div>
+            <div class="overflow-x-auto">
+                <div class="mb-4 flex space-x-4">
+                    <div class="flex-1">
+                        <input type="text" 
+                               id="searchInput" 
+                               placeholder="Search tests..." 
+                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               onkeyup="filterTests()">
+                    </div>
+                    <div class="flex space-x-2">
+                        <select id="statusFilter" 
+                                class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                onchange="filterTests()">
+                            <option value="all">All Status</option>
+                            <option value="passed">Passed</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                        <select id="suiteFilter" 
+                                class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                onchange="filterTests()">
+                            <option value="all">All Suites</option>
+                        </select>
+                    </div>
+                </div>
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Suite</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Test Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="testResults" class="bg-white divide-y divide-gray-200">
+                        <!-- Test results will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Raw Output -->
+        <div class="mt-8 bg-white rounded-lg shadow overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-700">Raw Output</h3>
+            </div>
+            <div class="p-6">
+                <pre id="rawOutput" class="bg-gray-100 p-4 rounded overflow-x-auto text-sm"></pre>
+            </div>
+                </div>
+
+        <div class="mt-8">
+            <h2 class="text-lg font-semibold mb-4">Test History</h2>
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Passed</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Failed</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody id="testHistory" class="bg-white divide-y divide-gray-200">
+                        <!-- Test history will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchData() {
+            try {
+                const [results, history] = await Promise.all([
+                    fetch('/api/results').then(r => r.json()),
+                    fetch('/api/history').then(r => r.json())
+                ]);
+
+                // Update summary
+                document.getElementById('timestamp').textContent = new Date(results.timestamp).toLocaleString();
+                document.getElementById('totalTests').textContent = results.summary.total;
+                document.getElementById('passedTests').textContent = results.summary.passed;
+                document.getElementById('failedTests').textContent = results.summary.failed;
+                document.getElementById('duration').textContent = `${(results.summary.duration / 1000).toFixed(1)}s`;
+
+                // Update system info
+                const memoryInfo = document.getElementById('memoryInfo');
+                memoryInfo.innerHTML = '';
+                Object.entries(results.systemInfo.memory).forEach(([key, value]) => {
+                    memoryInfo.innerHTML += `<p class="text-sm text-gray-700">${key}: ${value}</p>`;
+                });
+
+                document.getElementById('cpuInfo').textContent = results.systemInfo.cpu;
+
+                const diskInfo = document.getElementById('diskInfo');
+                diskInfo.innerHTML = '';
+                results.systemInfo.disk.forEach(line => {
+                    diskInfo.innerHTML += `<p class="text-sm text-gray-700">${line}</p>`;
+                });
+
+                // Update test results table
+                const tbody = document.getElementById('testResults');
+                tbody.innerHTML = '';
+
+                results.results.forEach(test => {
+                    const row = document.createElement('tr');
+                    row.className = `test-case ${test.status === 'failed' ? 'bg-red-50' : ''}`;
+                    row.dataset.status = test.status;
+                    
+                    // Format output with line breaks
+                    const formattedOutput = test.output
+                        .map(line => line.replace(/\[(\w+)\]/, '<span class="font-semibold text-blue-600">[$1]</span>'))
+                        .join('<br>');
+
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${test.suiteName}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${test.testName}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">${test.description || '-'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                test.status === 'passed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }">${test.status}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${test.duration}ms</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            <div class="max-h-32 overflow-y-auto">
+                                <div class="test-output">${formattedOutput}</div>
+                                ${test.error ? `
+                                    <div class="mt-2 text-red-600">
+                                        <button class="text-blue-600 hover:text-blue-800" onclick="toggleError(this)">Show Error</button>
+                                        <pre class="hidden mt-2 whitespace-pre-wrap">${JSON.stringify(test.error, null, 2)}</pre>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                // Update raw output
+                document.getElementById('rawOutput').textContent = results.rawOutput || '';
+
+                // Create results chart
+                new Chart(document.getElementById('resultsChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Passed', 'Failed'],
+                        datasets: [{
+                            data: [results.summary.passed, results.summary.failed],
+                            backgroundColor: ['#10B981', '#EF4444']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+
+                // Create history chart
+                new Chart(document.getElementById('historyChart'), {
+                type: 'line',
+                data: {
+                        labels: history.map(h => new Date(h.timestamp).toLocaleDateString()),
+                        datasets: [{
+                            label: 'Passed',
+                            data: history.map(h => h.summary.passed),
+                            borderColor: '#10B981',
+                            tension: 0.1
+                        }, {
+                            label: 'Failed',
+                            data: history.map(h => h.summary.failed),
+                            borderColor: '#EF4444',
+                            tension: 0.1
+                        }]
+                },
+                options: {
+                    responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+                // Set up filter buttons
+                document.getElementById('showAllBtn').addEventListener('click', () => {
+                    document.querySelectorAll('.test-case').forEach(el => el.style.display = '');
+                });
+
+                document.getElementById('showPassedBtn').addEventListener('click', () => {
+                    document.querySelectorAll('.test-case').forEach(el => {
+                        el.style.display = el.dataset.status === 'passed' ? '' : 'none';
+                    });
+                });
+
+                document.getElementById('showFailedBtn').addEventListener('click', () => {
+                    document.querySelectorAll('.test-case').forEach(el => {
+                        el.style.display = el.dataset.status === 'failed' ? '' : 'none';
+                    });
+                });
+
+                // Update suite filter
+                updateSuiteFilter(results);
+
+                // Update test history
+                updateTestHistory(history);
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        function toggleError(button) {
+            const pre = button.nextElementSibling;
+            const isHidden = pre.classList.contains('hidden');
+            pre.classList.toggle('hidden');
+            button.textContent = isHidden ? 'Hide Error' : 'Show Error';
+        }
+
+        function updateTestHistory(history) {
+            const tbody = document.getElementById('testHistory');
+            tbody.innerHTML = '';
+
+            history.forEach(entry => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${new Date(entry.timestamp).toLocaleString()}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${entry.summary.total}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">
+                        ${entry.summary.passed}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600">
+                        ${entry.summary.failed}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${(entry.summary.duration / 1000).toFixed(1)}s
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function filterTests() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const suiteFilter = document.getElementById('suiteFilter').value;
+            
+            const rows = document.querySelectorAll('#testResults tr.test-case');
+            
+            rows.forEach(row => {
+                const testName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                const suiteName = row.querySelector('td:nth-child(1)').textContent;
+                const status = row.dataset.status;
+                
+                const matchesSearch = testName.includes(searchTerm);
+                const matchesStatus = statusFilter === 'all' || status === statusFilter;
+                const matchesSuite = suiteFilter === 'all' || suiteName === suiteFilter;
+                
+                row.style.display = matchesSearch && matchesStatus && matchesSuite ? '' : 'none';
+            });
+        }
+
+        function updateSuiteFilter(results) {
+            const suiteFilter = document.getElementById('suiteFilter');
+            const suites = new Set(results.results.map(test => test.suiteName));
+            
+            // Clear existing options except 'All Suites'
+            while (suiteFilter.options.length > 1) {
+                suiteFilter.remove(1);
+            }
+            
+            // Add new suite options
+            Array.from(suites).sort().forEach(suite => {
+                const option = document.createElement('option');
+                option.value = suite;
+                option.textContent = suite;
+                suiteFilter.appendChild(option);
+            });
+        }
+
+        // Add auto-refresh functionality
+        let autoRefresh = false;
+        function toggleAutoRefresh() {
+            autoRefresh = !autoRefresh;
+            const button = document.getElementById('autoRefreshButton');
+            button.textContent = autoRefresh ? 'Stop Auto-Refresh' : 'Start Auto-Refresh';
+            button.className = autoRefresh ? 
+                'bg-red-600 hover:bg-red-700' : 
+                'bg-green-600 hover:bg-green-700' + ' px-4 py-2 text-white rounded';
+            
+            if (autoRefresh) {
+                refreshInterval = setInterval(fetchData, 5000);
+            } else {
+                clearInterval(refreshInterval);
+            }
+        }
+
+        let refreshInterval;
+        // Initial load
+        fetchData();
+    </script>
+</body>
+</html> 
