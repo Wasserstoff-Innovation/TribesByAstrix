@@ -1,0 +1,177 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "PostErrors",
+  "sourceName": "contracts/libraries/PostErrors.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "AlreadyInteracted",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "AlreadyReported",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "BatchCooldownActive",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "BatchLimitExceeded",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "CannotInteractWithOwnPost",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "CooldownActive",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "field",
+          "type": "string"
+        }
+      ],
+      "name": "EmptyField",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "EmptyMetadata",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InsufficientAccess",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidCollectible",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidCollectibleContract",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidEncryptionKey",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidField",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidInteractionType",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidJsonFormat",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidLimit",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidMetadata",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidOffset",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidPagination",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidParentPost",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidPostType",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidSignature",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidSigner",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "MissingContentField",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "MissingTitleField",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "MissingTypeField",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotPostCreator",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotTribeAdmin",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotTribeMember",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "PostDeleted",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "RequiredFieldMissing",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "Unauthorized",
+      "type": "error"
+    }
+  ],
+  "bytecode": "0x6080806040523460175760119081601d823930815050f35b600080fdfe600080fdfea164736f6c6343000814000a",
+  "deployedBytecode": "0x600080fdfea164736f6c6343000814000a",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
